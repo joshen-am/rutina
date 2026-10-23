@@ -14,8 +14,8 @@
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
-html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:manipulation;background:#F2F2F7}
-#app{height:100%}
+html,body{margin:0;height:var(--app-h,100%);overflow:hidden;overscroll-behavior:none;-webkit-text-size-adjust:100%;touch-action:manipulation;background:#F2F2F7}
+#app{position:fixed;top:0;left:0;right:0;height:var(--app-h,100%)}
 input{-webkit-user-select:text;user-select:text}
 body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 
@@ -2740,6 +2740,21 @@ class Component extends DCLogic {
     var fn = handlers[+el.getAttribute('data-hi')];
     if (fn) fn(e);
   });
+
+  // iOS (web app instalada con barra de estado translúcida) resta la barra de estado a 100% y 100vh,
+  // lo que deja una franja vacía abajo. Se usa la altura real de la pantalla.
+  function fitHeight() {
+    var h = window.innerHeight;
+    if (window.navigator.standalone) {
+      var portrait = window.matchMedia('(orientation: portrait)').matches;
+      var sh = portrait ? Math.max(screen.width, screen.height) : Math.min(screen.width, screen.height);
+      if (sh > h) h = sh;
+    }
+    document.documentElement.style.setProperty('--app-h', h + 'px');
+  }
+  fitHeight();
+  window.addEventListener('resize', fitHeight);
+  window.addEventListener('orientationchange', function () { setTimeout(fitHeight, 300); });
 
   comp = new Component();
   comp.props = PROPS;
