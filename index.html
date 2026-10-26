@@ -82,6 +82,11 @@ input:focus-visible,button:focus-visible{outline:2px solid #0A84FF;outline-offse
 <h2 id="hist" style="margin: 0; font-size: 17px; font-weight: 600">Historial</h2>
 <span style="font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums">{{ hist.summary }}</span>
 </div>
+<div role="group" aria-label="Qué mostrar" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; padding: 2px; border-radius: 10px; background: {{ th.segBg }}">
+<sc-for list="{{ hist.modes }}" as="hm" hint-placeholder-count="2">
+<button type="button" onClick="{{ hm.pick }}" aria-pressed="{{ hm.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; border-radius: 8px; background: {{ hm.bg }}; color: {{ th.text }}; box-shadow: {{ hm.shadow }}; font-size: 13px; font-weight: {{ hm.weight }}">{{ hm.label }}</button>
+</sc-for>
+</div>
 <div style="display: flex; gap: 6px">
 <div aria-hidden="true" style="display: grid; grid-template-rows: 14px repeat(7, 15px); row-gap: 3px; font-size: 10px; line-height: 15px; color: {{ th.sub }}">
 <span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
@@ -93,6 +98,7 @@ input:focus-visible,button:focus-visible{outline:2px solid #0A84FF;outline-offse
 </sc-for>
 </div>
 </div>
+<sc-if value="{{ hist.trainMode }}" hint-placeholder-val="{{ false }}">
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: {{ th.sub }}">
 <span style="display: flex; align-items: center; gap: 10px">
 <span style="display: flex; align-items: center; gap: 4px"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{ hist.missBg }}"></span>No la hice</span>
@@ -102,7 +108,83 @@ input:focus-visible,button:focus-visible{outline:2px solid #0A84FF;outline-offse
 <sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="4"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{ hs.bg }}"></span></sc-for>
 Al límite</span>
 </div>
+</sc-if>
+<sc-if value="{{ hist.habMode }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: {{ th.sub }}">
+<span>Hábitos cumplidos cada día</span>
+<span style="display: flex; align-items: center; gap: 3px">Menos
+<span style="width: 10px; height: 10px; border-radius: 2px; background: {{ th.fill }}"></span>
+<sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="4"><span style="width: 10px; height: 10px; border-radius: 2px; background: {{ hs.bg }}"></span></sc-for>
+Más</span>
+</div>
+</sc-if>
 </section>
+</div>
+</div>
+
+<div style="order: {{ ho.habitos.order }}; display: {{ ho.habitos.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 600">{{ ho.habitos.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.habitos.up }}" aria-label="Subir {{ ho.habitos.label }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; opacity: {{ ho.habitos.upOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.habitos.down }}" aria-label="Bajar {{ ho.habitos.label }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; opacity: {{ ho.habitos.downOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.habitos.toggle }}" aria-pressed="{{ ho.habitos.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; min-width: 88px; padding: 0 14px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ primaryText }}; font-size: 15px; font-weight: 600">{{ ho.habitos.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.habitos.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 20px; display: flex; flex-direction: column; gap: 20px">
+<button type="button" onClick="{{ goHabitos }}" style="appearance: none; border: 0; margin: 0; font: inherit; color: inherit; cursor: pointer; text-align: left; width: 100%; background: {{ th.card }}; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 16px">
+<span style="position: relative; width: 56px; height: 56px; flex: none">
+<svg width="56" height="56" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="38" fill="none" stroke="{{ th.fill }}" stroke-width="12"></circle><circle cx="44" cy="44" r="38" fill="none" stroke="{{ c.constancia }}" stroke-width="12" stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="{{ hd.ringOff }}" transform="rotate(-90 44 44)"></circle></svg>
+<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 700; font-variant-numeric: tabular-nums">{{ hd.done }}/{{ hd.total }}</span>
+</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px">
+<span style="font-size: 17px; font-weight: 600">Hábitos de hoy</span>
+<span style="font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.sub }}</span>
+</span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</div>
+</div>
+
+<div style="order: {{ ho.agua.order }}; display: {{ ho.agua.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 600">{{ ho.agua.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.agua.up }}" aria-label="Subir {{ ho.agua.label }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; opacity: {{ ho.agua.upOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.agua.down }}" aria-label="Bajar {{ ho.agua.label }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; opacity: {{ ho.agua.downOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.agua.toggle }}" aria-pressed="{{ ho.agua.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; min-width: 88px; padding: 0 14px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ primaryText }}; font-size: 15px; font-weight: 600">{{ ho.agua.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.agua.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 20px; display: flex; flex-direction: column; gap: 20px">
+<sc-if value="{{ hd.water.on }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="agua-home" style="background: {{ th.card }}; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 36px; height: 36px; border-radius: 10px; flex: none; background: {{ tint.resistencia }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="{{ c.resistencia }}" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<h2 id="agua-home" style="margin: 0; font-size: 17px; font-weight: 600">Agua</h2>
+<span style="font-size: 13px; color: {{ th.sub }}">{{ hd.water.left }}</span>
+</div>
+<span style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ hd.water.liters }}<span style="font-size: 15px; font-weight: 600; color: {{ th.sub }}"> de {{ hd.water.goalL }} L</span></span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{ hd.water.glasses }}" as="g" hint-placeholder-count="10">
+<button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ g.bg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="{{ g.fill }}" stroke="{{ g.stroke }}" stroke-width="1.8" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg>
+</button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<button type="button" onClick="{{ hd.water.sub }}" aria-label="Quitar un vaso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ th.btn2 }}; color: {{ th.text }}; font-size: 20px; font-weight: 600">−</button>
+<button type="button" onClick="{{ hd.water.add }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ wbBg }}; color: {{ wbFg }}; font-size: 15px; font-weight: 600">+ Vaso 250 ml</button>
+<button type="button" onClick="{{ hd.water.add2 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ tint.resistencia }}; color: {{ c.resistenciaText }}; font-size: 15px; font-weight: 600">+ Botella 500 ml</button>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.water.cue }}</p>
+</section>
+</sc-if>
 </div>
 </div>
 
@@ -398,6 +480,151 @@ Al límite</span>
 </sc-if>
 </div>
 </sc-if>
+</sc-if>
+
+<sc-if value="{{ showHabitos }}" hint-placeholder-val="{{ false }}">
+<div class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: calc(env(safe-area-inset-top) + 44px) 16px 110px; display: flex; flex-direction: column; gap: 16px">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px">
+<div style="display: flex; flex-direction: column; gap: 0; min-width: 0">
+<p style="margin: 0; font-size: 15px; line-height: 20px; font-weight: 600; color: {{ th.sub }}">{{ hd.dateLabel }}</p>
+<h1 style="margin: 0; font-size: 34px; line-height: 41px; font-weight: 700; letter-spacing: 0.01em">Hábitos</h1>
+</div>
+<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y personalización" style="appearance: none; border: 0; margin: 0 -4px 0 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; flex: none; border-radius: 50%; background: transparent; display: flex; align-items: center; justify-content: center">
+<span style="width: 38px; height: 38px; border-radius: 50%; background: {{ primary }}; color: {{ onPrimary }}; display: flex; align-items: center; justify-content: center; font-size: 17px; font-weight: 700">{{ initial }}</span>
+</button>
+</header>
+
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: {{ th.card }}; border-radius: 14px; padding: 0 4px">
+<button type="button" onClick="{{ hd.prev }}" aria-label="Día anterior" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; background: transparent; color: {{ primaryText }}; opacity: {{ hd.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<span style="font-size: 17px; font-weight: 600">{{ hd.dayLabel }}</span>
+<button type="button" onClick="{{ hd.next }}" aria-label="Día siguiente" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; background: transparent; color: {{ primaryText }}; opacity: {{ hd.nextOp }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+
+<section aria-label="Resumen del día" style="background: {{ th.card }}; border-radius: 20px; padding: 16px; display: flex; align-items: center; gap: 18px">
+<div style="position: relative; width: 88px; height: 88px; flex: none">
+<svg width="88" height="88" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="38" fill="none" stroke="{{ th.fill }}" stroke-width="10"></circle><circle cx="44" cy="44" r="38" fill="none" stroke="{{ c.constancia }}" stroke-width="10" stroke-linecap="round" stroke-dasharray="238.8" stroke-dashoffset="{{ hd.ringOff }}" transform="rotate(-90 44 44)"></circle></svg>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center"><span style="font-size: 22px; line-height: 26px; font-weight: 700; font-variant-numeric: tabular-nums">{{ hd.done }}/{{ hd.total }}</span><span style="font-size: 11px; color: {{ th.sub }}">hábitos</span></div>
+</div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 20px; line-height: 25px; font-weight: 700">{{ hd.title }}</span>
+<span style="font-size: 15px; line-height: 20px; color: {{ th.sub }}">{{ hd.sub }}</span>
+</div>
+</section>
+
+<sc-if value="{{ hd.water.on }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="agua-h" style="background: {{ th.card }}; border-radius: 20px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 36px; height: 36px; border-radius: 10px; flex: none; background: {{ tint.resistencia }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="{{ c.resistencia }}" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<h2 id="agua-h" style="margin: 0; font-size: 17px; font-weight: 600">Agua</h2>
+<span style="font-size: 13px; color: {{ th.sub }}">{{ hd.water.left }}</span>
+</div>
+<span style="font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums">{{ hd.water.liters }}<span style="font-size: 15px; font-weight: 600; color: {{ th.sub }}"> de {{ hd.water.goalL }} L</span></span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{ hd.water.glasses }}" as="g" hint-placeholder-count="10">
+<button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ g.bg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s">
+<svg width="18" height="18" viewBox="0 0 24 24" fill="{{ g.fill }}" stroke="{{ g.stroke }}" stroke-width="1.8" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg>
+</button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 56px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<button type="button" onClick="{{ hd.water.sub }}" aria-label="Quitar un vaso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ th.btn2 }}; color: {{ th.text }}; font-size: 20px; font-weight: 600">−</button>
+<button type="button" onClick="{{ hd.water.add }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ wbBg }}; color: {{ wbFg }}; font-size: 15px; font-weight: 600">+ Vaso 250 ml</button>
+<button type="button" onClick="{{ hd.water.add2 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 12px; background: {{ tint.resistencia }}; color: {{ c.resistenciaText }}; font-size: 15px; font-weight: 600">+ Botella 500 ml</button>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.water.cue }}</p>
+</section>
+</sc-if>
+
+<section aria-label="Hábitos" style="background: {{ th.card }}; border-radius: 20px; padding: 0 0 0 16px">
+<sc-for list="{{ hd.items }}" as="h" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 14px 16px 14px 0; box-shadow: {{ h.line }}">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 36px; height: 36px; border-radius: 10px; flex: none; background: {{ h.tint }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ h.color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ h.icon }}"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<span style="font-size: 17px; font-weight: 600">{{ h.name }}</span>
+<span style="font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums">{{ h.status }}</span>
+</div>
+<sc-if value="{{ h.isBin }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ h.toggle }}" aria-label="{{ h.name }}" aria-pressed="{{ h.met }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; flex: none; background: {{ h.checkBg }}; color: {{ h.checkFg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></button>
+</sc-if>
+<sc-if value="{{ h.isNum }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 6px; flex: none">
+<button type="button" aria-label="Restar" onClick="{{ h.minus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<span style="min-width: 34px; text-align: center; font-size: 17px; font-weight: 700; font-variant-numeric: tabular-nums">{{ h.valueShort }}</span>
+<button type="button" aria-label="Sumar" onClick="{{ h.plus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</sc-if>
+<sc-if value="{{ h.isAuto }}" hint-placeholder-val="{{ false }}">
+<span style="width: 44px; height: 44px; border-radius: 22px; flex: none; background: {{ h.checkBg }}; color: {{ h.checkFg }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+</sc-if>
+</div>
+<sc-if value="{{ h.isNum }}" hint-placeholder-val="{{ false }}">
+<div style="margin-left: 48px; height: 4px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ h.pct }}%; background: {{ h.barColor }}; transition: width 0.3s"></div></div>
+</sc-if>
+<div style="margin-left: 48px; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ h.cue }}</span>
+<sc-if value="{{ h.hasStreak }}" hint-placeholder-val="{{ false }}"><span style="display: flex; align-items: center; gap: 4px; font-size: 13px; font-weight: 600; color: {{ c.fuerzaText }}"><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.5c1.4 3.6 5.5 5.6 5.5 11a5.5 5.5 0 0 1-11 0c0-2.7 1.3-4.2 2.7-5.3 0 2 1.1 3.3 2.6 3.3 0-3.3-1.3-5.8.2-9z"></path></svg>{{ h.streakTxt }}</span></sc-if>
+</div>
+<sc-if value="{{ h.atRisk }}" hint-placeholder-val="{{ false }}">
+<div style="margin-left: 48px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 12px; background: {{ th.segBg }}">
+<span style="flex: 1; font-size: 13px; line-height: 18px"><b style="font-weight: 600">Nunca falles dos veces.</b> Ayer no se cumplió: hoy basta con la versión mínima, {{ h.mini }}.</span>
+<button type="button" onClick="{{ h.doMini }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 12px; border-radius: 22px; flex: none; background: {{ th.card }}; color: {{ primaryText }}; font-size: 13px; font-weight: 600">La hice</button>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</section>
+
+<button type="button" onClick="{{ openHabEditor }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 50px; border-radius: 14px; background: {{ th.btn2 }}; color: {{ primaryText }}; font-size: 17px; font-weight: 600">Elegir y ajustar hábitos</button>
+<p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Cada hábito tiene una señal concreta para empezarlo y una versión mínima para los días difíciles. Lo importante es no fallar dos días seguidos.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHabEditor }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.45s cubic-bezier(.32,.72,0,1) both">
+<div style="padding: calc(env(safe-area-inset-top) + 30px) 8px 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; align-items: center">
+<span></span>
+<span style="text-align: center; font-size: 17px; font-weight: 600">Tus hábitos</span>
+<button type="button" onClick="{{ closeHabEditor }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; justify-self: end; height: 44px; padding: 0 12px; background: transparent; color: {{ primaryText }}; font-size: 17px; font-weight: 600">Listo</button>
+</div>
+<div class="scroll" style="flex: 1; overflow-y: auto; padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 14px">
+<p style="margin: 0; padding: 0 4px; font-size: 15px; line-height: 20px; color: {{ th.sub }}">Empieza con pocos. Escribe la señal como «Después de [algo que ya haces], voy a [hábito]» y una versión mínima para los días sin ganas.</p>
+<sc-for list="{{ he }}" as="e" hint-placeholder-count="12">
+<section style="background: {{ th.card }}; border-radius: 16px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 36px; height: 36px; border-radius: 10px; flex: none; background: {{ e.tint }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ e.color }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ e.icon }}"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px">
+<span style="font-size: 17px; font-weight: 600">{{ e.name }}</span>
+<span style="font-size: 13px; line-height: 17px; color: {{ th.sub }}">{{ e.desc }}</span>
+</div>
+<button type="button" role="switch" aria-checked="{{ e.on }}" aria-label="{{ e.name }}" onClick="{{ e.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 2px; cursor: pointer; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ e.track }}; display: flex; align-items: center; transition: background 0.25s">
+<span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.16); transform: translateX({{ e.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span>
+</button>
+</div>
+<sc-if value="{{ e.hasGoal }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 0.5px solid {{ th.sep }}; padding-top: 10px">
+<span style="font-size: 15px">Meta diaria</span>
+<div style="display: flex; align-items: center; gap: 8px">
+<span style="font-size: 15px; color: {{ th.sub }}; font-variant-numeric: tabular-nums">{{ e.goalLabel }}</span>
+<button type="button" aria-label="Bajar meta" onClick="{{ e.goalMinus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<button type="button" aria-label="Subir meta" onClick="{{ e.goalPlus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ e.showCue }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px; border-top: 0.5px solid {{ th.sep }}; padding-top: 10px">
+<label for="{{ e.cueId }}" style="font-size: 13px; color: {{ th.sub }}">Señal</label>
+<input id="{{ e.cueId }}" type="text" autocomplete="off" value="{{ e.cue }}" onChange="{{ e.setCue }}" style="appearance: none; border: 0; outline: none; border-radius: 10px; padding: 0 12px; height: 44px; background: {{ th.segBg }}; color: {{ th.text }}; font: inherit; font-size: 15px">
+<label for="{{ e.miniId }}" style="font-size: 13px; color: {{ th.sub }}">Versión mínima</label>
+<input id="{{ e.miniId }}" type="text" autocomplete="off" value="{{ e.mini }}" onChange="{{ e.setMini }}" style="appearance: none; border: 0; outline: none; border-radius: 10px; padding: 0 12px; height: 44px; background: {{ th.segBg }}; color: {{ th.text }}; font: inherit; font-size: 15px">
+</div>
+</sc-if>
+</section>
+</sc-for>
+</div>
+</div>
 </sc-if>
 
 <sc-if value="{{ showStats }}" hint-placeholder-val="{{ false }}">
@@ -720,6 +947,56 @@ Al límite</span>
 </div>
 </section>
 
+<section aria-labelledby="s-rec" style="display: flex; flex-direction: column; gap: 6px">
+<h2 id="s-rec" style="margin: 0; padding-left: 16px; font-size: 13px; font-weight: 400; color: {{ th.sub }}">Recordatorios</h2>
+<sc-if value="{{ rm.unsupported }}" hint-placeholder-val="{{ true }}">
+<div style="background: {{ th.card }}; border-radius: 12px; padding: 14px 16px; font-size: 15px; line-height: 20px">Para recibir notificaciones, abre la app desde el ícono de tu pantalla de inicio. Si aún no la instalas: en Safari toca Compartir y luego «Añadir a pantalla de inicio».</div>
+</sc-if>
+<div style="background: {{ th.card }}; border-radius: 12px; overflow: hidden">
+<sc-for list="{{ rm.items }}" as="ri" hint-placeholder-count="5">
+<div style="padding: 0 16px; box-shadow: {{ ri.line }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px">
+<span style="display: flex; flex-direction: column; gap: 1px"><span style="font-size: 17px">{{ ri.label }}</span><span style="font-size: 13px; color: {{ th.sub }}">{{ ri.desc }}</span></span>
+<button type="button" role="switch" aria-checked="{{ ri.on }}" aria-label="{{ ri.label }}" onClick="{{ ri.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 2px; cursor: pointer; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ ri.track }}; display: flex; align-items: center; transition: background 0.25s">
+<span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 3px 8px rgba(0,0,0,0.15), 0 1px 1px rgba(0,0,0,0.16); transform: translateX({{ ri.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span>
+</button>
+</div>
+<sc-for list="{{ ri.times }}" as="tm" hint-placeholder-count="1">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}">
+<span style="font-size: 15px; color: {{ th.sub }}">{{ tm.label }}</span>
+<div style="display: flex; align-items: center; gap: 8px">
+<button type="button" aria-label="Quince minutos antes" onClick="{{ tm.minus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<span style="min-width: 52px; text-align: center; font-size: 17px; font-weight: 600; font-variant-numeric: tabular-nums">{{ tm.value }}</span>
+<button type="button" aria-label="Quince minutos después" onClick="{{ tm.plus }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; flex: none"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</div>
+</sc-for>
+<sc-if value="{{ ri.hasCycle }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}">
+<span style="font-size: 15px; color: {{ th.sub }}">Frecuencia</span>
+<button type="button" onClick="{{ ri.cycle.pick }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 14px; border-radius: 22px; background: {{ th.btn2 }}; color: {{ th.text }}; font-size: 15px; font-weight: 600">{{ ri.cycle.label }}</button>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</div>
+<sc-if value="{{ rm.supported }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px; margin-top: 6px">
+<sc-if value="{{ rm.inactive }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ rm.enable }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 50px; border-radius: 14px; background: {{ primary }}; color: {{ onPrimary }}; font-size: 17px; font-weight: 600">Activar notificaciones</button>
+</sc-if>
+<sc-if value="{{ rm.active }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ rm.copy }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 50px; border-radius: 14px; background: {{ primary }}; color: {{ onPrimary }}; font-size: 17px; font-weight: 600">Copiar código para GitHub</button>
+<a href="{{ rm.ghUrl }}" target="_blank" rel="noopener" style="display: flex; align-items: center; justify-content: center; height: 50px; border-radius: 14px; background: {{ th.btn2 }}; color: {{ primaryText }}; font-size: 17px; font-weight: 600; text-decoration: none">Abrir GitHub para pegarlo</a>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ rm.dirty }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; padding: 0 16px; font-size: 13px; line-height: 18px; color: {{ c.heatText }}">Cambiaste los horarios: copia el código otra vez y actualiza el secreto RUTINA_PUSH en GitHub.</p></sc-if>
+<sc-if value="{{ rm.hasMsg }}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; padding: 0 16px; font-size: 13px; line-height: 18px; color: {{ c.constanciaText }}">{{ rm.msg }}</p></sc-if>
+<sc-if value="{{ rm.showCode }}" hint-placeholder-val="{{ false }}"><textarea readonly aria-label="Código para GitHub" style="margin: 0 16px; height: 96px; border: 0; border-radius: 10px; padding: 10px; background: {{ th.segBg }}; color: {{ th.text }}; font-size: 11px; font-family: ui-monospace, Menlo, monospace; -webkit-user-select: text; user-select: text">{{ rm.code }}</textarea></sc-if>
+<p style="margin: 0; padding: 0 16px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Una sola vez: toca Activar, después Copiar código, y en GitHub crea un secreto llamado RUTINA_PUSH con ese código. Los avisos los envía un recordatorio programado gratuito y pueden llegar con unos minutos de diferencia.</p>
+</section>
+
 <section aria-labelledby="s-datos" style="display: flex; flex-direction: column; gap: 6px">
 <h2 id="s-datos" style="margin: 0; padding-left: 16px; font-size: 13px; font-weight: 400; color: {{ th.sub }}">Tus datos</h2>
 <div style="background: {{ th.card }}; border-radius: 12px; overflow: hidden">
@@ -752,10 +1029,14 @@ Restaurar respaldo
 </sc-if>
 
 <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
-<nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: calc(49px + env(safe-area-inset-bottom)); box-sizing: border-box; padding: 4px 8px 0; background: {{ th.bar }}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid {{ th.sep }}; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr))">
+<nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: calc(49px + env(safe-area-inset-bottom)); box-sizing: border-box; padding: 4px 8px 0; background: {{ th.bar }}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border-top: 0.5px solid {{ th.sep }}; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr))">
 <button type="button" onClick="{{ tabGo.inicio }}" aria-current="{{ tabCur.inicio }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: {{ tabC.inicio }}; font-size: 10px; font-weight: 500">
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.inicio }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg>
 <span>Inicio</span>
+</button>
+<button type="button" onClick="{{ tabGo.habitos }}" aria-current="{{ tabCur.habitos }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: {{ tabC.habitos }}; font-size: 10px; font-weight: 500">
+<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.habitos }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l3.5 3.5L14 9.5"></path><path d="M4 5h16M15 12h5M4 19h16"></path></svg>
+<span>Hábitos</span>
 </button>
 <button type="button" onClick="{{ tabGo.stats }}" aria-current="{{ tabCur.stats }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; background: transparent; color: {{ tabC.stats }}; font-size: 10px; font-weight: 500">
 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.stats }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 20v-7M12 20V5M19 20v-10"></path></svg>
@@ -1434,7 +1715,7 @@ class Component extends DCLogic {
     peso: null,
     quiz: { step: 0, minutes: null, intensity: null, series: null },
     t: 1,
-    prefs: { tema: 'auto', acento: null, fuente: 'sistema', clase: 'guerrero', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['hist', 'recup', 'progreso', 'semana', 'rutina', 'logro'], homeHidden: {}, lastBackup: 0, backupSnooze: 0 },
+    prefs: { tema: 'auto', acento: null, fuente: 'sistema', clase: 'guerrero', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['hist', 'habitos', 'agua', 'recup', 'progreso', 'semana', 'rutina', 'logro'], homeHidden: {}, lastBackup: 0, backupSnooze: 0, histMode: 'habitos' },
     plan: { 0: 'superiorA', 1: 'piernasA', 2: 'cardio', 3: 'superiorB', 4: 'piernasB', 5: 'caminata' },
     resetArmed: false,
     noDemo: false,
@@ -1443,7 +1724,12 @@ class Component extends DCLogic {
     since: null,
     editHome: false,
     persisted: false,
-    backupMsg: ''
+    backupMsg: '',
+    hlog: {},
+    hday: 0,
+    habEdit: false,
+    pushMsg: '',
+    showCode: false
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -1480,15 +1766,16 @@ class Component extends DCLogic {
 
   applyData(s) {
     const next = {};
-    ['log', 'xp', 'stats', 'streak', 'best', 'shields', 'perfectWeeks', 'peso', 'plan', 'noDemo', 'sess', 'since'].forEach((k) => {
+    ['log', 'xp', 'stats', 'streak', 'best', 'shields', 'perfectWeeks', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
       next.prefs = Object.assign({}, this.state.prefs, s.prefs);
       if (next.prefs.acento && next.prefs.acento.charAt(0) === '#') next.prefs.acento = null;
-      const known = ['hist', 'recup', 'progreso', 'semana', 'rutina', 'logro'];
+      const known = ['hist', 'habitos', 'agua', 'recup', 'progreso', 'semana', 'rutina', 'logro'];
       const ord = (next.prefs.homeOrder || []).filter((k) => known.indexOf(k) >= 0);
       if (ord.indexOf('recup') < 0) { const h = ord.indexOf('hist'); ord.splice(h >= 0 ? h + 1 : 0, 0, 'recup'); }
+      ['agua', 'habitos'].forEach((nk) => { if (ord.indexOf(nk) < 0) { const h = ord.indexOf('hist'); ord.splice(h >= 0 ? h + 1 : 0, 0, nk); } });
       known.forEach((k) => { if (ord.indexOf(k) < 0) ord.push(k); });
       next.prefs.homeOrder = ord;
     }
@@ -1500,8 +1787,28 @@ class Component extends DCLogic {
     return {
       schema: 3, savedAt: Date.now(),
       log: s.log, xp: s.xp, stats: s.stats, streak: s.streak, best: s.best, shields: s.shields,
-      perfectWeeks: s.perfectWeeks, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since
+      perfectWeeks: s.perfectWeeks, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
+      hlog: s.hlog, derived: this.derived()
     };
+  }
+
+  // Resumen que lee el service worker para personalizar las notificaciones
+  derived() {
+    try {
+      const t = new Date();
+      const key = this.keyOf(t);
+      const d = (this.state.hlog || {})[key] || {};
+      const r = this.routineAt(this.todayIdx());
+      const names = {};
+      for (let i = 0; i < 7; i++) { const rr = this.routineAt(i); if (rr) names[i + 1] = rr.name; }
+      const lect = this.habitCatalog().find((h) => h.id === 'lectura');
+      return {
+        day: key, agua: d.agua || 0, aguaGoal: this.habitGoal({ id: 'agua' }, t), aguaBase: Math.max(8, Math.round((this.peso() * 30) / 250)),
+        lectura: d.lectura || 0, lecturaGoal: this.habitGoal(lect, t),
+        entreno: r && r.id !== 'caminata' ? r.name : null,
+        entrenoHecho: !!(this.state.log[key] && this.state.log[key].status === 'done'), planNames: names
+      };
+    } catch (e) { return null; }
   }
 
   idbOpen() {
@@ -2303,7 +2610,7 @@ class Component extends DCLogic {
 
   nav() {
     const pv = this.props.pantalla || 'inicio';
-    const tabMap = { estadisticas: 'stats', logros: 'logros', ajustes: 'ajustes' };
+    const tabMap = { habitos: 'habitos', estadisticas: 'stats', logros: 'logros', ajustes: 'ajustes' };
     return {
       screen: this.state.screen ?? (['confirmar', 'test', 'victoria', 'sesion'].indexOf(pv) >= 0 ? pv : 'inicio'),
       tab: this.state.tab ?? (tabMap[pv] || 'inicio'),
@@ -2437,6 +2744,411 @@ class Component extends DCLogic {
       log: {}, xp: 0, stats: { fuerza: 10, resistencia: 10, constancia: 10, tecnica: 10 },
       streak: 0, best: 0, shields: 0, perfectWeeks: 0, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
+  }
+
+
+  /* ---------- hábitos (Hábitos Atómicos: señal clara, empezar pequeño, nunca fallar dos veces) ---------- */
+
+  habitCatalog() {
+    return [
+      { id: 'entreno', name: 'Entrenar', kind: 'auto', color: 'fuerza', def: true,
+        icon: 'M6 7v10M18 7v10M3 10v4M21 10v4M6 12h12',
+        desc: 'Se marca solo al terminar tu sesión del día.',
+        cue: 'Cuando llego a casa, me pongo la ropa de entrenar', mini: 'Hacer solo el calentamiento de 8 min' },
+      { id: 'agua', name: 'Agua', kind: 'num', unit: 'vasos', step: 1, max: 30, color: 'resistencia', def: true,
+        icon: 'M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z',
+        desc: 'Vasos de 250 ml. La meta sale de tu peso y sube los días de entrenamiento.',
+        cue: 'Después de cada comida, tomo un vaso de agua', mini: 'Un vaso grande al despertar' },
+      { id: 'sueno', name: 'Sueño', kind: 'num', unit: 'h', goal: 8, step: 0.5, min: 6, max: 10, color: 'tecnica', def: true,
+        icon: 'M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z',
+        desc: 'Horas que dormiste anoche. Los adultos necesitan 7 a 9.',
+        cue: 'A las 22:30 dejo el celular cargando fuera de la pieza', mini: 'Acostarme 15 min antes' },
+      { id: 'lectura', name: 'Lectura', kind: 'num', unit: 'min', goal: 20, step: 5, min: 5, max: 120, color: 'heat', def: true,
+        icon: 'M4 4h6a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H4zM20 4h-6a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6z',
+        desc: 'Minutos de lectura de libros, no redes.',
+        cue: 'Después de lavarme los dientes en la noche, leo en la cama', mini: 'Leer una página' },
+      { id: 'pasos', name: 'Pasos', kind: 'num', unit: 'mil pasos', step: 1, goal: 8, min: 3, max: 20, color: 'constancia', def: true,
+        icon: 'M8 14c-1.7 0-3-1.8-3-4.5S6.3 4 8 4s3 2.8 3 5.5S9.7 14 8 14zM6 17h4M16 20c-1.7 0-3-1.8-3-4.5S14.3 10 16 10s3 2.8 3 5.5-1.3 4.5-3 4.5z',
+        desc: 'Revisa el número en la app Salud del iPhone.',
+        cue: 'Camino al trabajo y de vuelta', mini: 'Una vuelta de 10 min después de almorzar' },
+      { id: 'planificar', name: 'Planificar el día', kind: 'bin', color: 'constancia', def: true,
+        icon: 'M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01',
+        desc: 'Elegir las 3 tareas más importantes antes de empezar.',
+        cue: 'Después del primer café, escribo mis 3 tareas más importantes', mini: 'Anotar una sola prioridad' },
+      { id: 'pantallas', name: 'Sin pantallas antes de dormir', kind: 'bin', color: 'tecnica', def: true,
+        icon: 'M7 3h10a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1zM3 3l18 18',
+        desc: 'Una hora sin celular ni pantallas antes de acostarte.',
+        cue: 'Una hora antes de dormir, pongo el celular a cargar en otra pieza', mini: '15 min sin pantalla' },
+      { id: 'proteina', name: 'Proteína', kind: 'num', unit: 'comidas', step: 1, goal: 3, min: 1, max: 6, color: 'fuerza', def: false,
+        icon: 'M12 3c4 0 7 6 7 10a7 7 0 0 1-14 0c0-4 3-10 7-10z',
+        desc: 'Comidas con 2 palmas de proteína, como dice tu plan.',
+        cue: 'En cada comida, me sirvo primero la proteína', mini: 'Una porción en el desayuno' },
+      { id: 'meditar', name: 'Meditar o respirar', kind: 'num', unit: 'min', step: 5, goal: 10, min: 5, max: 60, color: 'resistencia', def: false,
+        icon: 'M3 8h10a3 3 0 1 0-3-3M3 12h15a3 3 0 1 1-3 3M3 16h7',
+        desc: 'Calma la mente y baja el estrés.',
+        cue: 'Después de levantarme, me siento y respiro antes de mirar el celular', mini: 'Tres respiraciones profundas' },
+      { id: 'luz', name: 'Luz solar en la mañana', kind: 'bin', color: 'heat', def: false,
+        icon: 'M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM12 1v2M12 21v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M1 12h2M21 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4',
+        desc: '10 minutos de luz natural antes de las 10 ordenan tu reloj interno.',
+        cue: 'Después de vestirme, salgo 10 min afuera antes de entrar al trabajo', mini: 'Abrir la cortina y asomarme 2 min' },
+      { id: 'habilidad', name: 'Practicar una habilidad', kind: 'num', unit: 'min', step: 5, goal: 30, min: 5, max: 180, color: 'constancia', def: false,
+        icon: 'M8 8l-4 4 4 4M16 8l4 4-4 4M14 5l-4 14',
+        desc: 'Diseño, código, un idioma: práctica deliberada cada día.',
+        cue: 'Después de cenar, practico en el escritorio con el celular lejos', mini: 'Abrir el proyecto 5 min' },
+      { id: 'diario', name: 'Diario o gratitud', kind: 'bin', color: 'tecnica', def: false,
+        icon: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
+        desc: 'Anotar 3 cosas buenas del día o lo que aprendiste.',
+        cue: 'Antes de apagar la luz, escribo 3 cosas buenas del día', mini: 'Escribir una línea' }
+    ];
+  }
+
+  habitCfg() {
+    const p = this.state.prefs;
+    const hp = p.habits || {};
+    const on = hp.on || this.habitCatalog().filter((h) => h.def).map((h) => h.id);
+    return { on: on, goals: hp.goals || {}, cues: hp.cues || {}, minis: hp.minis || {} };
+  }
+
+  setHabitCfg(patch) {
+    const cfg = this.habitCfg();
+    this.setPref('habits', Object.assign({ on: cfg.on, goals: cfg.goals, cues: cfg.cues, minis: cfg.minis }, patch));
+  }
+
+  waterGoal(date) {
+    // ~30 ml por kg al día en bebidas (los 3,7 L de referencia para hombres incluyen comida) + 500 ml si entrenas.
+    const base = Math.max(8, Math.round((this.peso() * 30) / 250));
+    const r = this.routineAt((date.getDay() + 6) % 7);
+    return base + (r && r.id !== 'caminata' ? 2 : 0);
+  }
+
+  habitGoal(h, date) {
+    if (h.id === 'agua') return this.habitCfg().goals.agua || this.waterGoal(date);
+    return this.habitCfg().goals[h.id] || h.goal || 1;
+  }
+
+  // fracción cumplida de un hábito en un día: null = no aplica (descanso), 0..1
+  habitFrac(h, key, date) {
+    const st = this.state;
+    if (h.kind === 'auto') {
+      const r = this.routineAt((date.getDay() + 6) % 7);
+      const e = st.log[key];
+      if (e && e.status === 'done') return 1;
+      if (!r || r.id === 'caminata') return null;
+      return 0;
+    }
+    const d = (st.hlog || {})[key] || {};
+    const mini = !!d[h.id + '~'];
+    let f = h.kind === 'bin' ? (d[h.id] ? 1 : 0) : Math.min(1, (d[h.id] || 0) / this.habitGoal(h, date));
+    if (mini && f < 0.5) f = 0.5;
+    return f;
+  }
+
+  habitMet(h, key, date) {
+    const f = this.habitFrac(h, key, date);
+    if (f === null) return null;
+    const d = ((this.state.hlog || {})[key] || {});
+    return f >= 1 || !!d[h.id + '~'];
+  }
+
+  dayScore(key, date) {
+    const cfg = this.habitCfg();
+    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
+    let n = 0, sum = 0;
+    list.forEach((h) => { const f = this.habitFrac(h, key, date); if (f !== null) { n++; sum += f; } });
+    return n ? sum / n : null;
+  }
+
+  habitStreak(h, today0) {
+    let streak = 0;
+    for (let i = 0; i < 400; i++) {
+      const d = new Date(today0.getFullYear(), today0.getMonth(), today0.getDate() - i);
+      const m = this.habitMet(h, this.keyOf(d), d);
+      if (m === null) continue;
+      if (m) streak++;
+      else if (i === 0) continue;
+      else break;
+    }
+    return streak;
+  }
+
+  setHabit(key, id, v) {
+    const hl = Object.assign({}, this.state.hlog || {});
+    hl[key] = Object.assign({}, hl[key] || {});
+    if (v === null || v === 0 || v === false) delete hl[key][id]; else hl[key][id] = v;
+    this.setState({ hlog: hl }, () => this.persist());
+  }
+
+  habitDate() {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() + (this.state.hday || 0));
+  }
+
+  fmtNum(v) { return String(Math.round(v * 10) / 10).replace('.', ','); }
+
+  habitValueLabel(h, v, goal) {
+    if (h.kind === 'bin') return v ? 'Hecho' : 'Pendiente';
+    if (h.id === 'pasos') return this.fmtNum(v) + ' de ' + goal + ' mil pasos';
+    return this.fmtNum(v) + ' de ' + this.fmtNum(goal) + ' ' + h.unit;
+  }
+
+  habitsVals(th, c, dark, primary, onPrimary) {
+    const st = this.state;
+    const cfg = this.habitCfg();
+    const date = this.habitDate();
+    const key = this.keyOf(date);
+    const now = new Date();
+    const today0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const isToday = (st.hday || 0) === 0;
+    const yesterday = new Date(date.getFullYear(), date.getMonth(), date.getDate() - 1);
+    const ykey = this.keyOf(yesterday);
+    const d = (st.hlog || {})[key] || {};
+    const cat = this.habitCatalog();
+    const tint = (k) => c[k] + (dark ? '33' : '24');
+    const items = [];
+    let done = 0, total = 0;
+    cat.filter((h) => cfg.on.indexOf(h.id) >= 0).forEach((h) => {
+      const f = this.habitFrac(h, key, date);
+      if (f === null) return;
+      total++;
+      const met = f >= 1;
+      if (met) done++;
+      if (h.id === 'agua') return;
+      const goal = this.habitGoal(h, date);
+      const v = d[h.id] || 0;
+      const ym = this.habitMet(h, ykey, yesterday);
+      const mini = !!d[h.id + '~'];
+      const streak = this.habitStreak(h, date);
+      const atRisk = ym === false && ykey >= (st.since || key) && !met && !mini;
+      const step = h.step || 1;
+      let status;
+      if (h.kind === 'auto') status = met ? 'Sesión completada' : 'Toca entrenar hoy';
+      else status = this.habitValueLabel(h, v, goal);
+      if (mini && !met) status += ', versión mínima';
+      items.push({
+        id: h.id, name: h.name, icon: h.icon, color: c[h.color], tint: tint(h.color),
+        status: status, streakTxt: streak > 1 ? streak + ' días seguidos' : '',
+        hasStreak: streak > 1, streak: streak,
+        isBin: h.kind === 'bin', isNum: h.kind === 'num', isAuto: h.kind === 'auto',
+        met: met, notMet: !met,
+        checkBg: met ? c[h.color] : th.segBg, checkFg: met ? (dark ? '#000000' : '#FFFFFF') : th.tertiary,
+        pct: Math.round(Math.min(1, f) * 100), barColor: c[h.color],
+        cue: cfg.cues[h.id] || h.cue, mini: cfg.minis[h.id] || h.mini,
+        atRisk: atRisk,
+        line: items.length ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
+        toggle: () => { this.sfx(d[h.id] ? 'tap' : 'pick'); this.setHabit(key, h.id, d[h.id] ? null : true); },
+        minus: () => { this.sfx('tap'); this.setHabit(key, h.id, Math.max(0, Math.round((v - step) * 10) / 10)); },
+        plus: () => { const nv = v < (h.min || 0) ? h.min : Math.round((v + step) * 10) / 10; this.sfx(nv >= goal && v < goal ? 'pick' : 'tap'); this.setHabit(key, h.id, nv); },
+        doMini: () => { this.sfx('pick'); this.setHabit(key, h.id + '~', true); },
+        valueShort: h.kind === 'num' ? this.fmtNum(v) : ''
+      });
+    });
+    // agua
+    const wOn = cfg.on.indexOf('agua') >= 0;
+    const wGoal = this.habitGoal({ id: 'agua' }, date);
+    const w = d.agua || 0;
+    const glasses = [];
+    for (let i = 1; i <= Math.max(wGoal, w); i++) {
+      const full = i <= w;
+      glasses.push({
+        aria: 'Vaso ' + i + (full ? ', tomado' : ''),
+        fill: full ? c.resistencia : 'none', stroke: full ? c.resistencia : th.tertiary,
+        bg: full ? tint('resistencia') : th.segBg,
+        pick: () => { this.sfx(full ? 'tap' : 'pick'); this.setHabit(key, 'agua', i === w ? i - 1 : i); }
+      });
+    }
+    const L = (n) => String(Math.round(n * 0.25 * 100) / 100).replace('.', ',');
+    const water = {
+      on: wOn, count: w, goal: wGoal, liters: L(w), goalL: L(wGoal), glasses: glasses,
+      pct: Math.round(Math.min(1, w / wGoal) * 100), met: w >= wGoal,
+      left: w >= wGoal ? 'Meta cumplida' : 'Te faltan ' + (wGoal - w) + (wGoal - w === 1 ? ' vaso' : ' vasos'),
+      cue: cfg.cues.agua || cat[1].cue,
+      add: () => { this.sfx(w + 1 === wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 1); },
+      add2: () => { this.sfx(w + 2 >= wGoal && w < wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 2); },
+      sub: () => { this.sfx('tap'); this.setHabit(key, 'agua', Math.max(0, w - 1)); }
+    };
+    const score = total ? done / total : 0;
+    const names = this.dayNames();
+    const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+    const left = total - done;
+    return {
+      dayLabel: isToday ? 'Hoy' : ((st.hday || 0) === -1 ? 'Ayer' : cap(names[(date.getDay() + 6) % 7]) + ' ' + date.getDate()),
+      dateLabel: this.longDate(date), isToday: isToday, canNext: !isToday, canPrev: (st.hday || 0) > -6,
+      nextOp: isToday ? 0.3 : 1, prevOp: (st.hday || 0) > -6 ? 1 : 0.3,
+      done: done, total: total, items: items, water: water,
+      ringOff: (238.8 * (1 - score)).toFixed(1),
+      title: total ? (done === total ? 'Día completo' : 'Vas al ' + Math.round(score * 100) + '%') : 'Sin hábitos',
+      sub: total ? (left === 0 ? 'Este día queda en el verde más oscuro del historial.' : 'Te faltan ' + left + (left === 1 ? ' hábito' : ' hábitos') + ' para el verde más oscuro.') : 'Elige qué hábitos seguir.',
+      hasRisk: items.some((x) => x.atRisk),
+      prev: () => { this.sfx('tap'); this.setState({ hday: Math.max(-6, (st.hday || 0) - 1) }); },
+      next: () => { this.sfx('tap'); this.setState({ hday: Math.min(0, (st.hday || 0) + 1) }); }
+    };
+  }
+
+  habitEditorVals(th, c, dark, primary) {
+    const cfg = this.habitCfg();
+    const today = new Date();
+    return this.habitCatalog().map((h, i) => {
+      const on = cfg.on.indexOf(h.id) >= 0;
+      const hasGoal = h.kind === 'num';
+      const goal = hasGoal ? this.habitGoal(h, today) : 0;
+      const step = h.step || 1;
+      const autoWater = h.id === 'agua' && !cfg.goals.agua;
+      return {
+        id: h.id, name: h.name, desc: h.desc, icon: h.icon, color: c[h.color], tint: c[h.color] + (dark ? '33' : '24'),
+        on: on, track: on ? c.constancia : th.segBg, knob: on ? 20 : 0,
+        line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
+        hasGoal: on && hasGoal, goalLabel: (h.id === 'pasos' ? goal + ' mil' : this.fmtNum(goal) + ' ' + h.unit) + (autoWater ? ' (según tu peso)' : ''),
+        showCue: on, cue: cfg.cues[h.id] || h.cue, mini: cfg.minis[h.id] || h.mini,
+        cueId: 'cue-' + h.id, miniId: 'mini-' + h.id,
+        toggle: () => {
+          this.sfx('tap');
+          const list = cfg.on.slice();
+          const k = list.indexOf(h.id);
+          if (k >= 0) list.splice(k, 1); else list.push(h.id);
+          this.setHabitCfg({ on: list });
+        },
+        goalMinus: () => { this.sfx('tap'); const g = Object.assign({}, cfg.goals); g[h.id] = Math.max(h.min || step, Math.round((goal - step) * 10) / 10); this.setHabitCfg({ goals: g }); },
+        goalPlus: () => { this.sfx('tap'); const g = Object.assign({}, cfg.goals); g[h.id] = Math.min(h.max || 99, Math.round((goal + step) * 10) / 10); this.setHabitCfg({ goals: g }); },
+        setCue: (e) => { const x = Object.assign({}, cfg.cues); x[h.id] = (e.target.value || '').slice(0, 120); this.setHabitCfg({ cues: x }); },
+        setMini: (e) => { const x = Object.assign({}, cfg.minis); x[h.id] = (e.target.value || '').slice(0, 80); this.setHabitCfg({ minis: x }); }
+      };
+    });
+  }
+
+  /* ---------- recordatorios (web push) ---------- */
+
+  remDefaults() {
+    return {
+      manana: { on: true, at: 480 }, agua: { on: true, from: 540, to: 1260, every: 120 },
+      entreno: { on: true, at: 1080 }, lectura: { on: true, at: 1290 }, dormir: { on: true, at: 1350 }
+    };
+  }
+
+  remCfg() { return Object.assign({}, this.remDefaults(), this.state.prefs.rem || {}); }
+
+  setRem(id, patch) {
+    const r = this.remCfg();
+    r[id] = Object.assign({}, r[id], patch);
+    const p = Object.assign({}, this.state.prefs, { rem: r, remDirty: !!this.state.prefs.pushSub });
+    this.setState({ prefs: p }, () => this.persist());
+  }
+
+  hhmm(m) { m = ((m % 1440) + 1440) % 1440; return Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'); }
+
+  pushSupported() {
+    try { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; } catch (e) { return false; }
+  }
+
+  isStandalone() {
+    try { return window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches; } catch (e) { return false; }
+  }
+
+  b64u(bytes) {
+    let s = '';
+    bytes.forEach((b) => { s += String.fromCharCode(b); });
+    return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+
+  fromB64u(str) {
+    const s = atob(str.replace(/-/g, '+').replace(/_/g, '/') + '==='.slice((str.length + 3) % 4));
+    return Uint8Array.from(s, (ch) => ch.charCodeAt(0));
+  }
+
+  async enablePush() {
+    // requestPermission tiene que ser lo primero tras el toque (iOS exige el gesto del usuario)
+    let perm = 'default';
+    try { perm = await Notification.requestPermission(); } catch (e) {}
+    this.sfx('tap');
+    if (perm !== 'granted') {
+      this.setState({ pushMsg: 'Sin permiso. Actívalo en Ajustes del iPhone, Notificaciones, Rutina.' });
+      return;
+    }
+    try {
+      let keys = this.state.prefs.pushKeys;
+      if (!keys) {
+        const kp = await crypto.subtle.generateKey({ name: 'ECDSA', namedCurve: 'P-256' }, true, ['sign', 'verify']);
+        const raw = new Uint8Array(await crypto.subtle.exportKey('raw', kp.publicKey));
+        const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey);
+        keys = { pub: this.b64u(raw), priv: jwk.d };
+      }
+      const reg = await navigator.serviceWorker.ready;
+      let sub = await reg.pushManager.getSubscription();
+      if (sub) {
+        const cur = sub.options && sub.options.applicationServerKey ? this.b64u(new Uint8Array(sub.options.applicationServerKey)) : null;
+        if (cur && cur !== keys.pub) { await sub.unsubscribe(); sub = null; }
+      }
+      if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: this.fromB64u(keys.pub) });
+      const p = Object.assign({}, this.state.prefs, { pushKeys: keys, pushSub: sub.toJSON(), remDirty: true });
+      this.setState({ prefs: p, pushMsg: 'Activados en este teléfono. Falta el último paso: copia el código y pégalo en GitHub.' }, () => this.persist());
+      this.sfx('yes');
+    } catch (e) {
+      this.setState({ pushMsg: 'No se pudo activar: ' + (e && e.message ? e.message : 'error desconocido') });
+    }
+  }
+
+  pushCode() {
+    const p = this.state.prefs;
+    if (!p.pushSub || !p.pushKeys) return '';
+    const r = this.remCfg();
+    const days = [];
+    for (let i = 0; i < 7; i++) { const rr = this.routineAt(i); if (rr && rr.id !== 'caminata') days.push(i + 1); }
+    let tz = 'America/Santiago';
+    try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || tz; } catch (e) {}
+    const cfg = { v: 1, tz: tz, sub: p.pushSub, pub: p.pushKeys.pub, priv: p.pushKeys.priv, rem: r, days: days };
+    const json = JSON.stringify(cfg);
+    return this.b64u(new TextEncoder().encode(json));
+  }
+
+  copyPushCode() {
+    const code = this.pushCode();
+    if (!code) return;
+    this.sfx('tap');
+    const ok = () => {
+      const p = Object.assign({}, this.state.prefs, { remDirty: false });
+      this.setState({ prefs: p, pushMsg: 'Código copiado. Ábrelo en GitHub y pégalo como el secreto RUTINA_PUSH.', showCode: false }, () => this.persist());
+    };
+    try {
+      navigator.clipboard.writeText(code).then(ok).catch(() => this.setState({ showCode: true, pushMsg: 'Copia el código de abajo manualmente.' }));
+    } catch (e) { this.setState({ showCode: true, pushMsg: 'Copia el código de abajo manualmente.' }); }
+  }
+
+  remVals(th, c) {
+    const st = this.state;
+    const r = this.remCfg();
+    const supported = this.pushSupported() && this.isStandalone();
+    const mk = (id, label, desc, times, cycle) => ({
+      id: id, label: label, desc: desc, on: r[id].on, track: r[id].on ? c.constancia : th.segBg, knob: r[id].on ? 20 : 0,
+      toggle: () => { this.sfx('tap'); this.setRem(id, { on: !r[id].on }); },
+      times: r[id].on ? times : [], hasCycle: !!cycle && r[id].on, cycle: cycle || { label: '', pick: () => {} },
+      line: id === 'manana' ? 'none' : ('inset 0 0.5px 0 ' + th.sep)
+    });
+    const t = (id, field, label) => ({
+      label: label, value: this.hhmm(r[id][field]),
+      minus: () => { this.sfx('tap'); const o = {}; o[field] = (r[id][field] - 15 + 1440) % 1440; this.setRem(id, o); },
+      plus: () => { this.sfx('tap'); const o = {}; o[field] = (r[id][field] + 15) % 1440; this.setRem(id, o); }
+    });
+    const everyOpts = [60, 90, 120, 180];
+    const ev = r.agua.every;
+    const items = [
+      mk('manana', 'Buenos días', 'Planificar el día y tomar luz', [t('manana', 'at', 'Hora')]),
+      mk('agua', 'Agua', 'Te recuerda tomar un vaso', [t('agua', 'from', 'Desde'), t('agua', 'to', 'Hasta')],
+        { label: 'Cada ' + (ev % 60 ? this.fmtNum(ev / 60) + ' h' : (ev / 60) + ' h'), pick: () => { this.sfx('tap'); this.setRem('agua', { every: everyOpts[(everyOpts.indexOf(ev) + 1) % everyOpts.length] }); } }),
+      mk('entreno', 'Entrenamiento', 'Solo los días con rutina', [t('entreno', 'at', 'Hora')]),
+      mk('lectura', 'Lectura', 'Tu momento de leer', [t('lectura', 'at', 'Hora')]),
+      mk('dormir', 'Desconectarse', 'Fuera pantallas, a dormir', [t('dormir', 'at', 'Hora')])
+    ];
+    const active = !!st.prefs.pushSub;
+    return {
+      supported: supported, unsupported: !supported, items: items,
+      active: active, inactive: !active,
+      dirty: active && !!st.prefs.remDirty,
+      hasMsg: !!st.pushMsg, msg: st.pushMsg || '',
+      showCode: !!st.showCode && active, code: st.showCode ? this.pushCode() : '',
+      ghUrl: 'https://github.com/joshen-am/rutina/settings/secrets/actions/new',
+      testUrl: 'https://github.com/joshen-am/rutina/actions/workflows/recordatorios.yml',
+      enable: () => this.enablePush(),
+      copy: () => this.copyPushCode()
+    };
   }
 
   /* ---------- vistas ---------- */
@@ -2708,7 +3420,8 @@ class Component extends DCLogic {
     const lvlOf = { suave: 0, moderada: 1, dura: 2, limite: 3 };
     const missBg = c.fuerza + (dark ? '73' : '59');
     const items = [];
-    let hDone = 0, hMiss = 0, prevMonth = -1;
+    const habMode = (st.prefs.histMode || 'habitos') === 'habitos';
+    let hDone = 0, hMiss = 0, hFull = 0, prevMonth = -1;
     for (let w = 0; w < HW; w++) {
       const col = new Date(startMon.getFullYear(), startMon.getMonth(), startMon.getDate() + 7 * w);
       const mo = col.getMonth();
@@ -2732,6 +3445,13 @@ class Component extends DCLogic {
         } else if (day > today0) {
           bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep;
         }
+        if (habMode) {
+          ring = 'none';
+          const sc = day <= today0 && day >= sinceD ? this.dayScore(this.keyOf(day), day) : null;
+          if (day > today0) { bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep; }
+          else if (sc === null || sc <= 0) bg = th.fill;
+          else { bg = this.mix(th.fill, c.constancia, sc >= 1 ? 1 : sc > 0.66 ? 0.78 : sc > 0.33 ? 0.55 : 0.32); if (sc >= 1) hFull++; }
+        }
         if (isToday) ring = 'inset 0 0 0 1.5px ' + primary;
         items.push({ isLabel: false, isCell: true, bg: bg, ring: ring });
       }
@@ -2739,7 +3459,12 @@ class Component extends DCLogic {
     const hist = {
       weeks: HW, items: items, missBg: missBg,
       scale: shades.map((k) => ({ bg: this.mix(th.fill, c.constancia, k) })),
-      summary: hDone + (hDone === 1 ? ' sesión' : ' sesiones') + ' en ' + HW + ' semanas',
+      summary: habMode ? (hFull + (hFull === 1 ? ' día completo' : ' días completos')) : (hDone + (hDone === 1 ? ' sesión' : ' sesiones') + ' en ' + HW + ' semanas'),
+      habMode: habMode, trainMode: !habMode,
+      modes: [['habitos', 'Hábitos'], ['entreno', 'Entrenos']].map((m) => {
+        const sel = (st.prefs.histMode || 'habitos') === m[0];
+        return { label: m[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 600 : 400, shadow: sel && !dark ? '0 2px 6px rgba(0, 0, 0, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setPref('histMode', m[0]); } };
+      }),
       aria: 'Historial de las últimas ' + HW + ' semanas: ' + hDone + ' sesiones hechas y ' + hMiss + ' no hechas.'
     };
 
@@ -2759,8 +3484,8 @@ class Component extends DCLogic {
 
     /* orden de inicio */
     const edit = !!st.editHome;
-    const HL = { hist: 'Historial', recup: 'Recuperación muscular', progreso: 'Nivel y semana', semana: 'Días de la semana', rutina: 'Rutina del día', logro: 'Próximo logro' };
-    const ordH = st.prefs.homeOrder || ['hist', 'recup', 'progreso', 'semana', 'rutina', 'logro'];
+    const HL = { hist: 'Historial', habitos: 'Hábitos de hoy', agua: 'Agua', recup: 'Recuperación muscular', progreso: 'Nivel y semana', semana: 'Días de la semana', rutina: 'Rutina del día', logro: 'Próximo logro' };
+    const ordH = st.prefs.homeOrder || ['hist', 'habitos', 'agua', 'recup', 'progreso', 'semana', 'rutina', 'logro'];
     const hidH = st.prefs.homeHidden || {};
     const ho = { pad: edit ? '10px' : '0', frame: edit ? ('inset 0 0 0 1.5px ' + th.sep) : 'none', pe: edit ? 'none' : 'auto', maxH: edit ? '132px' : 'none', ov: edit ? 'hidden' : 'visible' };
     ordH.forEach((k, idx) => {
@@ -2774,6 +3499,8 @@ class Component extends DCLogic {
       };
     });
 
+    const hdv = this.habitsVals(th, c, dark, primary, onPrimary);
+
     /* sesión */
     const sesForView = st.sess || { rid: rc.id, date: '', i: 9, sets: { 9: 1 }, start: Date.now() - 754000, restEnd: null, restTotal: 0 };
     const ss = this.sessionVals(sesForView, th, c, dark, primary, onPrimary, fx);
@@ -2786,7 +3513,7 @@ class Component extends DCLogic {
     const selRing = 'inset 0 0 0 2px ' + primary;
 
     const tabC = {}, tabW = {}, tabGo = {}, tabCur = {};
-    ['inicio', 'stats', 'logros', 'ajustes'].forEach((k) => {
+    ['inicio', 'habitos', 'stats', 'logros', 'ajustes'].forEach((k) => {
       const on = n.tab === k;
       tabC[k] = on ? primaryText : th.sub;
       tabW[k] = on ? 2.3 : 1.8;
@@ -2809,7 +3536,14 @@ class Component extends DCLogic {
       showStats: main && n.tab === 'stats',
       showLogros: main && n.tab === 'logros',
       showAjustes: main && n.tab === 'ajustes',
-      showTabs: main,
+      showHabitos: main && n.tab === 'habitos' && !st.habEdit,
+      isHabEditor: main && n.tab === 'habitos' && !!st.habEdit,
+      hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
+      wbBg: dark ? c.resistencia : c.resistenciaText, wbFg: dark ? '#000000' : '#FFFFFF',
+      openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },
+      closeHabEditor: () => { this.sfx('tap'); this.setState({ habEdit: false }); },
+      goHabitos: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: 0 }); },
+      showTabs: main && !st.habEdit,
       menuOpen: main && n.menu,
       isConfirm: n.screen === 'confirmar',
       isTest: n.screen === 'test',
