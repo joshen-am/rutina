@@ -1,6 +1,6 @@
 {
- "name": "Rutina",
- "short_name": "Rutina",
+ "name": "sprout",
+ "short_name": "sprout",
  "lang": "es",
  "description": "Tu rutina de calistenia con sesiones guiadas, progreso y logros.",
  "start_url": "./",

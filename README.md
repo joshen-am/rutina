@@ -1,4 +1,4 @@
-# Rutina
+# sprout
 
 App web instalable para seguir una rutina de calistenia: sesiones guiadas con ejercicios animados, series y descansos, resumen tipo RPG, historial, estadísticas y logros.
 
