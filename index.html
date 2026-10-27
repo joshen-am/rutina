@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
-<title>sprout</title>
+<title>keystone</title>
 <meta name="description" content="Entrenamiento, comida, hábitos y perfil de salud en un solo lugar.">
 <meta name="theme-color" content="#FFFFFF">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="sprout">
+<meta name="apple-mobile-web-app-title" content="keystone">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
@@ -48,13 +48,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <div style="width: 100%; max-width: 640px; margin: 0 auto; height: 100%; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em">
 <sc-if value="{{ showInicio }}" hint-placeholder-val="{{ false }}">
 <div id="sc-showInicio" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: calc(env(safe-area-inset-top) + 44px) 16px 210px; display: flex; flex-direction: column; gap: 14px">
-<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
-<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ dateLabel }}</span>
-<h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">{{ greeting }}</h1>
-</div>
-<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button>
-</header>
+<header style="display: flex; flex-direction: column; gap: 22px; padding: 0 4px 4px"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span style="font-size: 22px; font-weight: 500; letter-spacing: -0.055em">keystone</span><button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button></div><div style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ dateLabel }}</span><h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">{{ greeting }}</h1></div></header>
 <sc-if value="{{ showBackupNudge }}" hint-placeholder-val="{{ false }}">
 <section aria-label="Respaldo" style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
 <span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 500">Respalda tus datos</span><span style="font-size: 14px; line-height: 20px; color: {{ th.sub }}">Guarda una copia en Archivos o iCloud Drive por si cambias de teléfono.</span></span>
@@ -914,7 +908,7 @@ Más</span>
 <label style="position: relative; display: flex; align-items: center; min-height: 52px; font-size: 16px; cursor: pointer; border-top: 0.5px solid {{ th.sep }}">Restaurar respaldo
 <input type="file" accept=".json,application/json" onChange="{{ importBackup }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer"></label>
 <button type="button" onClick="{{ resetAll }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 100%; min-height: 52px; padding: 0; background: transparent; color: {{ th.danger }}; font-size: 16px; text-align: left; font-weight: {{ resetWeight }}; border-top: 0.5px solid {{ th.sep }}">{{ resetLabel }}</button></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Todo se guarda solo en este teléfono, en dos copias. El respaldo no incluye las fotos ni tu clave de IA.</p></section>
-<div aria-label="sprout" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px"><div style="display: flex; align-items: center; gap: 6px"><svg viewBox="250 150 560 690" width="24.3" height="30" aria-hidden="true" style="display: block; flex: none"><g transform="translate(-36 0)"><path d="M512 470 V800" stroke="{{ brand.st }}" stroke-width="58" stroke-linecap="round"></path><path d="M512.0 548.0 A151.4 151.4 0 0 1 326.4 392.3 A151.4 151.4 0 0 1 512.0 548.0 Z" fill="{{ brand.l1 }}"></path><path d="M512.0 470.0 A245.0 245.0 0 0 1 789.2 192.8 A245.0 245.0 0 0 1 512.0 470.0 Z" fill="{{ brand.l2 }}"></path></g></svg><span style="font-size: 26px; font-weight: 500; letter-spacing: -0.06em">sprout</span></div><span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: {{ th.tertiary }}">HECHA PARA {{ prefs.nombre }}</span></div>
+<div aria-label="keystone" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px"><span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em">keystone</span><span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: {{ th.tertiary }}">HECHA PARA {{ prefs.nombre }}</span></div>
 </div>
 </sc-if>
 
@@ -1648,13 +1642,13 @@ class Component extends DCLogic {
 
   exportBackup() {
     this.sfx('tap');
-    const name = 'rutina-respaldo-' + this.keyOf(new Date()) + '.json';
+    const name = 'keystone-respaldo-' + this.keyOf(new Date()) + '.json';
     const json = JSON.stringify({ app: 'rutina', version: 1, exportedAt: new Date().toISOString(), data: this.backupData() });
     const done = () => { this.setPref('lastBackup', Date.now()); this.setState({ backupMsg: 'Respaldo guardado. Guárdalo en Archivos o iCloud Drive.' }); };
     try {
       const file = new File([json], name, { type: 'application/json' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
-        navigator.share({ files: [file], title: 'Respaldo de sprout' }).then(done).catch(() => {});
+        navigator.share({ files: [file], title: 'Respaldo de keystone' }).then(done).catch(() => {});
         return;
       }
     } catch (e) {}
@@ -1681,7 +1675,7 @@ class Component extends DCLogic {
         this.setState({ backupMsg: 'Respaldo restaurado: ' + n + (n === 1 ? ' sesión.' : ' sesiones.') });
         this.sfx('yes');
       });
-    }).catch(() => { this.setState({ backupMsg: 'Ese archivo no es un respaldo de sprout.' }); this.sfx('no'); });
+    }).catch(() => { this.setState({ backupMsg: 'Ese archivo no es un respaldo de keystone.' }); this.sfx('no'); });
     try { input.value = ''; } catch (err) {}
   }
 
@@ -2740,7 +2734,7 @@ class Component extends DCLogic {
     try { perm = await Notification.requestPermission(); } catch (e) {}
     this.sfx('tap');
     if (perm !== 'granted') {
-      this.setState({ pushMsg: 'Sin permiso. Actívalo en Ajustes del iPhone, Notificaciones, sprout.' });
+      this.setState({ pushMsg: 'Sin permiso. Actívalo en Ajustes del iPhone, Notificaciones, keystone.' });
       return;
     }
     try {

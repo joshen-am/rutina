@@ -1,5 +1,5 @@
 // Funciona sin conexión: guarda la app en el teléfono y la actualiza cuando hay internet.
-const CACHE = 'rutina-v8';
+const CACHE = 'rutina-v9';
 const FILES = ["./", "index.html", "manifest.webmanifest", "vendor/morphdom-umd.min.js", "fonts/Geist-Variable.woff2", "fonts/GeistMono-Variable.woff2", "img/angeles.svg", "img/balanceo_pierna.svg", "img/bird_dog.svg", "img/boxeo.svg", "img/chin_tuck.svg", "img/circulos_brazos.svg", "img/circulos_cadera.svg", "img/crunch_invertido.svg", "img/curl.svg", "img/curl_martillo.svg", "img/deadbug.svg", "img/elev_piernas.svg", "img/escalador.svg", "img/escapular_pared.svg", "img/esfinge.svg", "img/flex_pica.svg", "img/flex_rodillas.svg", "img/flex_suelo.svg", "img/flexor_cadera.svg", "img/fondo_suelo.svg", "img/gato_vaca.svg", "img/hollow.svg", "img/jalon_suelo.svg", "img/laterales.svg", "img/marcha.svg", "img/pecho_marco.svg", "img/plancha.svg", "img/plancha_lateral.svg", "img/pm_rumano.svg", "img/puente.svg", "img/puente_isquios.svg", "img/puente_una2.svg", "img/remo_marco.svg", "img/sentadilla.svg", "img/sentadilla_pared.svg", "img/sentadilla_talones.svg", "img/sumo.svg", "img/talones_suelo.svg", "img/triceps.svg", "img/ytw.svg", "img/zancada_atras.svg", "img/zancada_estatica.svg", "icons/apple-touch-icon.png", "icons/icon-192.png", "icons/icon-512.png", "icons/icon-maskable-512.png", "icons/splash-1170x2532.png"];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(FILES)).then(() => self.skipWaiting()));
@@ -49,7 +49,7 @@ async function personalizar(m) {
   return m;
 }
 self.addEventListener('push', (e) => {
-  let m = { type: 'aviso', title: 'sprout', body: 'Tienes un recordatorio.' };
+  let m = { type: 'aviso', title: 'keystone', body: 'Tienes un recordatorio.' };
   try { if (e.data) m = Object.assign(m, e.data.json()); } catch (err) {}
   e.waitUntil(personalizar(m).catch(() => m).then((n) => self.registration.showNotification(n.title, {
     body: n.body, tag: n.tag || ('rutina-' + n.type), icon: 'icons/icon-192.png', badge: 'icons/icon-192.png',

@@ -1,4 +1,4 @@
-// Envía los recordatorios de sprout como notificaciones push.
+// Envía los recordatorios de keystone como notificaciones push.
 // Lo ejecuta el workflow .github/workflows/recordatorios.yml cada 10 minutos.
 import webpush from 'web-push';
 import fs from 'node:fs';
@@ -50,7 +50,7 @@ for (let t = last + 60e3; t <= now; t += 60e3) {
 
 let failed = false;
 for (const id of due) {
-  const m = id === 'prueba' ? { title: 'Recordatorios activos', body: 'Así te llegarán los avisos de sprout.' } : MSG[id];
+  const m = id === 'prueba' ? { title: 'Recordatorios activos', body: 'Así te llegarán los avisos de keystone.' } : MSG[id];
   const payload = JSON.stringify({ type: id, title: m.title, body: m.body, tag: 'rutina-' + id });
   try {
     await webpush.sendNotification(cfg.sub, payload, { TTL: 3600, urgency: 'high' });

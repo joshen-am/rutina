@@ -1,6 +1,6 @@
 {
- "name": "sprout",
- "short_name": "sprout",
+ "name": "keystone",
+ "short_name": "keystone",
  "lang": "es",
  "description": "Entrenamiento, comida, hábitos y perfil de salud en un solo lugar.",
  "start_url": "./",

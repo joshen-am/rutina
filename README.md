@@ -1,4 +1,4 @@
-# sprout
+# keystone
 
 App web instalable para entrenamiento, comida, hábitos y salud: sesiones guiadas con ejercicios animados, registro de comidas con análisis de fotos por IA, hábitos diarios, agua, recordatorios y un perfil de salud con nota por área.
 
