@@ -2,13 +2,13 @@
  "name": "sprout",
  "short_name": "sprout",
  "lang": "es",
- "description": "Tu rutina de calistenia con sesiones guiadas, progreso y logros.",
+ "description": "Entrenamiento, comida, hábitos y perfil de salud en un solo lugar.",
  "start_url": "./",
  "scope": "./",
  "display": "standalone",
  "orientation": "portrait",
- "background_color": "#F2F2F7",
- "theme_color": "#F2F2F7",
+ "background_color": "#0B0B0C",
+ "theme_color": "#FFFFFF",
  "icons": [
   {
    "src": "icons/icon-192.png",
