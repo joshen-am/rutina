@@ -22,6 +22,7 @@ jobs:
           X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
           sudo xcode-select -s "$X"; echo "::notice::$(xcodebuild -version | tr '\n' ' ')"
       - run: npm ci
+      - run: npx cap sync ios
       - name: Compilar
         run: |
           set +e
