@@ -27,7 +27,7 @@ body{margin:0}
 button{-webkit-tap-highlight-color:transparent;transition:opacity .12s, transform .12s}
 button:active{opacity:.7;transform:scale(.985)}
 input::placeholder,textarea::placeholder{color:#A1A1AA}
-input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #F2602A;outline-offset:2px}
+input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #71717A;outline-offset:2px}
 @keyframes present{from{transform:translateY(100%)}to{transform:none}}
 @keyframes sheet{from{transform:translateY(105%)}to{transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -69,7 +69,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <div style="opacity: {{ ho.salud.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
 <sc-if value="{{ hs.has }}" hint-placeholder-val="{{ true }}">
 <button type="button" onClick="{{ goSalud }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 18px; min-height: 236px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62)">8 ÁREAS</span></span>
 <span style="position: relative; display: flex; align-items: flex-end; gap: 14px">
 <span style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; font-variant-numeric: tabular-nums;">{{ hs.overall }}</span>
@@ -90,7 +90,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 </sc-if>
 <sc-if value="{{ hs.none }}" hint-placeholder-val="{{ false }}">
 <button type="button" onClick="{{ hs.startEval }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 270px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span></span>
 <span style="position: relative; font-size: 30px; line-height: 34px; font-weight: 400; letter-spacing: -0.04em; max-width: 290px">Conoce tu punto de partida</span>
 <span style="position: relative; font-size: 15px; line-height: 21px; color: rgba(250, 250, 250, 0.72); max-width: 300px">Una evaluación de 3 minutos arma tu perfil y califica 8 áreas: sueño, nutrición, hidratación, fuerza, cardio, cuerpo, corazón y mente.</span>
@@ -116,11 +116,6 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <h2 id="hist" style="margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.02em">Historial</h2>
 <span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ hist.summary }}</span>
 </div>
-<div role="group" aria-label="Qué mostrar" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 3px; border-radius: 999px; background: {{ th.segBg }}">
-<sc-for list="{{ hist.modes }}" as="hm" hint-placeholder-count="2">
-<button type="button" onClick="{{ hm.pick }}" aria-pressed="{{ hm.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 32px; border-radius: 999px; background: {{ hm.bg }}; color: {{ th.text }}; box-shadow: {{ hm.shadow }}; font-size: 13px; font-weight: {{ hm.weight }}">{{ hm.label }}</button>
-</sc-for>
-</div>
 <div style="display: flex; gap: 6px">
 <div aria-hidden="true" style="display: grid; grid-template-rows: 14px repeat(7, 15px); row-gap: 3px; font-family: {{ mono }}; font-size: 9px; line-height: 15px; color: {{ th.tertiary }}">
 <span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
@@ -133,11 +128,10 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 </div>
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: {{ th.sub }}">
-<span>{{ hist.legend }}</span>
-<span style="display: flex; align-items: center; gap: 3px">Menos
-<span style="width: 10px; height: 10px; border-radius: 3px; background: {{ th.fill }}"></span>
-<sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="4"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{ hs.bg }}"></span></sc-for>
-Más</span>
+<span>Hábitos y entrenos de cada día</span>
+<span style="display: flex; align-items: center; gap: 3px">Nada
+<sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="5"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{ hs.bg }}"></span></sc-for>
+Todo</span>
 </div>
 </section>
 </div>
@@ -245,86 +239,7 @@ Más</span>
 <span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}">{{ rec.summary }}</span>
 </div>
 <div style="display: flex; align-items: center; gap: 12px">
-<div style="display: flex; gap: 2px; flex: none">
-<svg width="80" height="160" viewBox="0 0 200 400" role="img" aria-label="Recuperación, vista frontal">
-<ellipse cx="100" cy="34" rx="19" ry="24" fill="{{ th.bodyBase }}"></ellipse>
-<path d="M89 52 C90 60 90 66 88 72 L112 72 C110 66 110 60 111 52 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 190 C70 198 71 206 75 213 C83 215 92 214 99 213 L99 208 C93 207 89 202 86 196 C82 196 77 194 73 190 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 216 C93 220 89 230 88 246 C91 252 95 257 99 261 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 305 84 305 87 309 C88 314 86 318 80 319 C75 318 72 314 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M89 64 C84 72 74 77 63 80 C72 84 82 84 90 82 C92 76 92 70 91 64 Z" fill="{{ hb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ hb.deltF }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 86 L72 85 C66 91 63 100 65 110 C69 121 81 127 98 125 Z" fill="{{ hb.chest }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M48 124 C43 134 42 147 44 159 C47 165 54 166 57 162 C61 150 62 138 61 126 C57 119 52 119 48 124 Z" fill="{{ hb.biceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ hb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 129 L86 130 C84 138 84 145 85 150 L98 150 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 154 L85 154 C84 161 84 167 85 172 L98 172 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 176 L85 176 C85 186 87 195 90 201 C93 206 96 209 98 211 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M82 129 C74 131 69 139 69 152 C69 166 71 180 75 191 C79 195 84 196 86 194 C83 180 81 160 82 129 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M75 212 C66 232 63 258 65 283 C67 296 73 304 80 305 C83 292 86 268 87 246 C87 232 83 220 75 212 Z" fill="{{ hb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M88 260 C95 268 97 282 95 294 C93 302 88 306 83 306 C85 292 86 276 88 260 Z" fill="{{ hb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 322 C65 342 66 362 71 378 L83 378 C86 360 88 340 86 322 C82 317 75 317 71 322 Z" fill="{{ hb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<g transform="translate(200 0) scale(-1 1)">
-<path d="M73 190 C70 198 71 206 75 213 C83 215 92 214 99 213 L99 208 C93 207 89 202 86 196 C82 196 77 194 73 190 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 216 C93 220 89 230 88 246 C91 252 95 257 99 261 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 305 84 305 87 309 C88 314 86 318 80 319 C75 318 72 314 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M89 64 C84 72 74 77 63 80 C72 84 82 84 90 82 C92 76 92 70 91 64 Z" fill="{{ hb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ hb.deltF }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 86 L72 85 C66 91 63 100 65 110 C69 121 81 127 98 125 Z" fill="{{ hb.chest }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M48 124 C43 134 42 147 44 159 C47 165 54 166 57 162 C61 150 62 138 61 126 C57 119 52 119 48 124 Z" fill="{{ hb.biceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ hb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 129 L86 130 C84 138 84 145 85 150 L98 150 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 154 L85 154 C84 161 84 167 85 172 L98 172 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 176 L85 176 C85 186 87 195 90 201 C93 206 96 209 98 211 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M82 129 C74 131 69 139 69 152 C69 166 71 180 75 191 C79 195 84 196 86 194 C83 180 81 160 82 129 Z" fill="{{ hb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M75 212 C66 232 63 258 65 283 C67 296 73 304 80 305 C83 292 86 268 87 246 C87 232 83 220 75 212 Z" fill="{{ hb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M88 260 C95 268 97 282 95 294 C93 302 88 306 83 306 C85 292 86 276 88 260 Z" fill="{{ hb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 322 C65 342 66 362 71 378 L83 378 C86 360 88 340 86 322 C82 317 75 317 71 322 Z" fill="{{ hb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-</g>
-<path d="M100 128 V212" stroke="{{ th.card }}" stroke-width="1.2" fill="none"></path>
-</svg>
-<svg width="80" height="160" viewBox="0 0 200 400" role="img" aria-label="Recuperación, vista trasera">
-<ellipse cx="100" cy="34" rx="19" ry="24" fill="{{ th.bodyBase }}"></ellipse>
-<path d="M89 52 C90 60 90 66 88 72 L112 72 C110 66 110 60 111 52 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 252 C95 258 92 266 91 276 L94 300 C97 290 99 278 99 268 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 306 84 306 87 309 C88 313 86 317 80 318 C75 317 72 313 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M75 367 L83 367 L83 381 L76 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 60 C94 70 85 76 64 81 C76 88 88 102 99 130 Z" fill="{{ hb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ hb.deltB }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M70 92 C79 96 89 106 95 119 C87 123 77 121 69 113 C67 105 67 98 70 92 Z" fill="{{ hb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M68 118 C77 126 89 130 98 133 L98 176 C89 172 80 162 74 150 C70 140 67 129 68 118 Z" fill="{{ hb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 180 L88 176 C86 186 86 197 88 206 L98 206 Z" fill="{{ hb.lowback }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M50 123 C44 133 42 147 44 160 C48 165 54 165 58 161 C60 149 62 137 62 125 C58 117 54 117 50 123 Z" fill="{{ hb.triceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ hb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 209 C86 207 76 211 72 223 C70 237 76 249 88 251 C94 251 98 247 98 243 Z" fill="{{ hb.glutes }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M73 254 C67 272 67 292 72 306 L91 306 C93 290 92 270 88 254 C83 251 77 251 73 254 Z" fill="{{ hb.hams }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 321 C65 335 65 351 71 363 C75 367 81 367 84 361 L86 321 C82 316 75 316 71 321 Z" fill="{{ hb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<g transform="translate(200 0) scale(-1 1)">
-<path d="M99 252 C95 258 92 266 91 276 L94 300 C97 290 99 278 99 268 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 306 84 306 87 309 C88 313 86 317 80 318 C75 317 72 313 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M75 367 L83 367 L83 381 L76 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 60 C94 70 85 76 64 81 C76 88 88 102 99 130 Z" fill="{{ hb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ hb.deltB }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M70 92 C79 96 89 106 95 119 C87 123 77 121 69 113 C67 105 67 98 70 92 Z" fill="{{ hb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M68 118 C77 126 89 130 98 133 L98 176 C89 172 80 162 74 150 C70 140 67 129 68 118 Z" fill="{{ hb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 180 L88 176 C86 186 86 197 88 206 L98 206 Z" fill="{{ hb.lowback }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M50 123 C44 133 42 147 44 160 C48 165 54 165 58 161 C60 149 62 137 62 125 C58 117 54 117 50 123 Z" fill="{{ hb.triceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ hb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 209 C86 207 76 211 72 223 C70 237 76 249 88 251 C94 251 98 247 98 243 Z" fill="{{ hb.glutes }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M73 254 C67 272 67 292 72 306 L91 306 C93 290 92 270 88 254 C83 251 77 251 73 254 Z" fill="{{ hb.hams }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 321 C65 335 65 351 71 363 C75 367 81 367 84 361 L86 321 C82 316 75 316 71 321 Z" fill="{{ hb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-</g>
-<path d="M100 132 V206 M81 258 C80 274 81 290 82 304 M119 258 C120 274 119 290 118 304" stroke="{{ th.card }}" stroke-width="1.2" fill="none"></path>
-</svg>
-</div>
+<div id="b3-rec" class="body3d" role="img" aria-label="Cuerpo con la carga de cada músculo" data-loads="{{ b3.rec }}" data-dark="{{ b3.dark }}" data-key="rec" style="width: 128px; height: 210px; flex: none; background: url({{ b3.fallback }}) center / contain no-repeat"></div>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
 <sc-if value="{{ rec.has }}" hint-placeholder-val="{{ true }}">
 <sc-for list="{{ rec.top }}" as="rt" hint-placeholder-count="3">
@@ -567,7 +482,7 @@ Más</span>
 </div>
 <sc-if value="{{ fd.noAi }}" hint-placeholder-val="{{ false }}">
 <section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Análisis con IA</span></span>
 <span style="position: relative; font-size: 24px; line-height: 28px; font-weight: 400; letter-spacing: -0.035em">Saca una foto y obtén calorías, proteína, fibra y más</span>
 <span style="position: relative; font-size: 14px; line-height: 20px; color: rgba(250, 250, 250, 0.72)">Conecta una IA una sola vez. Gemini de Google tiene un plan gratis que alcanza de sobra.</span>
@@ -687,7 +602,7 @@ Más</span>
 <sc-if value="{{ fd.dHasThumb }}" hint-placeholder-val="{{ false }}"><img src="{{ fd.dThumb }}" alt="Foto de tu comida" style="width: 100%; height: 210px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
 <sc-if value="{{ fd.dLoading }}" hint-placeholder-val="{{ true }}">
 <div style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 22px; padding: 22px 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; animation: breathe 2.4s ease-in-out infinite; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; animation: breathe 2.4s ease-in-out infinite; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Analizando</span></span>
 <span style="position: relative; font-size: 20px; line-height: 25px; letter-spacing: -0.03em">Identificando alimentos y porciones…</span>
 </div>
@@ -770,7 +685,7 @@ Más</span>
 </header>
 <sc-if value="{{ hv.has }}" hint-placeholder-val="{{ true }}">
 <button type="button" onClick="{{ noop }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 18px; min-height: 236px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62)">8 ÁREAS</span></span>
 <span style="position: relative; display: flex; align-items: flex-end; gap: 14px">
 <span style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; font-variant-numeric: tabular-nums;">{{ hv.overall }}</span>
@@ -791,7 +706,7 @@ Más</span>
 </sc-if>
 <sc-if value="{{ hv.none }}" hint-placeholder-val="{{ false }}">
 <button type="button" onClick="{{ hv.startEval }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 270px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span></span>
 <span style="position: relative; font-size: 30px; line-height: 34px; font-weight: 400; letter-spacing: -0.04em; max-width: 290px">Conoce tu punto de partida</span>
 <span style="position: relative; font-size: 15px; line-height: 21px; color: rgba(250, 250, 250, 0.72); max-width: 300px">Una evaluación de 3 minutos arma tu perfil y califica 8 áreas: sueño, nutrición, hidratación, fuerza, cardio, cuerpo, corazón y mente.</span>
@@ -951,7 +866,7 @@ Más</span>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 14px 16px 48px; display: flex; flex-direction: column; gap: 14px">
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Área</span><h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">{{ hv.detail.name }}</h1></div>
 <section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; align-items: center; gap: 20px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ hv.detail.halo }}; transition: background 0.6s"></span>
 <div style="position: relative; width: 104px; height: 104px; flex: none"><svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52.0" cy="52.0" r="44" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="6"></circle><circle cx="52.0" cy="52.0" r="44" fill="none" stroke="{{ hv.detail.gColor }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="{{ hv.detail.ringOff }}" transform="rotate(-90 52.0 52.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
 <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 30px; color: {{ hv.detail.gColor }}">{{ hv.detail.grade }}</div></div>
 <div style="position: relative; display: flex; flex-direction: column; gap: 4px">
@@ -1030,7 +945,7 @@ Más</span>
 
 <sc-if value="{{ isEval }}" hint-placeholder-val="{{ false }}">
 <div style="position: absolute; inset: 0; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 25; overflow: hidden">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 135%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ haloEval }}; transition: background 0.6s"></span>
 <div style="position: relative; padding: calc(env(safe-area-inset-top) + 30px) 16px 0; display: flex; align-items: center; gap: 14px">
 <button type="button" onClick="{{ ev.close }}" aria-label="Cerrar evaluación" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 40px; height: 40px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 <div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: {{ ev.pct }}%; background: #FAFAFA; border-radius: 2px; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
@@ -1103,7 +1018,7 @@ Más</span>
 
 <sc-if value="{{ ss.isRestStep }}" hint-placeholder-val="{{ false }}">
 <div style="position: relative; overflow: hidden; background: #0B0B0C; color: #FAFAFA; border-radius: 26px; padding: 30px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 18px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}"></span>
 <span style="position: relative; font-size: 72px; line-height: 72px; font-weight: 300; letter-spacing: -0.06em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
 <div style="position: relative; width: 100%; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: #FAFAFA"></div></div>
 <div style="position: relative; display: flex; gap: 10px">
@@ -1190,7 +1105,7 @@ Más</span>
 
 <sc-if value="{{ ss.isRestStep }}" hint-placeholder-val="{{ false }}">
 <div style="position: relative; overflow: hidden; background: #0B0B0C; color: #FAFAFA; border-radius: 26px; padding: 30px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 18px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}"></span>
 <span style="position: relative; font-size: 72px; line-height: 72px; font-weight: 300; letter-spacing: -0.06em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
 <div style="position: relative; width: 100%; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: #FAFAFA"></div></div>
 <div style="position: relative; display: flex; gap: 10px">
@@ -1365,7 +1280,7 @@ Más</span>
 <div style="position: absolute; inset: 0; background: {{ th.bg }}; animation: present 0.55s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: calc(env(safe-area-inset-top) + 44px) 16px 120px; display: flex; flex-direction: column; gap: 14px">
 <section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 18px; min-height: 250px">
-<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: radial-gradient(120% 82% at 50% 122%, #FF9246 0%, #F2602A 16%, #8A2A0B 36%, rgba(11, 11, 12, 0) 66%)"></span>
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Sesión completada · {{ v.dateLine }}</span></span>
 <span style="position: relative; display: flex; flex-direction: column; gap: 6px"><span style="font-size: 34px; line-height: 38px; font-weight: 400; letter-spacing: -0.045em">{{ v.name }}</span><span style="font-size: 15px; color: rgba(250, 250, 250, 0.7)">{{ v.title }}</span></span>
 <span style="position: relative; margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px">
@@ -1378,86 +1293,8 @@ Más</span>
 <section style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 15px">Sesiones esta semana</span><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums;">{{ v.week }}</span></section>
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Músculos trabajados</h2></div>
 <section style="background: {{ th.card }}; border-radius: 22px; padding: 18px 18px 4px; display: flex; flex-direction: column; gap: 12px">
-<div style="display: flex; justify-content: center; gap: 8px">
-<figure style="margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="136" height="272" viewBox="0 0 200 400" role="img" aria-label="Vista frontal con los músculos trabajados resaltados">
-<ellipse cx="100" cy="34" rx="19" ry="24" fill="{{ th.bodyBase }}"></ellipse>
-<path d="M89 52 C90 60 90 66 88 72 L112 72 C110 66 110 60 111 52 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 190 C70 198 71 206 75 213 C83 215 92 214 99 213 L99 208 C93 207 89 202 86 196 C82 196 77 194 73 190 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 216 C93 220 89 230 88 246 C91 252 95 257 99 261 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 305 84 305 87 309 C88 314 86 318 80 319 C75 318 72 314 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M89 64 C84 72 74 77 63 80 C72 84 82 84 90 82 C92 76 92 70 91 64 Z" fill="{{ vb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ vb.deltF }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 86 L72 85 C66 91 63 100 65 110 C69 121 81 127 98 125 Z" fill="{{ vb.chest }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M48 124 C43 134 42 147 44 159 C47 165 54 166 57 162 C61 150 62 138 61 126 C57 119 52 119 48 124 Z" fill="{{ vb.biceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ vb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 129 L86 130 C84 138 84 145 85 150 L98 150 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 154 L85 154 C84 161 84 167 85 172 L98 172 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 176 L85 176 C85 186 87 195 90 201 C93 206 96 209 98 211 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M82 129 C74 131 69 139 69 152 C69 166 71 180 75 191 C79 195 84 196 86 194 C83 180 81 160 82 129 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M75 212 C66 232 63 258 65 283 C67 296 73 304 80 305 C83 292 86 268 87 246 C87 232 83 220 75 212 Z" fill="{{ vb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M88 260 C95 268 97 282 95 294 C93 302 88 306 83 306 C85 292 86 276 88 260 Z" fill="{{ vb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 322 C65 342 66 362 71 378 L83 378 C86 360 88 340 86 322 C82 317 75 317 71 322 Z" fill="{{ vb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<g transform="translate(200 0) scale(-1 1)">
-<path d="M73 190 C70 198 71 206 75 213 C83 215 92 214 99 213 L99 208 C93 207 89 202 86 196 C82 196 77 194 73 190 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 216 C93 220 89 230 88 246 C91 252 95 257 99 261 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 305 84 305 87 309 C88 314 86 318 80 319 C75 318 72 314 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M89 64 C84 72 74 77 63 80 C72 84 82 84 90 82 C92 76 92 70 91 64 Z" fill="{{ vb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ vb.deltF }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 86 L72 85 C66 91 63 100 65 110 C69 121 81 127 98 125 Z" fill="{{ vb.chest }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M48 124 C43 134 42 147 44 159 C47 165 54 166 57 162 C61 150 62 138 61 126 C57 119 52 119 48 124 Z" fill="{{ vb.biceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ vb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 129 L86 130 C84 138 84 145 85 150 L98 150 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 154 L85 154 C84 161 84 167 85 172 L98 172 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 176 L85 176 C85 186 87 195 90 201 C93 206 96 209 98 211 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M82 129 C74 131 69 139 69 152 C69 166 71 180 75 191 C79 195 84 196 86 194 C83 180 81 160 82 129 Z" fill="{{ vb.abs }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M75 212 C66 232 63 258 65 283 C67 296 73 304 80 305 C83 292 86 268 87 246 C87 232 83 220 75 212 Z" fill="{{ vb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M88 260 C95 268 97 282 95 294 C93 302 88 306 83 306 C85 292 86 276 88 260 Z" fill="{{ vb.quads }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 322 C65 342 66 362 71 378 L83 378 C86 360 88 340 86 322 C82 317 75 317 71 322 Z" fill="{{ vb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-</g>
-<path d="M100 128 V212" stroke="{{ th.card }}" stroke-width="1.2" fill="none"></path>
-</svg><figcaption style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">FRENTE</figcaption></figure>
-<figure style="margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px"><svg width="136" height="272" viewBox="0 0 200 400" role="img" aria-label="Vista trasera con los músculos trabajados resaltados">
-<ellipse cx="100" cy="34" rx="19" ry="24" fill="{{ th.bodyBase }}"></ellipse>
-<path d="M89 52 C90 60 90 66 88 72 L112 72 C110 66 110 60 111 52 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 252 C95 258 92 266 91 276 L94 300 C97 290 99 278 99 268 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 306 84 306 87 309 C88 313 86 317 80 318 C75 317 72 313 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M75 367 L83 367 L83 381 L76 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 60 C94 70 85 76 64 81 C76 88 88 102 99 130 Z" fill="{{ vb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ vb.deltB }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M70 92 C79 96 89 106 95 119 C87 123 77 121 69 113 C67 105 67 98 70 92 Z" fill="{{ vb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M68 118 C77 126 89 130 98 133 L98 176 C89 172 80 162 74 150 C70 140 67 129 68 118 Z" fill="{{ vb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 180 L88 176 C86 186 86 197 88 206 L98 206 Z" fill="{{ vb.lowback }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M50 123 C44 133 42 147 44 160 C48 165 54 165 58 161 C60 149 62 137 62 125 C58 117 54 117 50 123 Z" fill="{{ vb.triceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ vb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 209 C86 207 76 211 72 223 C70 237 76 249 88 251 C94 251 98 247 98 243 Z" fill="{{ vb.glutes }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M73 254 C67 272 67 292 72 306 L91 306 C93 290 92 270 88 254 C83 251 77 251 73 254 Z" fill="{{ vb.hams }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 321 C65 335 65 351 71 363 C75 367 81 367 84 361 L86 321 C82 316 75 316 71 321 Z" fill="{{ vb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<g transform="translate(200 0) scale(-1 1)">
-<path d="M99 252 C95 258 92 266 91 276 L94 300 C97 290 99 278 99 268 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M73 309 C76 306 84 306 87 309 C88 313 86 317 80 318 C75 317 72 313 73 309 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M33 220 C30 228 31 238 35 244 C39 247 43 244 44 238 C45 231 44 224 42 219 C39 216 35 217 33 220 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M75 367 L83 367 L83 381 L76 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M70 381 C68 386 69 391 74 392 L84 392 C87 390 86 384 84 381 Z" fill="{{ th.bodyBase }}"></path>
-<path d="M99 60 C94 70 85 76 64 81 C76 88 88 102 99 130 Z" fill="{{ vb.traps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M62 81 C52 82 45 90 44 102 C43 111 45 118 48 123 C52 113 58 105 67 99 C69 92 67 85 62 81 Z" fill="{{ vb.deltB }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M70 92 C79 96 89 106 95 119 C87 123 77 121 69 113 C67 105 67 98 70 92 Z" fill="{{ vb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M68 118 C77 126 89 130 98 133 L98 176 C89 172 80 162 74 150 C70 140 67 129 68 118 Z" fill="{{ vb.lats }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 180 L88 176 C86 186 86 197 88 206 L98 206 Z" fill="{{ vb.lowback }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M50 123 C44 133 42 147 44 160 C48 165 54 165 58 161 C60 149 62 137 62 125 C58 117 54 117 50 123 Z" fill="{{ vb.triceps }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M45 167 C40 179 36 196 35 213 C38 218 42 218 45 215 C49 200 54 185 57 169 C54 164 49 163 45 167 Z" fill="{{ vb.forearm }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M98 209 C86 207 76 211 72 223 C70 237 76 249 88 251 C94 251 98 247 98 243 Z" fill="{{ vb.glutes }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M73 254 C67 272 67 292 72 306 L91 306 C93 290 92 270 88 254 C83 251 77 251 73 254 Z" fill="{{ vb.hams }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-<path d="M71 321 C65 335 65 351 71 363 C75 367 81 367 84 361 L86 321 C82 316 75 316 71 321 Z" fill="{{ vb.calves }}" stroke="{{ th.card }}" stroke-width="1.2" stroke-linejoin="round"></path>
-</g>
-<path d="M100 132 V206 M81 258 C80 274 81 290 82 304 M119 258 C120 274 119 290 118 304" stroke="{{ th.card }}" stroke-width="1.2" fill="none"></path>
-</svg><figcaption style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">ESPALDA</figcaption></figure>
-</div>
+<div id="b3-sum" class="body3d" role="img" aria-label="Cuerpo con los músculos trabajados" data-loads="{{ b3.sum }}" data-dark="{{ b3.dark }}" data-key="sum" style="width: 100%; height: 320px; background: url({{ b3.fallback }}) center / contain no-repeat"></div>
+<p style="margin: -4px 0 0; text-align: center; font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: {{ th.tertiary }}">DESLIZA PARA GIRAR</p>
 <ul style="list-style: none; margin: 0 -18px 0 0; padding: 0">
 <sc-for list="{{ v.muscles }}" as="m" hint-placeholder-count="4">
 <li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 18px; border-top: 0.5px solid {{ th.sep }}">
@@ -1474,7 +1311,9 @@ Más</span>
 </sc-if>
 </div>
 </template>
+<script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 <script src="vendor/morphdom-umd.min.js"></script>
+<script src="body3d.js"></script>
 <script>
 
 window.__dc = { cbs: [], schedule: function () {} };
@@ -2187,18 +2026,42 @@ class Component extends DCLogic {
   /* Paleta: neutros zinc, un acento cálido y colores de datos sobrios */
   colors(dark) {
     return dark ? {
-      fuerza: '#FF7A45', resistencia: '#5AB0F0', constancia: '#3CC77F', tecnica: '#A196FF', heat: '#FF7A3D',
-      fuerzaText: '#FF9466', resistenciaText: '#7DC1F5', constanciaText: '#5AD394', tecnicaText: '#B4ABFF', heatText: '#FF9466',
-      accent: '#FF7A3D', accentText: '#FF9466',
+      fuerza: '#F2555A', resistencia: '#5AB0F0', constancia: '#3CC77F', tecnica: '#A196FF', heat: '#F2555A',
+      fuerzaText: '#FF7B80', resistenciaText: '#7DC1F5', constanciaText: '#5AD394', tecnicaText: '#B4ABFF', heatText: '#FF7B80',
+      accent: '#FAFAFA', accentText: '#A1A1AA',
       gA: '#3CC77F', gB: '#E2C043', gC: '#FF9F4D', gD: '#F2638E',
       prot: '#5AB0F0', carb: '#E2C043', fat: '#F2638E', fib: '#3CC77F'
     } : {
-      fuerza: '#E8572A', resistencia: '#2A86CF', constancia: '#1F9D62', tecnica: '#6F5FEA', heat: '#F2602A',
-      fuerzaText: '#C2410C', resistenciaText: '#1D6AA8', constanciaText: '#157A4B', tecnicaText: '#5544D6', heatText: '#C2410C',
-      accent: '#F2602A', accentText: '#C2410C',
+      fuerza: '#DC3B41', resistencia: '#2A86CF', constancia: '#1F9D62', tecnica: '#6F5FEA', heat: '#DC3B41',
+      fuerzaText: '#B42A30', resistenciaText: '#1D6AA8', constanciaText: '#157A4B', tecnicaText: '#5544D6', heatText: '#B42A30',
+      accent: '#18181B', accentText: '#71717A',
       gA: '#1F9D62', gB: '#C9A100', gC: '#E8711A', gD: '#DB2E6A',
       prot: '#2A86CF', carb: '#D9A400', fat: '#DB2E6A', fib: '#1F9D62'
     };
+  }
+
+  /* Color de salud continuo: 0 rojo → 50 ámbar → 100 verde profundo (interpolación de tono en HSL) */
+  healthColor(s, dark) {
+    if (s == null || !isFinite(s)) return dark ? '#A1A1AA' : '#71717A';
+    const x = Math.max(0, Math.min(100, s)) / 100;
+    const h = 2 + 140 * Math.pow(x, 1.05);
+    const sat = dark ? 68 : 70;
+    let l = dark ? 56 : 46;
+    if (x > 0.8) l -= (x - 0.8) / 0.2 * (dark ? 8 : 12);
+    return this.hsl(h, sat, l);
+  }
+
+  hsl(h, s, l) {
+    s /= 100; l /= 100;
+    const k = (n) => (n + h / 30) % 12;
+    const a = s * Math.min(l, 1 - l);
+    const f = (n) => Math.round(255 * (l - a * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))).toString(16).padStart(2, '0');
+    return '#' + f(0) + f(8) + f(4);
+  }
+
+  haloCss(color, at) {
+    const c = color || '#A1A1AA';
+    return 'radial-gradient(120% 82% at 50% ' + (at || 122) + '%, ' + this.mix(c, '#FFFFFF', 0.35) + ' 0%, ' + c + ' 16%, ' + this.mix(c, '#000000', 0.62) + ' 36%, rgba(11, 11, 12, 0) 66%)';
   }
 
   /* ---------- fechas ---------- */
@@ -3210,7 +3073,7 @@ class Component extends DCLogic {
           return {
             title: e.t || m.name, sub: r0(et.kcal) + ' kcal · ' + r0(et.p) + ' g proteína',
             hasPhoto: !!ph, photo: ph || '', noPhoto: !ph,
-            q: e.q || '', hasQ: !!e.q, qColor: e.q >= 8 ? c.gA : e.q >= 6 ? c.gB : e.q >= 4 ? c.gC : c.gD,
+            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark),
             open: () => { this.sfx('open'); this.setState({ fentry: { key: key, id: e.id }, fdelArmed: null }); }
           };
         })
@@ -3788,12 +3651,12 @@ class Component extends DCLogic {
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
     const list = areas.map((x, i) => ({
-      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: gc(x.grade), score: x.score == null ? '—' : x.score, status: x.status,
+      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
       open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); }
     }));
     const sorted = areas.filter((x) => x.score != null).slice().sort((a, b) => a.score - b.score);
-    const focus = sorted.slice(0, 2).map((x) => ({ name: x.name, grade: x.grade, gColor: gc(x.grade), status: x.status, open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); } }));
+    const focus = sorted.slice(0, 2).map((x) => ({ name: x.name, grade: x.grade, gColor: this.healthColor(x.score, dark), status: x.status, open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); } }));
     const ar = areas.find((x) => x.id === st.area) || null;
     let detail = null;
     if (ar) {
@@ -3807,9 +3670,9 @@ class Component extends DCLogic {
         opts: [1, 2, 3, 4, 5].map((v) => ({ v: v, sel: today[field] === v, bg: today[field] === v ? th.inv : th.fill, fg: today[field] === v ? th.onInv : th.text, pick: () => this.setMood(field, v) }))
       });
       detail = {
-        name: ar.name, icon: ar.icon, grade: ar.grade, gColor: gc(ar.grade), gLabel: this.gradeLabel(ar.grade), score: ar.score == null ? '—' : ar.score,
+        name: ar.name, icon: ar.icon, grade: ar.grade, gColor: this.healthColor(ar.score, true), halo: this.haloCss(this.healthColor(ar.score, true)), gLabel: this.gradeLabel(ar.grade), score: ar.score == null ? '—' : ar.score,
         ringOff: (276.5 * (1 - (ar.score || 0) / 100)).toFixed(1), what: ar.what, source: ar.source, hasNote: !!ar.note, note: ar.note || '',
-        metrics: ar.metrics.map((m, i) => ({ label: m.label, value: m.value, ideal: m.ideal, hasIdeal: !!m.ideal, dot: m.s == null ? 'transparent' : gc(this.gradeOf(m.s)), line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })),
+        metrics: ar.metrics.map((m, i) => ({ label: m.label, value: m.value, ideal: m.ideal, hasIdeal: !!m.ideal, dot: m.s == null ? 'transparent' : this.healthColor(m.s, dark), line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })),
         actions: ar.actions.slice(0, 3).map((t, i) => ({ n: '0' + (i + 1), text: t, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })),
         hasSeries: items.length >= 2, seriesLabel: ar.series.label || (ar.id === 'fuerza' ? 'Sesiones por semana' : ar.id === 'cuerpo' ? 'Peso' : ar.id === 'corazon' ? 'Pulso en reposo' : 'Promedio semanal'),
         seriesUnit: ar.series.unit, hasTarget: !!ar.series.target && items.length >= 2, targetPx: ar.series.target ? sc(ar.series.target) : 0,
@@ -3830,7 +3693,7 @@ class Component extends DCLogic {
     const lastM = (st.meas || []).slice(-1)[0];
     const fc = this.latest('fc'), pas = this.latest('pas'), pad = this.latest('pad'), cin = this.latest('cintura');
     return {
-      has: has, none: !has, overall: overall == null ? '—' : overall, grade: g, gColor: gc(g), gLabel: this.gradeLabel(g),
+      has: has, none: !has, overall: overall == null ? '—' : overall, overallN: overall, grade: g, gColor: this.healthColor(overall, true), gLabel: this.gradeLabel(g),
       ringOff: (439.8 * (1 - (overall || 0) / 100)).toFixed(1), areas: list, focus: focus, hasFocus: focus.length > 0,
       evalAgo: has ? this.agoText(st.hp.at).toLowerCase() : '', evalOld: has && Date.now() - st.hp.at > 60 * 864e5,
       startEval: () => this.startEval(),
@@ -3982,6 +3845,12 @@ class Component extends DCLogic {
     const dark = this.isDark();
     const th = this.theme(dark);
     const c = this.colors(dark);
+    /* salud primero: su nota tiñe los halos y el acento de toda la app */
+    const hv = this.healthVals(th, c, dark);
+    hv.noop = () => {};
+    const hcol = hv.has ? this.healthColor(hv.overallN, true) : null;
+    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = c.accent; }
+    const halo = this.haloCss(hcol);
     const tint = {};
     ['fuerza', 'resistencia', 'constancia', 'tecnica', 'heat'].forEach((k) => { tint[k] = c[k] + (dark ? '2E' : '1F'); });
     const primary = th.inv, onPrimary = th.onInv;
@@ -4047,11 +3916,9 @@ class Component extends DCLogic {
     const sinceD = st.since ? this.dateOf(st.since) : today0;
     const startMon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * (HW - 1));
     const mshort = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
-    const shades = [0.3, 0.52, 0.76, 1];
-    const lvlOf = { suave: 0, moderada: 1, dura: 2, limite: 3 };
     const items = [];
-    const habMode = (st.prefs.histMode || 'habitos') === 'habitos';
-    let hDone = 0, hFull = 0, prevMonth = -1;
+    const dayCol = (f) => (f <= 0 ? this.mix(th.fill, this.healthColor(0, dark), dark ? 0.42 : 0.3) : this.mix(th.fill, this.healthColor(f * 100, dark), 0.42 + 0.58 * f));
+    let hFull = 0, hAny = 0, prevMonth = -1;
     for (let w = 0; w < HW; w++) {
       const col = new Date(startMon.getFullYear(), startMon.getMonth(), startMon.getDate() + 7 * w);
       const mo = col.getMonth();
@@ -4059,16 +3926,12 @@ class Component extends DCLogic {
       prevMonth = mo;
       for (let d = 0; d < 7; d++) {
         const day = new Date(col.getFullYear(), col.getMonth(), col.getDate() + d);
-        const e = st.log[this.keyOf(day)];
         const isToday = day.getTime() === today0.getTime();
         let bg = th.fill, ring = 'none';
         if (day > today0) { bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep; }
-        else if (habMode) {
-          const sc = day >= sinceD ? this.dayScore(this.keyOf(day), day) : null;
-          if (sc !== null && sc > 0) { bg = this.mix(th.fill, c.heat, sc >= 1 ? 1 : sc > 0.66 ? 0.76 : sc > 0.33 ? 0.52 : 0.3); if (sc >= 1) hFull++; }
-        } else if (e && e.status === 'done') {
-          bg = this.mix(th.fill, c.heat, shades[lvlOf[(e.summary && e.summary.intensityKey) || 'moderada'] ?? 1]);
-          hDone++;
+        else if (day >= sinceD) {
+          const sc = this.dayScore(this.keyOf(day), day);
+          if (sc !== null && !(isToday && sc === 0)) { bg = dayCol(sc); if (sc > 0) hAny++; if (sc >= 1) hFull++; }
         }
         if (isToday) ring = 'inset 0 0 0 1.5px ' + th.text;
         items.push({ isLabel: false, isCell: true, bg: bg, ring: ring });
@@ -4076,19 +3939,22 @@ class Component extends DCLogic {
     }
     const hist = {
       weeks: HW, items: items,
-      scale: shades.map((k) => ({ bg: this.mix(th.fill, c.heat, k) })),
-      summary: habMode ? (hFull + (hFull === 1 ? ' día completo' : ' días completos')) : (hDone + (hDone === 1 ? ' sesión' : ' sesiones')),
-      legend: habMode ? 'Hábitos cumplidos' : 'Intensidad de tus sesiones',
-      modes: [['habitos', 'Hábitos'], ['entreno', 'Entrenos']].map((m) => {
-        const sel = (st.prefs.histMode || 'habitos') === m[0];
-        return { label: m[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 500 : 400, shadow: sel && !dark ? '0 1px 3px rgba(9, 9, 11, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setPref('histMode', m[0]); } };
-      }),
+      scale: [0, 0.25, 0.5, 0.75, 1].map((k) => ({ bg: dayCol(k) })),
+      summary: hFull + (hFull === 1 ? ' día completo' : ' días completos'),
       aria: 'Historial de las últimas ' + HW + ' semanas'
     };
+
+    /* cuerpo 3D: carga por región (0..1) */
+    const R3 = {};
+    Object.keys(regionLoad).forEach((k) => { if (regionLoad[k] >= 0.05) R3[k] = Math.round(regionLoad[k] * 100) / 100; });
+    const b3 = { rec: JSON.stringify(R3), dark: dark ? '1' : '0', fallback: dark ? 'img/body-dark.png' : 'img/body-light.png', sum: '{}' };
 
     /* resumen de sesión */
     const summary = st.last || Object.assign(this.buildSummary(rc, { minutes: rc.minutes, intensity: 'dura', series: 0.8, setsDone: 22, setsTotal: 26 }, sd), { weekDone: weekDone, meta: meta });
     const vv = this.summaryVals(summary, st.t, th, c, dark);
+    const S3 = {};
+    summary.muscles.forEach((mu) => { this.regionsOf(mu.name).forEach((k) => { S3[k] = Math.max(S3[k] || 0, Math.round(Math.min(1, mu.w) * 100) / 100); }); });
+    b3.sum = JSON.stringify(S3);
 
     /* orden de inicio */
     const edit = !!st.editHome;
@@ -4125,9 +3991,6 @@ class Component extends DCLogic {
       add: () => { this.go({ tab: 'comida', screen: 'inicio', menu: false, fday: 0 }); this.openFoodAdd(this.mealNow()); }
     };
 
-    /* salud */
-    const hv = this.healthVals(th, c, dark);
-    hv.noop = () => {};
 
     /* sesión */
     const sesForView = st.sess || { rid: rc.id, date: '', i: 9, sets: { 9: 1 }, start: Date.now() - 754000, restEnd: null, restTotal: 0 };
@@ -4173,7 +4036,7 @@ class Component extends DCLogic {
 
     return {
       th: th, c: c, tint: tint, primary: primary, onPrimary: onPrimary, primaryText: th.text,
-      font: F.sans, mono: F.mono,
+      font: F.sans, mono: F.mono, halo: halo, haloEval: this.haloCss(null, 135), b3: b3,
       prefs: st.prefs, initial: (st.prefs.nombre || '?').trim().charAt(0).toUpperCase() || '?',
       greeting: greet, menuSub: hv.has ? 'Salud ' + hv.overall + ' · ' + hv.gLabel.toLowerCase() : 'Sin evaluación de salud',
 
@@ -4393,6 +4256,11 @@ class Component extends DCLogic {
     morphdom(appEl, '<div id="app">' + html + '</div>', {
       onBeforeElUpdated: function (from, to) {
         if (from.isEqualNode(to)) return false;
+        if (from.classList && from.classList.contains('body3d') && from.getAttribute('data-key') === to.getAttribute('data-key')) {
+          from.setAttribute('data-loads', to.getAttribute('data-loads') || '{}');
+          from.setAttribute('data-dark', to.getAttribute('data-dark') || '0');
+          return false;
+        }
         if (from === document.activeElement && (from.tagName === 'INPUT' || from.tagName === 'TEXTAREA')) { to.value = from.value; if (from.tagName === 'TEXTAREA') to.textContent = from.value; }
         return true;
       }
@@ -4404,6 +4272,7 @@ class Component extends DCLogic {
       if (tc) tc.setAttribute('content', vals.th.bg);
     }
     if (comp.componentDidUpdate) comp.componentDidUpdate();
+    if (window.Body3D) { try { window.Body3D.sync(); } catch (e) { console.error(e); } }
     var run = window.__dc.cbs; window.__dc.cbs = [];
     run.forEach(function (f) { try { f(); } catch (e) { console.error(e); } });
   }
