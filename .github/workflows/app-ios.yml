@@ -1,0 +1,40 @@
+# Compila la app nativa de keystone para iPhone (sin firmar) y la publica como keystone.ipa.
+# SideStore la firma con tu Apple ID gratis al instalarla.
+name: App iOS
+on:
+  push:
+    paths: ['nativo/**', '.github/workflows/app-ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: { group: app-ios, cancel-in-progress: true }
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 40
+    defaults: { run: { working-directory: nativo } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Elegir el Xcode más nuevo
+        run: |
+          X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          echo "Usando $X"; sudo xcode-select -s "$X"; xcodebuild -version
+      - run: npm ci
+      - name: Compilar
+        run: |
+          xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
+            -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" build
+      - name: Empaquetar keystone.ipa
+        run: |
+          mkdir -p Payload && cp -R build/Build/Products/Release-iphoneos/App.app Payload/
+          zip -qry keystone.ipa Payload && ls -la keystone.ipa
+      - uses: actions/upload-artifact@v4
+        with: { name: keystone-ipa, path: nativo/keystone.ipa }
+      - name: Publicar en la release "app"
+        env: { GH_TOKEN: '${{ github.token }}' }
+        run: |
+          gh release view app >/dev/null 2>&1 || gh release create app --title "keystone para iPhone" --notes "Última compilación de la app nativa. Instálala con SideStore."
+          gh release upload app keystone.ipa --clobber

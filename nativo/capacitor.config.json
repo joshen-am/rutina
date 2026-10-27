@@ -1,0 +1,21 @@
+{
+  "appId": "cl.joshen.keystone",
+  "appName": "keystone",
+  "webDir": "www",
+  "server": {
+    "url": "https://joshen-am.github.io/rutina/",
+    "errorPath": "sin-conexion.html"
+  },
+  "ios": {
+    "contentInset": "never",
+    "limitsNavigationsToAppBoundDomains": true,
+    "backgroundColor": "#FAFAFB",
+    "scrollEnabled": true
+  },
+  "appendUserAgent": "KeystoneApp",
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#1FD38A"
+    }
+  }
+}
