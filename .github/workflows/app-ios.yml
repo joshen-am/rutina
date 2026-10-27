@@ -20,13 +20,20 @@ jobs:
       - name: Elegir el Xcode más nuevo
         run: |
           X=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
-          echo "Usando $X"; sudo xcode-select -s "$X"; xcodebuild -version
+          sudo xcode-select -s "$X"; echo "::notice::$(xcodebuild -version | tr '\n' ' ')"
       - run: npm ci
       - name: Compilar
         run: |
+          set +e
           xcodebuild -project ios/App/App.xcodeproj -scheme App -configuration Release \
             -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build \
-            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" build
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" DEVELOPMENT_TEAM="" build > build.log 2>&1
+          st=$?
+          if [ $st -ne 0 ]; then
+            grep -E "error:|error -|fatal|Could not|failed" build.log | sort -u | head -25 | while IFS= read -r l; do echo "::error::$l"; done
+            tail -15 build.log | while IFS= read -r l; do echo "::warning::$l"; done
+          fi
+          exit $st
       - name: Empaquetar keystone.ipa
         run: |
           mkdir -p Payload && cp -R build/Build/Products/Release-iphoneos/App.app Payload/
