@@ -1,13 +1,12 @@
 /* keystone · cuerpo 3D
-   Modelo: "Xbot" de Mixamo (ejemplos de three.js). Cada vértice se asigna a una región muscular
-   según el hueso que más lo mueve y hacia dónde mira su normal (frente o espalda).
+   Modelo propio: un cuerpo liso hecho con formas suaves; cada vértice trae el número de su músculo.
    La carga de cada región (0..1) llega en data-loads del contenedor .body3d y tiñe la piel de ámbar a rojo. */
 (function () {
   'use strict';
   var BASE = (document.currentScript && document.currentScript.src) ? document.currentScript.src.replace(/[^/]*$/, '') : './';
   var S = { three: null, ready: false, loading: false, failed: false, el: null, canvas: null, renderer: null, scene: null, camera: null,
             pivot: null, mixer: null, surface: null, joints: null, regionOf: null, loadsStr: '', dark: null, raf: 0, last: 0,
-            visible: true, drag: null, vel: 0, io: null, ro: null, fitH: 2, center: null, statik: !!window.B3_STATIC };
+            visible: true, t: 0, model: null, drag: null, vel: 0, io: null, ro: null, fitH: 2, center: null, statik: !!window.B3_STATIC };
 
   function luma(el) { return el && el.getClientRects().length && el.offsetWidth > 0 && el.offsetHeight > 0; }
 
@@ -84,34 +83,23 @@
       var scene = new T.Scene();
       var pm = new T.PMREMGenerator(renderer);
       scene.environment = pm.fromScene(new m[2].RoomEnvironment(), 0.04).texture;
-      scene.environmentIntensity = 0.9;
-      var key = new T.DirectionalLight(0xffffff, 1.6); key.position.set(1.5, 3, 2.5); scene.add(key);
-      var rim = new T.DirectionalLight(0xffffff, 1.2); rim.position.set(-2, 2, -2.5); scene.add(rim);
+      scene.environmentIntensity = 0.62;
+      var key = new T.DirectionalLight(0xffffff, 2.1); key.position.set(-1.6, 2.6, 2.4); scene.add(key);
+      var rim = new T.DirectionalLight(0xffffff, 1.4); rim.position.set(2.2, 1.6, -2.4); scene.add(rim);
       var camera = new T.PerspectiveCamera(24, 0.6, 0.1, 50);
       S.canvas = canvas; S.renderer = renderer; S.scene = scene; S.camera = camera;
       new m[1].GLTFLoader().load(BASE + 'vendor/three/body.glb', function (g) {
         var model = g.scene;
         var pivot = new T.Group(); pivot.add(model); scene.add(pivot); S.pivot = pivot;
-        model.traverse(function (o) {
-          if (!o.isSkinnedMesh) return;
-          o.frustumCulled = false;
-          var surf = /HighLimbs|Surface/i.test((o.material && o.material.name) || '') || /Surface/.test(o.name || '') || (o.parent && /Surface/.test(o.parent.name || ''));
-          if (surf && !S.surface) S.surface = o; else S.joints = o;
-        });
-        if (!S.surface) { S.surface = S.joints; S.joints = null; }
+        model.traverse(function (o) { if (o.isMesh && !S.surface) S.surface = o; });
         prepSurface(T);
-        pivot.rotation.y = S.yaw0 + (window.B3_YAW || 0);
-        if (S.joints) S.joints.material = new T.MeshStandardMaterial({ color: 0xcfcfd4, roughness: 0.38, metalness: 0.0 });
-        if (g.animations && g.animations.length) {
-          S.mixer = new T.AnimationMixer(model);
-          S.mixer.clipAction(g.animations[0]).play();
-          S.mixer.update(0.6);
-        }
+        pivot.rotation.y = (window.B3_YAW || 0);
         model.updateMatrixWorld(true);
-        var box = new T.Box3().setFromObject(model, true);
+        var box = new T.Box3().setFromObject(model);
         var c = box.getCenter(new T.Vector3());
         model.position.x -= c.x; model.position.z -= c.z;
-        S.fitH = box.max.y - box.min.y; S.fitW = Math.max(box.max.x - box.min.x, box.max.z - box.min.z); S.center = new T.Vector3(0, c.y, 0);
+        S.fitH = box.max.y - box.min.y; S.fitW = Math.max(box.max.x - box.min.x, box.max.z - box.min.z);
+        S.center = new T.Vector3(0, c.y, 0); S.model = model;
         S.io = new IntersectionObserver(function (es) { S.visible = es.some(function (e) { return e.isIntersecting; }); if (S.visible) start(); });
         S.ro = new ResizeObserver(function () { resize(); });
         bindDrag(canvas);
@@ -124,81 +112,21 @@
     }).catch(function () { S.failed = true; });
   }
 
-  /* ----- regiones ----- */
+  /* ----- regiones: vienen en el modelo, un número por vértice ----- */
+  var KEYS = ['chest', 'deltF', 'deltB', 'biceps', 'triceps', 'forearm', 'abs', 'lowback', 'traps', 'lats', 'glutes', 'quads', 'hams', 'calves'];
   function prepSurface(T) {
-    var mesh = S.surface, geo = mesh.geometry;
-    if (geo.attributes.position.isInterleavedBufferAttribute || geo.attributes.position.normalized) {
-      // KHR_mesh_quantization: deja posiciones/normales en float para leerlas cómodo
-      ['position', 'normal'].forEach(function (k) {
-        var a = geo.attributes[k]; if (!a) return;
-        var arr = new Float32Array(a.count * 3);
-        for (var i = 0; i < a.count; i++) { arr[i * 3] = a.getX(i); arr[i * 3 + 1] = a.getY(i); arr[i * 3 + 2] = a.getZ(i); }
-        geo.setAttribute(k, new T.BufferAttribute(arr, 3));
-      });
-    }
+    var geo = S.surface.geometry, n = geo.attributes.position.count;
     if (!geo.attributes.normal) geo.computeVertexNormals();
-    var n = geo.attributes.position.count;
     geo.setAttribute('color', new T.BufferAttribute(new Float32Array(n * 3), 3));
-    mesh.material = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.42, metalness: 0.0 });
-
-    mesh.skeleton.bones.forEach(function (b) { b.updateMatrixWorld(true); });
-    var bones = mesh.skeleton.bones, inv = mesh.skeleton.boneInverses;
-    var pos = {}, idx = {};
-    bones.forEach(function (b, i) {
-      var k = b.name.replace(/^mixamorig:?/, '');
-      idx[k] = i;
-      pos[k] = new T.Vector3().setFromMatrixPosition(inv[i].clone().invert());
-    });
-    var V = T.Vector3;
-    var up = new V().subVectors(pos.Head, pos.Hips).normalize();
-    var fwd;
-    if (pos.LeftEye && pos.Head) fwd = new V().subVectors(pos.LeftEye, pos.Head);
-    else fwd = new V().subVectors(pos.LeftToeBase, pos.LeftFoot);
-    fwd.addScaledVector(up, -fwd.dot(up)).normalize();
-    var height = pos.Head.distanceTo(pos.Hips);
-    var child = { Arm: 'ForeArm', ForeArm: 'Hand', UpLeg: 'Leg', Leg: 'Foot' };
-    var bm = mesh.bindMatrix, nm = new T.Matrix3().getNormalMatrix(bm);
-    var P = geo.attributes.position, N = geo.attributes.normal, SI = geo.attributes.skinIndex, SW = geo.attributes.skinWeight;
-    var keys = bones.map(function (b) { return b.name.replace(/^mixamorig:?/, ''); });
-    var region = new Array(n);
-    var p = new V(), q = new V(), d = new V(), a = new V();
-    for (var i = 0; i < n; i++) {
-      var best = 0, bw = -1;
-      for (var j = 0; j < 4; j++) { var w = SW.getComponent(i, j); if (w > bw) { bw = w; best = SI.getComponent(i, j); } }
-      var full = keys[best] || '';
-      var side = /^Left/.test(full) ? 'Left' : /^Right/.test(full) ? 'Right' : '';
-      var k = full.replace(/^(Left|Right)/, '');
-      p.fromBufferAttribute(P, i).applyMatrix4(bm);
-      q.fromBufferAttribute(N, i).applyMatrix3(nm).normalize();
-      var f = q.dot(fwd);
-      var t = 0;
-      if (child[k] && pos[full] && pos[side + child[k]]) {
-        d.subVectors(pos[side + child[k]], pos[full]);
-        a.subVectors(p, pos[full]);
-        t = a.dot(d) / d.lengthSq();
-      }
-      var hy = a.subVectors(p, pos.Hips).dot(up) / height; // altura relativa a la cadera (0 cadera, 1 cabeza)
-      var r = null;
-      if (k === 'Hips') r = f < -0.15 ? 'glutes' : (f > 0.3 && hy > -0.02 ? 'abs' : null);
-      else if (k === 'Spine') r = f > 0.1 ? 'abs' : f < -0.1 ? 'lowback' : null;
-      else if (k === 'Spine1') r = f > 0.1 ? 'abs' : f < -0.1 ? (hy > 0.38 ? 'lats' : 'lowback') : 'lats';
-      else if (k === 'Spine2') r = f > 0.05 ? (hy > 0.5 ? 'chest' : 'abs') : (hy > 0.72 ? 'traps' : 'lats');
-      else if (k === 'Neck') r = f < 0 ? 'traps' : null;
-      else if (k === 'Shoulder') r = f > 0.35 ? 'chest' : f < -0.05 ? 'traps' : (q.dot(up) > 0.4 ? 'traps' : 'deltF');
-      else if (k === 'Arm') r = t < 0.3 ? (f >= 0 ? 'deltF' : 'deltB') : (f >= 0 ? 'biceps' : 'triceps');
-      else if (k === 'ForeArm') r = 'forearm';
-      else if (k === 'UpLeg') r = f < -0.05 ? (t < 0.25 ? 'glutes' : 'hams') : 'quads';
-      else if (k === 'Leg') r = f < 0.1 ? 'calves' : null;
-      region[i] = r;
-    }
-    S.regionOf = region;
-    S.yaw0 = -Math.atan2(fwd.x, fwd.z);
+    S.surface.material = new T.MeshPhysicalMaterial({ vertexColors: true, roughness: 0.38, metalness: 0, clearcoat: 0.35, clearcoatRoughness: 0.45, sheen: 0.3, sheenRoughness: 0.6 });
+    var ra = geo.attributes._region, wa = geo.attributes._w, region = new Array(n), wt = new Float32Array(n);
+    for (var i = 0; i < n; i++) { var r = ra ? Math.round(ra.getX(i)) : 0; region[i] = r > 0 ? KEYS[r - 1] : null; wt[i] = wa ? wa.getX(i) / 255 : 1; }
+    S.regionOf = region; S.wt = wt;
   }
 
   function tintBase() {
     var T = S.three;
-    S.base = new T.Color(S.dark ? '#8E8E96' : '#E9E9EC');
-    if (S.joints) S.joints.material.color.set(S.dark ? '#6E6E78' : '#CDCDD3');
+    S.base = new T.Color(S.dark ? '#A3A3AC' : '#D8D8DE');
   }
 
   function paint(L) {
@@ -209,11 +137,14 @@
       if (v < 0.04) return;
       var hue = (42 - 40 * Math.pow(v, 0.8)) / 360;
       var c = new T.Color().setHSL(hue, 0.88, S.dark ? 0.56 : 0.52, T.SRGBColorSpace);
-      cols[k] = S.base.clone().lerp(c, Math.min(1, 0.35 + v * 0.75));
+      cols[k] = c; c.amt = Math.min(1, 0.35 + v * 0.75);
     });
     for (var i = 0; i < C.count; i++) {
-      var c = (R[i] && cols[R[i]]) || S.base;
-      C.setXYZ(i, c.r, c.g, c.b);
+      var c = R[i] && cols[R[i]];
+      if (!c) { C.setXYZ(i, S.base.r, S.base.g, S.base.b); continue; }
+      var a = c.amt * S.wt[i];
+      tmp.copy(S.base).lerp(c, a);
+      C.setXYZ(i, tmp.r, tmp.g, tmp.b);
     }
     C.needsUpdate = true;
     draw();
@@ -249,7 +180,9 @@
       if (Math.abs(S.vel) > 0.05) { S.pivot.rotation.y += S.vel * dt; S.vel *= Math.pow(0.04, dt); }
       else S.pivot.rotation.y += 0.32 * dt;
     }
-    if (S.mixer) S.mixer.update(dt);
+    S.t = (S.t || 0) + dt;
+    var br = 1 + 0.006 * Math.sin(S.t * 1.6);
+    S.model.scale.set(br, 1 + 0.002 * Math.sin(S.t * 1.6), br);
     draw();
     S.raf = requestAnimationFrame(loop);
   }
