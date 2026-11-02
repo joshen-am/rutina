@@ -30,9 +30,12 @@
     if (!el) { stop(); return; }
     if (!S.ready) { if (!S.loading) boot(); S.pending = el; return; }
     attach(el);
+    var ek = el.getAttribute('data-ex') || '';
+    if (!(window.KS_EX && window.KS_EX[ek])) ek = '';
+    if (ek !== (S.exKey || '')) setMode(ek);
     var dk = el.getAttribute('data-dark') === '1';
     if (dk !== S.dark) { S.dark = dk; tintBase(); S.loadsStr = null; }
-    var ls = el.getAttribute('data-loads') || '{}';
+    var ls = S.exKey ? JSON.stringify(S.ex.def.loads || {}) : (el.getAttribute('data-loads') || '{}');
     if (ls !== S.loadsStr) { S.loadsStr = ls; var L = {}; try { L = JSON.parse(ls); } catch (e) {} paint(L); }
     start();
   }
@@ -58,6 +61,7 @@
     S.canvas.style.width = w + 'px'; S.canvas.style.height = h + 'px';
     S.camera.aspect = w / h;
     var T = S.three;
+    if (S.exKey) { exCamera(); draw(); return; }
     var vfov = T.MathUtils.degToRad(S.camera.fov);
     var needH = S.fitH * 1.06;
     var needW = S.fitW * 1.08;
@@ -102,6 +106,7 @@
         prepSurface(T);
         pivot.rotation.y = S.yaw0 + (window.B3_YAW || 0);
         if (S.joints) S.joints.material = new T.MeshStandardMaterial({ color: 0xcfcfd4, roughness: 0.38, metalness: 0.0 });
+        S.model = model; exInit(T);
         if (g.animations && g.animations.length) {
           S.mixer = new T.AnimationMixer(model);
           S.mixer.clipAction(g.animations[0]).play();
@@ -112,6 +117,7 @@
         var c = box.getCenter(new T.Vector3());
         model.position.x -= c.x; model.position.z -= c.z;
         S.fitH = box.max.y - box.min.y; S.fitW = Math.max(box.max.x - box.min.x, box.max.z - box.min.z); S.center = new T.Vector3(0, c.y, 0);
+        S.floorY = box.min.y + 0.004; S.restPos = model.position.clone();
         S.io = new IntersectionObserver(function (es) { S.visible = es.some(function (e) { return e.isIntersecting; }); if (S.visible) start(); });
         S.ro = new ResizeObserver(function () { resize(); });
         bindDrag(canvas);
@@ -245,16 +251,199 @@
     S.raf = 0;
     if (!S.el || !document.body.contains(S.el) || document.hidden || !S.visible) return;
     var dt = Math.min(0.05, (now - S.last) / 1000); S.last = now;
-    if (!S.drag) {
-      if (Math.abs(S.vel) > 0.05) { S.pivot.rotation.y += S.vel * dt; S.vel *= Math.pow(0.04, dt); }
-      else S.pivot.rotation.y += 0.32 * dt;
+    if (!S.drag && Math.abs(S.vel) > 0.05) { S.pivot.rotation.y += S.vel * dt; S.vel *= Math.pow(0.04, dt); }
+    if (S.exKey) {
+      S.ext += dt;
+      setPose(sample(S.ex, S.ext));
+    } else {
+      if (!S.drag && Math.abs(S.vel) <= 0.05) S.pivot.rotation.y += 0.32 * dt;
+      if (S.mixer) S.mixer.update(dt);
     }
-    if (S.mixer) S.mixer.update(dt);
     draw();
     S.raf = requestAnimationFrame(loop);
   }
 
   function draw() { if (S.ready && S.el) S.renderer.render(S.scene, S.camera); }
 
-  window.Body3D = { sync: sync, state: S };
+  /* ----- ejercicios: poses clave, IK de dos huesos e interpolación ----- */
+  var LIMBS = [['lLeg', 'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'lFoot', 1], ['rLeg', 'RightUpLeg', 'RightLeg', 'RightFoot', 'rFoot', -1],
+               ['lArm', 'LeftArm', 'LeftForeArm', 'LeftHand', 'lHand', 1], ['rArm', 'RightArm', 'RightForeArm', 'RightHand', 'rHand', -1]];
+  var CTRL = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head', 'LeftShoulder', 'RightShoulder', 'LeftArm', 'LeftForeArm', 'LeftHand', 'RightArm', 'RightForeArm', 'RightHand',
+              'LeftUpLeg', 'LeftLeg', 'LeftFoot', 'LeftToeBase', 'RightUpLeg', 'RightLeg', 'RightFoot', 'RightToeBase'];
+  var CONTACT = [['LeftToeBase', 0.02], ['RightToeBase', 0.02], ['LeftFoot', 0.08], ['RightFoot', 0.08], ['LeftHand', 0.03], ['RightHand', 0.03],
+                 ['LeftForeArm', 0.045], ['RightForeArm', 0.045], ['LeftLeg', 0.06], ['RightLeg', 0.06], ['Head', 0.1], ['Hips', 0.1], ['Spine2', 0.11], ['Spine', 0.1]];
+  var FRAMEB = ['HeadTop_End', 'Head', 'LeftHandMiddle4', 'RightHandMiddle4', 'LeftToe_End', 'RightToe_End', 'LeftLeg', 'RightLeg', 'Hips', 'LeftArm', 'RightArm', 'LeftForeArm', 'RightForeArm', 'Spine2', 'LeftFoot', 'RightFoot'];
+  var _v = [], _q = [];
+
+  function exInit(T) {
+    S.B = {};
+    S.model.traverse(function (o) { if (o.isBone) S.B[o.name.replace(/^mixamorig:?/, '')] = o; });
+    if (!S.B.Hips) return;
+    S.hipsRest = S.B.Hips.position.clone();
+    S.scale = new T.Vector3(); S.B.Hips.parent.getWorldScale(S.scale); S.scale = S.scale.x / S.model.getWorldScale(new T.Vector3()).x;
+    S.d0 = {}; S.len = {};
+    LIMBS.forEach(function (L) {
+      var up = S.B[L[1]], lo = S.B[L[2]], end = S.B[L[3]];
+      S.d0[L[1]] = lo.position.clone().normalize(); S.d0[L[2]] = end.position.clone().normalize();
+      S.len[L[1]] = lo.position.length() * S.scale; S.len[L[2]] = end.position.length() * S.scale;
+    });
+    for (var i = 0; i < 12; i++) { _v.push(new T.Vector3()); _q.push(new T.Quaternion()); }
+    S.qModelInv = new T.Quaternion();
+  }
+
+  function mPos(b, out) { b.getWorldPosition(out); return S.model.worldToLocal(out); }
+  function mQuat(b, out) { b.getWorldQuaternion(out); S.model.getWorldQuaternion(S.qModelInv).invert(); return out.premultiply(S.qModelInv); }
+  function eul(a, out, k) { var T = S.three, d = Math.PI / 180; k = k || 1; return out.setFromEuler(new T.Euler(a[0] * d * k, a[1] * d * k, a[2] * d * k, 'YXZ')); }
+
+  // resuelve la pose completa sobre el esqueleto
+  function setPose(P) {
+    var T = S.three, B = S.B; if (!B || !B.Hips) return;
+    CTRL.forEach(function (n) { if (B[n]) B[n].quaternion.identity(); });
+    eul(P.hips.r, B.Hips.quaternion);
+    var hp = P.hips.p || [0, 0.5, 0];
+    var target = _v[0].set(hp[0], S.floorY + hp[1], hp[2]);
+    B.Hips.position.copy(B.Hips.parent.worldToLocal(S.model.localToWorld(target.clone())));
+    var sp = [P.spine[0] / 3, P.spine[1] / 3, P.spine[2] / 3];
+    ['Spine', 'Spine1', 'Spine2'].forEach(function (n) { eul(sp, B[n].quaternion); });
+    var hd = [P.head[0] / 2, P.head[1] / 2, P.head[2] / 2];
+    eul(hd, B.Neck.quaternion); eul(hd, B.Head.quaternion);
+    eul(P.sh, B.LeftShoulder.quaternion); eul([P.sh[0], -P.sh[1], -P.sh[2]], B.RightShoulder.quaternion);
+    S.model.updateMatrixWorld(true);
+    var Fq = mQuat(B.Hips, _q[0]).clone(), FqI = Fq.clone().invert();
+    LIMBS.forEach(function (L) {
+      var spec = P[L[0]]; if (!spec) return;
+      var up = B[L[1]], lo = B[L[2]], end = B[L[3]], side = L[5];
+      var F = spec.w ? new T.Quaternion() : Fq, FI = spec.w ? new T.Quaternion() : FqI;
+      var u1, u2;
+      if (spec.ik) {
+        var R = mPos(up, new T.Vector3()), Tg = new T.Vector3(spec.ik[0], S.floorY + spec.ik[1], spec.ik[2]);
+        var a = S.len[L[1]], b = S.len[L[2]];
+        var D = new T.Vector3().subVectors(Tg, R), d = Math.min(Math.max(D.length(), Math.abs(a - b) + 1e-3), a + b - 1e-3);
+        var u = D.normalize();
+        var x = (a * a - b * b + d * d) / (2 * d), h = Math.sqrt(Math.max(0, a * a - x * x));
+        var pole = new T.Vector3(spec.pole[0], spec.pole[1], spec.pole[2]).normalize();
+        var w = pole.addScaledVector(u, -pole.dot(u)); if (w.lengthSq() < 1e-6) w.set(0, 0, 1); w.normalize();
+        var K = R.clone().addScaledVector(u, x).addScaledVector(w, h), E = R.clone().addScaledVector(u, d);
+        u1 = K.clone().sub(R).normalize(); u2 = E.sub(K).normalize();
+      } else {
+        u1 = new T.Vector3(spec.a[0], spec.a[1], spec.a[2]).normalize().applyQuaternion(F);
+        u2 = new T.Vector3(spec.b[0], spec.b[1], spec.b[2]).normalize().applyQuaternion(F);
+      }
+      var q1 = F.clone().multiply(new T.Quaternion().setFromUnitVectors(S.d0[L[1]], u1.clone().applyQuaternion(FI)));
+      var q2 = F.clone().multiply(new T.Quaternion().setFromUnitVectors(S.d0[L[2]], u2.clone().applyQuaternion(FI)));
+      var pq = mQuat(up.parent, new T.Quaternion());
+      up.quaternion.copy(pq.invert().multiply(q1));
+      lo.quaternion.copy(q1.clone().invert().multiply(q2));
+      var e = P[L[4]], q3 = null;
+      if (L[0].indexOf('Leg') > 0) {
+        if (e === 'flat') q3 = new T.Quaternion();
+        else if (typeof e === 'number') q3 = eul([e, 0, 0], new T.Quaternion());
+      } else if (e === 'flat') q3 = eul([0, -90 * side, 0], new T.Quaternion());
+      if (q3) end.quaternion.copy(q2.clone().invert().multiply(q3));
+    });
+    S.model.updateMatrixWorld(true);
+    if (P.ground || !P.hips.p) {
+      var lo2 = Infinity, p = new T.Vector3();
+      CONTACT.forEach(function (c) { if (B[c[0]]) { mPos(B[c[0]], p); lo2 = Math.min(lo2, p.y - c[1]); } });
+      var dy = S.floorY - lo2;
+      var hm = mPos(B.Hips, new T.Vector3()); hm.y += dy;
+      B.Hips.position.copy(B.Hips.parent.worldToLocal(S.model.localToWorld(hm)));
+      S.model.updateMatrixWorld(true);
+    }
+  }
+
+  // de una pose con IK a direcciones (para mezclar poses con tipos distintos)
+  function toDirs(P) {
+    setPose(P);
+    var T = S.three, B = S.B, out = {};
+    var FqI = mQuat(B.Hips, new T.Quaternion()).invert();
+    LIMBS.forEach(function (L) {
+      var a = mPos(B[L[2]], new T.Vector3()).sub(mPos(B[L[1]], new T.Vector3())).normalize().applyQuaternion(FqI);
+      var b = mPos(B[L[3]], new T.Vector3()).sub(mPos(B[L[2]], new T.Vector3())).normalize().applyQuaternion(FqI);
+      out[L[0]] = { a: [a.x, a.y, a.z], b: [b.x, b.y, b.z] };
+    });
+    return out;
+  }
+
+  function lerpV(a, b, f) { return a.map(function (x, i) { return x + (b[i] - x) * f; }); }
+  function mix(A, Bk, f, dA, dB) {
+    var o = { hips: { r: lerpV(A.hips.r, Bk.hips.r, f) }, spine: lerpV(A.spine, Bk.spine, f), head: lerpV(A.head, Bk.head, f), sh: lerpV(A.sh, Bk.sh, f), ground: A.ground || Bk.ground };
+    if (A.hips.p && Bk.hips.p) o.hips.p = lerpV(A.hips.p, Bk.hips.p, f);
+    LIMBS.forEach(function (L) {
+      var a = A[L[0]], b = Bk[L[0]];
+      if (a.ik && b.ik) o[L[0]] = { ik: lerpV(a.ik, b.ik, f), pole: lerpV(a.pole, b.pole, f) };
+      else if (a.a && b.a && !!a.w === !!b.w) o[L[0]] = { a: lerpV(a.a, b.a, f), b: lerpV(a.b, b.b, f), w: a.w };
+      else { var x = dA[L[0]], y = dB[L[0]]; o[L[0]] = { a: lerpV(x.a, y.a, f), b: lerpV(x.b, y.b, f) }; }
+      var ea = A[L[4]], eb = Bk[L[4]];
+      o[L[4]] = (typeof ea === 'number' && typeof eb === 'number') ? ea + (eb - ea) * f : (typeof ea === 'number' && eb === 'flat') ? ea * (1 - f) : (ea === 'flat' && typeof eb === 'number') ? eb * f : (f < 0.5 ? ea : eb);
+    });
+    return o;
+  }
+  function ease(u) { var t = Math.min(1, Math.max(0, (u - 0.14) / 0.72)); return t * t * (3 - 2 * t); }
+  function sample(ex, t) {
+    var K = ex.keys, n = K.length, T = ex.def.t || 1;
+    if (ex.def.loop === 'hold' || n === 1) {
+      var P0 = JSON.parse(JSON.stringify(K[0])); P0.spine = [P0.spine[0] + 1.6 * Math.sin(t * 2.1), P0.spine[1], P0.spine[2]]; return P0;
+    }
+    var u = t / T, i, j, f;
+    if (ex.def.loop === 'cycle') { u = u % n; i = Math.floor(u); j = (i + 1) % n; f = ex.def.smooth ? u - i : ease(u - i); }
+    else { u = u % (2 * (n - 1)); if (u < n - 1) { i = Math.floor(u); j = i + 1; f = ease(u - i); } else { u -= n - 1; i = n - 1 - Math.floor(u); j = i - 1; f = ease(u - Math.floor(u)); } }
+    return mix(K[i], K[j], f, ex.dirs[i], ex.dirs[j]);
+  }
+
+  function setMode(k) {
+    var T = S.three;
+    S.exKey = k;
+    document.body.classList.toggle('ex3d-on', !!k);
+    if (!k) {
+      S.ex = null; S.pivot.rotation.y = S.yaw0; S.vel = 0;
+      if (S.shadow) S.shadow.visible = false;
+      S.loadsStr = null; resize(); return;
+    }
+    var def = window.KS_EX[k];
+    var keys = def.keys.map(function (p) { return JSON.parse(JSON.stringify(p)); });
+    S.ex = { def: def, keys: keys, dirs: keys.map(toDirs) };
+    S.ext = 0; S.vel = 0;
+    S.pivot.rotation.y = S.yaw0 + (def.view || 0) * Math.PI / 180 + (window.B3_YAW || 0);
+    // encuadre: todas las poses de la animación
+    S.pivot.updateMatrixWorld(true);
+    var box = new T.Box3(), p = new T.Vector3(), foot = new T.Box3();
+    var steps = def.loop === 'hold' ? 1 : 16, total = def.loop === 'hold' ? 0 : (def.t || 1) * (def.loop === 'cycle' ? keys.length : 2 * (keys.length - 1));
+    for (var s = 0; s <= steps; s++) {
+      setPose(sample(S.ex, total * s / steps));
+      FRAMEB.forEach(function (n) { if (!S.B[n]) return; S.B[n].getWorldPosition(p); box.expandByPoint(p); foot.expandByPoint(S.model.worldToLocal(p.clone())); });
+    }
+    box.expandByScalar(0.09); box.min.y = Math.min(box.min.y, S.pivot.localToWorld(new T.Vector3(0, S.floorY, 0)).y);
+    S.exBox = box;
+    if (!S.shadow) {
+      var cv = document.createElement('canvas'); cv.width = cv.height = 128;
+      var g = cv.getContext('2d'), gr = g.createRadialGradient(64, 64, 4, 64, 64, 62);
+      gr.addColorStop(0, 'rgba(0,0,0,0.26)'); gr.addColorStop(0.55, 'rgba(0,0,0,0.09)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+      S.shadow = new T.Mesh(new T.PlaneGeometry(1, 1), new T.MeshBasicMaterial({ map: new T.CanvasTexture(cv), transparent: true, depthWrite: false }));
+      S.shadow.rotation.x = -Math.PI / 2; S.shadow.renderOrder = -1; S.model.add(S.shadow);
+    }
+    var fc = foot.getCenter(new T.Vector3()), fs = foot.getSize(new T.Vector3());
+    S.shadow.position.set(fc.x, S.floorY + 0.002, fc.z);
+    S.shadow.scale.set(Math.max(0.5, fs.x * 1.1), Math.max(0.5, fs.z * 1.1), 1);
+    S.shadow.visible = true;
+    setPose(sample(S.ex, 0));
+    S.loadsStr = null;
+    exCamera();
+  }
+
+  function exCamera() {
+    var T = S.three, box = S.exBox; if (!box || !S.camera) return;
+    var c = box.getCenter(new T.Vector3()), sz = box.getSize(new T.Vector3());
+    var el = ((S.ex && S.ex.def.elev) || 6) * Math.PI / 180, vfov = T.MathUtils.degToRad(S.camera.fov);
+    var needH = sz.y * Math.cos(el) + sz.z * Math.sin(el) * 0.6, needW = sz.x;
+    var dist = Math.max(needH / (2 * Math.tan(vfov / 2)), needW / (2 * Math.tan(vfov / 2) * S.camera.aspect)) + sz.z * 0.5;
+    S.camera.position.set(c.x, c.y + Math.sin(el) * dist, c.z + Math.cos(el) * dist);
+    S.camera.lookAt(c);
+    S.camera.updateProjectionMatrix();
+  }
+
+  function debugPose(k, t) { if (!S.ready) return false; if (k !== S.exKey) setMode(k); S.ext = t; setPose(sample(S.ex, t)); paint(S.ex.def.loads || {}); draw(); return true; }
+
+  window.Body3D = { sync: sync, state: S, debug: debugPose };
 })();

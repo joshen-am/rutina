@@ -11,10 +11,10 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="keystone">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-plata.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-plata.png">
 <link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1170x2532-plata.png">
 <style>
 @font-face{font-family:'Geist';src:url('fonts/Geist-Variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
 @font-face{font-family:'Geist Mono';src:url('fonts/GeistMono-Variable.woff2') format('woff2');font-weight:100 900;font-display:swap}
@@ -40,6 +40,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 .push{animation:push .38s cubic-bezier(.32,.72,0,1) both}
 @media (prefers-reduced-motion: reduce){.push{animation:none}}
 
+body.ex3d-on .ex3d-img{visibility:hidden}
 </style>
 </head>
 <body>
@@ -1012,7 +1013,8 @@ Todo</span>
 
 <sc-if value="{{ ss.hasImg }}" hint-placeholder-val="{{ true }}">
 <div role="img" aria-label="{{ ss.imgAlt }}" style="position: relative; width: 100%; aspect-ratio: 354 / 300; border-radius: 24px; overflow: hidden; background: {{ ss.imgBg }}">
-<img src="{{ ss.img }}" alt="" style="position: absolute; left: 0; top: 0; height: 100%; width: {{ ss.imgW }}%; max-width: none; transform: translateX(-{{ ss.shift }}%); filter: {{ ss.imgFilter }}">
+<img class="ex3d-img" src="{{ ss.img }}" alt="" style="position: absolute; left: 0; top: 0; height: 100%; width: {{ ss.imgW }}%; max-width: none; transform: translateX(-{{ ss.shift }}%); filter: {{ ss.imgFilter }}">
+<div class="body3d" data-key="ex" data-ex="{{ ss.k }}" data-dark="{{ b3.dark }}" data-loads="{}" aria-hidden="true" style="position: absolute; inset: 0"></div>
 </div>
 </sc-if>
 
@@ -1099,7 +1101,8 @@ Todo</span>
 
 <sc-if value="{{ ss.hasImg }}" hint-placeholder-val="{{ true }}">
 <div role="img" aria-label="{{ ss.imgAlt }}" style="position: relative; width: 100%; aspect-ratio: 354 / 300; border-radius: 24px; overflow: hidden; background: {{ ss.imgBg }}">
-<img src="{{ ss.img }}" alt="" style="position: absolute; left: 0; top: 0; height: 100%; width: {{ ss.imgW }}%; max-width: none; transform: translateX(-{{ ss.shift }}%); filter: {{ ss.imgFilter }}">
+<img class="ex3d-img" src="{{ ss.img }}" alt="" style="position: absolute; left: 0; top: 0; height: 100%; width: {{ ss.imgW }}%; max-width: none; transform: translateX(-{{ ss.shift }}%); filter: {{ ss.imgFilter }}">
+<div class="body3d" data-key="ex" data-ex="{{ ss.k }}" data-dark="{{ b3.dark }}" data-loads="{}" aria-hidden="true" style="position: absolute; inset: 0"></div>
 </div>
 </sc-if>
 
@@ -1313,6 +1316,7 @@ Todo</span>
 </template>
 <script type="importmap">{"imports":{"three":"./vendor/three/three.module.min.js"}}</script>
 <script src="vendor/morphdom-umd.min.js"></script>
+<script src="exercises.js"></script>
 <script src="body3d.js"></script>
 <script>
 
@@ -1790,7 +1794,7 @@ class Component extends DCLogic {
       elapsed: this.fmtClock((now - s.start) / 1000),
       even: i % 2 === 0, odd: i % 2 === 1,
       phase: p.phase, phaseColor: phaseColor, round: p.round || '',
-      hasImg: !!p.img, img: p.img || '', imgW: Math.max(1, p.n) * 100, shift: p.n ? Math.round((f / p.n) * 100000) / 1000 : 0,
+      hasImg: !!p.img, k: p.k || '', img: p.img || '', imgW: Math.max(1, p.n) * 100, shift: p.n ? Math.round((f / p.n) * 100000) / 1000 : 0,
       imgBg: dark ? th.card : '#FFFFFF', imgFilter: dark ? 'invert(0.9) hue-rotate(180deg)' : 'none',
       imgAlt: 'Animación de ' + p.name.toLowerCase(),
       isRestStep: isRest,
@@ -4329,8 +4333,7 @@ class Component extends DCLogic {
       onBeforeElUpdated: function (from, to) {
         if (from.isEqualNode(to)) return false;
         if (from.classList && from.classList.contains('body3d') && from.getAttribute('data-key') === to.getAttribute('data-key')) {
-          from.setAttribute('data-loads', to.getAttribute('data-loads') || '{}');
-          from.setAttribute('data-dark', to.getAttribute('data-dark') || '0');
+          for (var ai = 0; ai < to.attributes.length; ai++) { var at = to.attributes[ai]; if (at.name.indexOf('data-') === 0 && from.getAttribute(at.name) !== at.value) from.setAttribute(at.name, at.value); }
           return false;
         }
         if (from === document.activeElement && (from.tagName === 'INPUT' || from.tagName === 'TEXTAREA')) { to.value = from.value; if (from.tagName === 'TEXTAREA') to.textContent = from.value; }
