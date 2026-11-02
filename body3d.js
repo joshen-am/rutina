@@ -105,7 +105,7 @@
         if (!S.surface) { S.surface = S.joints; S.joints = null; }
         prepSurface(T);
         pivot.rotation.y = S.yaw0 + (window.B3_YAW || 0);
-        if (S.joints) S.joints.material = new T.MeshStandardMaterial({ color: 0xcfcfd4, roughness: 0.38, metalness: 0.0 });
+        if (S.joints) S.joints.material = new T.MeshStandardMaterial({ vertexColors: true, roughness: 0.38, metalness: 0.0 });
         S.model = model; exInit(T);
         if (g.animations && g.animations.length) {
           S.mixer = new T.AnimationMixer(model);
@@ -126,13 +126,13 @@
         sync();
         requestAnimationFrame(function () { canvas.style.opacity = '1'; });
         window.__b3ready = true;
-      }, undefined, function () { S.failed = true; });
+      }, undefined, function (e) { try { console.error('body3d', e && e.message ? e.message : e); } catch (er) {} S.failed = true; });
     }).catch(function () { S.failed = true; });
   }
 
   /* ----- regiones ----- */
-  function prepSurface(T) {
-    var mesh = S.surface, geo = mesh.geometry;
+  function prepGeo(T, mesh) {
+    var geo = mesh.geometry;
     if (geo.attributes.position.isInterleavedBufferAttribute || geo.attributes.position.normalized) {
       // KHR_mesh_quantization: deja posiciones/normales en float para leerlas cómodo
       ['position', 'normal'].forEach(function (k) {
@@ -142,6 +142,14 @@
         geo.setAttribute(k, new T.BufferAttribute(arr, 3));
       });
     }
+    if (!geo.attributes.normal) geo.computeVertexNormals();
+    if (!geo.attributes.color) geo.setAttribute('color', new T.BufferAttribute(new Float32Array(geo.attributes.position.count * 3), 3));
+  }
+
+
+  function prepSurface(T) {
+    var mesh = S.surface, geo = mesh.geometry;
+    prepGeo(T, mesh);
     if (!geo.attributes.normal) geo.computeVertexNormals();
     var n = geo.attributes.position.count;
     geo.setAttribute('color', new T.BufferAttribute(new Float32Array(n * 3), 3));
@@ -161,42 +169,92 @@
     if (pos.LeftEye && pos.Head) fwd = new V().subVectors(pos.LeftEye, pos.Head);
     else fwd = new V().subVectors(pos.LeftToeBase, pos.LeftFoot);
     fwd.addScaledVector(up, -fwd.dot(up)).normalize();
-    var height = pos.Head.distanceTo(pos.Hips);
-    var child = { Arm: 'ForeArm', ForeArm: 'Hand', UpLeg: 'Leg', Leg: 'Foot' };
     var bm = mesh.bindMatrix, nm = new T.Matrix3().getNormalMatrix(bm);
     var P = geo.attributes.position, N = geo.attributes.normal, SI = geo.attributes.skinIndex, SW = geo.attributes.skinWeight;
     var keys = bones.map(function (b) { return b.name.replace(/^mixamorig:?/, ''); });
-    var region = new Array(n);
-    var p = new V(), q = new V(), d = new V(), a = new V();
+    // músculos como manchas suaves: elipsoides anclados a las articulaciones, filtrados por hueso y por hacia dónde mira la piel
+    var Z = fwd.z >= 0 ? 1 : -1;
+    var RK = ['chest', 'deltF', 'deltB', 'biceps', 'triceps', 'forearm', 'abs', 'lowback', 'traps', 'lats', 'glutes', 'quads', 'hams', 'calves'];
+    var RI = {}; RK.forEach(function (k, i) { RI[k] = i; });
+    var TORSO = { Hips: 1, Spine: 1, Spine1: 1, Spine2: 1, Neck: 1, Shoulder: 1 }, ARM = { Arm: 1, ForeArm: 1, Shoulder: 1 }, LEG = { UpLeg: 1, Leg: 1, Hips: 1 };
+    var E = [];
+    function el(r, c, rad, face, bones, side) { E.push({ r: RI[r], c: c, rad: rad, face: face, bones: bones, side: side || 0 }); }
+    var sw = Math.abs(pos.LeftArm.x - pos.Hips.x);
+    [1, -1].forEach(function (s) {
+      var P = function (k) { return pos[(s > 0 ? 'Left' : 'Right') + k]; };
+      var A = P('Arm'), FA = P('ForeArm'), HA = P('Hand'), UL = P('UpLeg'), L = P('Leg'), F = P('Foot');
+      el('chest', [pos.Hips.x + s * sw * 0.42, pos.Spine2.y + 0.05, pos.Spine2.z], [sw * 0.46, 0.085, 0.4], 'f', TORSO, s);
+      el('lats', [pos.Hips.x + s * sw * 0.62, pos.Spine1.y + 0.02, pos.Spine1.z], [sw * 0.32, 0.15, 0.4], 'b', TORSO, s);
+      el('deltF', [A.x + s * 0.012, A.y + 0.012, A.z], [0.082, 0.085, 0.4], 'f', ARM, s);
+      el('deltB', [A.x + s * 0.012, A.y + 0.012, A.z], [0.082, 0.085, 0.4], 'b', ARM, s);
+      var ua = [A.x + (FA.x - A.x) * 0.55, A.y + (FA.y - A.y) * 0.55, A.z], ul = Math.abs(FA.x - A.x);
+      el('biceps', ua, [ul * 0.4, 0.055, 0.4], 'f', ARM, s);
+      el('triceps', ua, [ul * 0.44, 0.06, 0.4], 'b', ARM, s);
+      el('forearm', [FA.x + (HA.x - FA.x) * 0.38, FA.y, FA.z], [Math.abs(HA.x - FA.x) * 0.5, 0.06, 0.4], null, ARM, s);
+      el('glutes', [UL.x + s * 0.005, pos.Hips.y - 0.065, pos.Hips.z], [0.1, 0.105, 0.4], 'b', LEG, s);
+      var th = [UL.x + (L.x - UL.x) * 0.48, UL.y + (L.y - UL.y) * 0.48, UL.z], tl = Math.abs(UL.y - L.y);
+      el('quads', th, [0.09, tl * 0.44, 0.4], 'f', LEG, s);
+      el('hams', [th[0], th[1] - tl * 0.03, th[2]], [0.085, tl * 0.4, 0.4], 'b', LEG, s);
+      el('calves', [L.x, L.y + (F.y - L.y) * 0.3, L.z], [0.065, Math.abs(L.y - F.y) * 0.27, 0.4], 'b', { Leg: 1 }, s);
+    });
+    el('abs', [pos.Hips.x, pos.Spine.y + 0.02, pos.Spine.z], [sw * 0.46, 0.15, 0.4], 'f', TORSO, 0);
+    el('lowback', [pos.Hips.x, pos.Spine.y - 0.025, pos.Spine.z], [sw * 0.5, 0.11, 0.4], 'b', TORSO, 0);
+    el('traps', [pos.Hips.x, pos.Spine2.y + 0.125, pos.Spine2.z], [sw * 0.95, 0.12, 0.4], 'b', TORSO, 0);
+    function weigh(mesh, allow) {
+      var geo = mesh.geometry, n = geo.attributes.position.count, bm = mesh.bindMatrix, nm = new T.Matrix3().getNormalMatrix(bm);
+      var P = geo.attributes.position, N = geo.attributes.normal, SI = geo.attributes.skinIndex, SW = geo.attributes.skinWeight;
+    var K = RK.length, W = new Float32Array(n * K);
+    var p = new V(), q = new V();
+    function sst(a, b, x) { var t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
     for (var i = 0; i < n; i++) {
       var best = 0, bw = -1;
       for (var j = 0; j < 4; j++) { var w = SW.getComponent(i, j); if (w > bw) { bw = w; best = SI.getComponent(i, j); } }
-      var full = keys[best] || '';
-      var side = /^Left/.test(full) ? 'Left' : /^Right/.test(full) ? 'Right' : '';
-      var k = full.replace(/^(Left|Right)/, '');
+      var full = keys[best] || '', side = /^Left/.test(full) ? 1 : /^Right/.test(full) ? -1 : 0, bk = full.replace(/^(Left|Right)/, '');
       p.fromBufferAttribute(P, i).applyMatrix4(bm);
       q.fromBufferAttribute(N, i).applyMatrix3(nm).normalize();
-      var f = q.dot(fwd);
-      var t = 0;
-      if (child[k] && pos[full] && pos[side + child[k]]) {
-        d.subVectors(pos[side + child[k]], pos[full]);
-        a.subVectors(p, pos[full]);
-        t = a.dot(d) / d.lengthSq();
+      var nz = q.z * Z, vside = side || ((p.x - pos.Hips.x) >= 0 ? 1 : -1);
+      for (var e = 0; e < E.length; e++) {
+        var D = E[e];
+        if (!D.bones[bk]) continue;
+        if (allow && !allow[RK[D.r]]) continue;
+        if (D.side && D.side !== vside) continue;
+        var dx = (p.x - D.c[0]) / D.rad[0], dy = (p.y - D.c[1]) / D.rad[1], dz = (p.z - D.c[2]) / D.rad[2];
+        var d = Math.sqrt(dx * dx + dy * dy + dz * dz);
+        var wv = 1 - sst(0.5, 1.0, d);
+        if (wv <= 0) continue;
+        if (D.face === 'f') wv *= sst(-0.25, 0.3, nz); else if (D.face === 'b') wv *= sst(-0.25, 0.3, -nz);
+        var o = i * K + D.r; if (wv > W[o]) W[o] = wv;
       }
-      var hy = a.subVectors(p, pos.Hips).dot(up) / height; // altura relativa a la cadera (0 cadera, 1 cabeza)
-      var r = null;
-      if (k === 'Hips') r = f < -0.15 ? 'glutes' : (f > 0.3 && hy > -0.02 ? 'abs' : null);
-      else if (k === 'Spine') r = f > 0.1 ? 'abs' : f < -0.1 ? 'lowback' : null;
-      else if (k === 'Spine1') r = f > 0.1 ? 'abs' : f < -0.1 ? (hy > 0.38 ? 'lats' : 'lowback') : 'lats';
-      else if (k === 'Spine2') r = f > 0.05 ? (hy > 0.5 ? 'chest' : 'abs') : (hy > 0.72 ? 'traps' : 'lats');
-      else if (k === 'Neck') r = f < 0 ? 'traps' : null;
-      else if (k === 'Shoulder') r = f > 0.35 ? 'chest' : f < -0.05 ? 'traps' : (q.dot(up) > 0.4 ? 'traps' : 'deltF');
-      else if (k === 'Arm') r = t < 0.3 ? (f >= 0 ? 'deltF' : 'deltB') : (f >= 0 ? 'biceps' : 'triceps');
-      else if (k === 'ForeArm') r = 'forearm';
-      else if (k === 'UpLeg') r = f < -0.05 ? (t < 0.25 ? 'glutes' : 'hams') : 'quads';
-      else if (k === 'Leg') r = f < 0.1 ? 'calves' : null;
-      region[i] = r;
     }
+    // suaviza los bordes sobre la malla (vecinos por triángulo)
+    var idx = geo.index ? geo.index.array : null;
+    if (idx) {
+      var deg = new Uint32Array(n + 1);
+      for (var t = 0; t < idx.length; t++) deg[idx[t] + 1] += 2;
+      for (var t2 = 0; t2 < n; t2++) deg[t2 + 1] += deg[t2];
+      var nb = new Uint32Array(deg[n]), fill = deg.slice(0, n);
+      for (var f = 0; f < idx.length; f += 3) {
+        var A0 = idx[f], B0 = idx[f + 1], C0 = idx[f + 2];
+        nb[fill[A0]++] = B0; nb[fill[A0]++] = C0; nb[fill[B0]++] = A0; nb[fill[B0]++] = C0; nb[fill[C0]++] = A0; nb[fill[C0]++] = B0;
+      }
+      var tmpW = new Float32Array(n * K);
+      for (var it = 0; it < 3; it++) {
+        for (var v = 0; v < n; v++) {
+          var s0 = deg[v], s1 = deg[v + 1], cnt = s1 - s0;
+          for (var k2 = 0; k2 < K; k2++) {
+            var acc = W[v * K + k2] * 2;
+            for (var u = s0; u < s1; u++) acc += W[nb[u] * K + k2];
+            tmpW[v * K + k2] = acc / (cnt + 2);
+          }
+        }
+        W.set(tmpW);
+      }
+    }
+      return W;
+    }
+    S.rw = weigh(S.surface); S.rk = RK;
+    if (S.joints) { prepGeo(T, S.joints); S.jrw = weigh(S.joints, { abs: 1, lowback: 1, deltF: 1, deltB: 1 }); }
+    var region = new Array(n);
     S.regionOf = region;
     S.yaw0 = -Math.atan2(fwd.x, fwd.z);
   }
@@ -204,24 +262,33 @@
   function tintBase() {
     var T = S.three;
     S.base = new T.Color(S.dark ? '#9A9AA3' : '#E2E2E7');
-    if (S.joints) S.joints.material.color.set(S.dark ? '#71717A' : '#C4C4CB');
+    S.jbase = new T.Color(S.dark ? '#71717A' : '#C4C4CB');
   }
 
   function paint(L) {
-    var T = S.three, geo = S.surface.geometry, C = geo.attributes.color, R = S.regionOf;
-    var cols = {}, tmp = new T.Color();
-    Object.keys(L).forEach(function (k) {
+    var T = S.three, K = S.rk.length, act = [];
+    S.rk.forEach(function (k, ri) {
       var v = Math.max(0, Math.min(1, +L[k] || 0));
       if (v < 0.04) return;
-      var hue = (42 - 40 * Math.pow(v, 0.8)) / 360;
-      var c = new T.Color().setHSL(hue, 0.88, S.dark ? 0.56 : 0.52, T.SRGBColorSpace);
-      cols[k] = S.base.clone().lerp(c, Math.min(1, 0.35 + v * 0.75));
+      var hue = (40 - 38 * Math.pow(v, 0.8)) / 360;
+      var c = new T.Color().setHSL(hue, 0.88, S.dark ? 0.57 : 0.53, T.SRGBColorSpace);
+      act.push({ ri: ri, c: c, a: Math.min(1, 0.45 + v * 0.6) });
     });
-    for (var i = 0; i < C.count; i++) {
-      var c = (R[i] && cols[R[i]]) || S.base;
-      C.setXYZ(i, c.r, c.g, c.b);
+    var tmp = new T.Color();
+    function one(mesh, W, base) {
+      if (!mesh || !W) return;
+      var C = mesh.geometry.attributes.color;
+      for (var i = 0; i < C.count; i++) {
+        tmp.copy(base);
+        for (var j = 0; j < act.length; j++) {
+          var w = W[i * K + act[j].ri];
+          if (w > 0.003) tmp.lerp(act[j].c, Math.min(1, w * 1.3) * act[j].a);
+        }
+        C.setXYZ(i, tmp.r, tmp.g, tmp.b);
+      }
+      C.needsUpdate = true;
     }
-    C.needsUpdate = true;
+    one(S.surface, S.rw, S.base); one(S.joints, S.jrw, S.jbase || S.base);
     draw();
   }
 
@@ -254,7 +321,7 @@
     if (!S.drag && Math.abs(S.vel) > 0.05) { S.pivot.rotation.y += S.vel * dt; S.vel *= Math.pow(0.04, dt); }
     if (S.exKey) {
       S.ext += dt;
-      setPose(sample(S.ex, S.ext));
+      setPoseFull(sample(S.ex, S.ext));
     } else {
       if (!S.drag && Math.abs(S.vel) <= 0.05) S.pivot.rotation.y += 0.32 * dt;
       if (S.mixer) S.mixer.update(dt);
@@ -331,6 +398,7 @@
       }
       var q1 = F.clone().multiply(new T.Quaternion().setFromUnitVectors(S.d0[L[1]], u1.clone().applyQuaternion(FI)));
       var q2 = F.clone().multiply(new T.Quaternion().setFromUnitVectors(S.d0[L[2]], u2.clone().applyQuaternion(FI)));
+      if (spec.tw) q2.premultiply(new T.Quaternion().setFromAxisAngle(u2, spec.tw * side * Math.PI / 180));
       var pq = mQuat(up.parent, new T.Quaternion());
       up.quaternion.copy(pq.invert().multiply(q1));
       lo.quaternion.copy(q1.clone().invert().multiply(q2));
@@ -344,14 +412,16 @@
     S.model.updateMatrixWorld(true);
     if (P.ground || !P.hips.p) {
       var lo2 = Infinity, p = new T.Vector3();
+      lo2 = Infinity;
       CONTACT.forEach(function (c) { if (B[c[0]]) { mPos(B[c[0]], p); lo2 = Math.min(lo2, p.y - c[1]); } });
-      var dy = S.floorY - lo2;
+      var dy = S.floorY + (S.matTop || 0) - lo2;
       var hm = mPos(B.Hips, new T.Vector3()); hm.y += dy;
       B.Hips.position.copy(B.Hips.parent.worldToLocal(S.model.localToWorld(hm)));
       S.model.updateMatrixWorld(true);
     }
   }
 
+  function setPoseFull(P) { setPose(P); syncProps(); }
   // de una pose con IK a direcciones (para mezclar poses con tipos distintos)
   function toDirs(P) {
     setPose(P);
@@ -380,15 +450,107 @@
     return o;
   }
   function ease(u) { var t = Math.min(1, Math.max(0, (u - 0.14) / 0.72)); return t * t * (3 - 2 * t); }
-  function sample(ex, t) {
+  function breathe(P, t) { P.spine = [P.spine[0] + 1.2 * Math.sin(t * 2.2), P.spine[1], P.spine[2]]; P.sh = [P.sh[0], P.sh[1], P.sh[2] + 1.5 * Math.sin(t * 2.2)]; return P; }
+  function sample(ex, t) { var P = sample0(ex, t); if (ex.def.loop !== 'hold') breathe(P, t); placeProps(P); return P; }
+  function sample0(ex, t) {
     var K = ex.keys, n = K.length, T = ex.def.t || 1;
     if (ex.def.loop === 'hold' || n === 1) {
-      var P0 = JSON.parse(JSON.stringify(K[0])); P0.spine = [P0.spine[0] + 1.6 * Math.sin(t * 2.1), P0.spine[1], P0.spine[2]]; return P0;
+      var P0 = JSON.parse(JSON.stringify(K[0])); P0.spine = [P0.spine[0] + 1.6 * Math.sin(t * 2.1), P0.spine[1], P0.spine[2]]; P0.sh = [P0.sh[0], P0.sh[1], P0.sh[2] + 2 * Math.sin(t * 2.1)]; return P0;
     }
     var u = t / T, i, j, f;
-    if (ex.def.loop === 'cycle') { u = u % n; i = Math.floor(u); j = (i + 1) % n; f = ex.def.smooth ? u - i : ease(u - i); }
-    else { u = u % (2 * (n - 1)); if (u < n - 1) { i = Math.floor(u); j = i + 1; f = ease(u - i); } else { u -= n - 1; i = n - 1 - Math.floor(u); j = i - 1; f = ease(u - Math.floor(u)); } }
+    if (ex.def.loop === 'cycle') {
+      u = u % n; i = Math.floor(u); j = (i + 1) % n; f = u - i;
+      if (ex.def.smooth) {   // movimiento continuo (círculos): curva suave entre las cuatro poses vecinas
+        var h = (i + n - 1) % n, k2 = (j + 1) % n;
+        var a = mix(K[h], K[i], 0.5 + 0.5 * f, ex.dirs[h], ex.dirs[i]), b = mix(K[j], K[k2], 0.5 * f, ex.dirs[j], ex.dirs[k2]);
+        return mix(a, b, f * f * (3 - 2 * f), ex.dirs[i], ex.dirs[j]);
+      }
+      f = ease(f);
+    }
+    else {
+      // ida y vuelta: la ida (bajar) un poco más lenta que la vuelta
+      var tp = ex.def.tempo || [1.12, 0.88], seg = T * (tp[0] + tp[1]), w2 = t % (seg * (n - 1)), si = Math.floor(w2 / seg), r2 = w2 - si * seg;
+      if (r2 < T * tp[0]) { i = si; j = si + 1; f = ease(r2 / (T * tp[0])); } else { i = si + 1; j = si; f = ease((r2 - T * tp[0]) / (T * tp[1])); }
+    }
     return mix(K[i], K[j], f, ex.dirs[i], ex.dirs[j]);
+  }
+
+
+  /* ----- utilería del ejercicio ----- */
+  function mat3(T, c, o) { return new T.MeshStandardMaterial(Object.assign({ color: c, roughness: 0.6, metalness: 0 }, o || {})); }
+  function dumbbell(T) {
+    var g = new T.Group();
+    var steel = mat3(T, 0xc9cbd1, { metalness: 0.85, roughness: 0.28 }), rub = mat3(T, 0x2b2c31, { roughness: 0.55 });
+    var handle = new T.Mesh(new T.CylinderGeometry(0.0145, 0.0145, 0.135, 20), steel); handle.rotation.x = Math.PI / 2; g.add(handle);
+    [-1, 1].forEach(function (s) {
+      var head = new T.Mesh(new T.CylinderGeometry(0.043, 0.043, 0.05, 6), rub); head.rotation.x = Math.PI / 2; head.position.z = s * 0.087; g.add(head);
+      var cap = new T.Mesh(new T.CylinderGeometry(0.02, 0.02, 0.054, 16), steel); cap.rotation.x = Math.PI / 2; cap.position.z = s * 0.087; g.add(cap);
+    });
+    g.traverse(function (o) { o.castShadow = false; });
+    return g;
+  }
+  function ensureProps() {
+    var T = S.three;
+    if (S.props) return S.props;
+    var P = S.props = {};
+    P.dbL = dumbbell(T); P.dbR = dumbbell(T); P.dbC = dumbbell(T);
+    S.model.add(P.dbL); S.model.add(P.dbR); S.model.add(P.dbC);
+    P.wallMat = mat3(T, 0xf2f2f4, { roughness: 0.95, emissive: 0x202024 });
+    P.wall = new T.Mesh(new T.BoxGeometry(1.5, 2.15, 0.05), P.wallMat); S.model.add(P.wall);
+    P.door = new T.Group();
+    P.doorMat = mat3(T, 0xd9d9de, { roughness: 0.7 });
+    [-1, 1].forEach(function (s) { var post = new T.Mesh(new T.BoxGeometry(0.07, 2.1, 0.12), P.doorMat); post.position.set(s * 0.5, 1.05, 0); post.name = s < 0 ? 'R' : 'L'; P.door.add(post); });
+    var head = new T.Mesh(new T.BoxGeometry(1.07, 0.07, 0.12), P.doorMat); head.position.y = 2.1; P.door.add(head);
+    S.model.add(P.door);
+    P.matMat = mat3(T, 0xd5d8dc, { roughness: 0.95 });
+    P.mat = new T.Mesh(new T.BoxGeometry(1, 0.008, 1), P.matMat); S.model.add(P.mat);
+    hideProps();
+    return P;
+  }
+  function hideProps() { var P = S.props; if (!P) return; [P.dbL, P.dbR, P.dbC, P.wall, P.door, P.mat].forEach(function (o) { o.visible = false; }); }
+  function setupProps(def, foot) {
+    var T = S.three, P = ensureProps(); hideProps();
+    var pr = def.props || {};
+    var dk = S.dark;
+    P.wallMat.color.set(dk ? '#3a3a40' : '#f0f0f2'); P.wallMat.emissive.set(dk ? '#1c1c20' : '#7c7c82'); P.doorMat.color.set(dk ? '#45454c' : '#d6d6db'); P.matMat.color.set(dk ? '#3a3e44' : '#cfd5da');
+    S.dbMode = pr.db || null;
+    if (pr.db === 'both') { P.dbL.visible = P.dbR.visible = true; }
+    if (pr.db === 'center') P.dbC.visible = true;
+    if (pr.wall) { P.wall.visible = true; P.wall.position.set(pr.wall.x || 0, S.floorY + 1.075, pr.wall.z + (pr.wall.z > 0 ? 0.025 : -0.025)); }
+    if (pr.door) {
+      P.door.visible = true; P.door.position.set(0, S.floorY, pr.door.z);
+      P.door.children.forEach(function (c) { if (c.name) c.position.x = (c.name === 'L' ? 1 : -1) * pr.door.x; else c.scale.x = (pr.door.x * 2 + 0.07) / 1.07; });
+    }
+    var floorish = def.mat != null ? !!def.mat : S.exHigh < 0.72;
+    if (floorish) {
+      var c = foot.getCenter(new T.Vector3()), z = foot.getSize(new T.Vector3());
+      P.mat.visible = true; P.mat.position.set(c.x, S.floorY + 0.004, c.z);
+      P.mat.scale.set(Math.min(1.1, Math.max(0.62, z.x + 0.28)), 1, Math.min(2.0, Math.max(0.62, z.z + 0.34)));
+    }
+    S.matTop = floorish ? 0.008 : 0;
+  }
+  // coloca las mancuernas en las manos (en cada cuadro, después de la pose)
+  function placeProps() { S.wantProps = true; }
+  function gripPoint(side, out) {
+    var T = S.three, B = S.B, h = B[side > 0 ? 'LeftHand' : 'RightHand'];
+    return S.model.worldToLocal(h.localToWorld(out.set(side * 0.075 / S.scale, -0.018 / S.scale, 0)));
+  }
+  function syncProps() {
+    var P = S.props; if (!P || !S.dbMode) return;
+    var T = S.three, B = S.B, q = new T.Quaternion(), mq = S.model.getWorldQuaternion(new T.Quaternion()).invert();
+    if (S.dbMode === 'both') {
+      [[P.dbL, 1, 'LeftHand'], [P.dbR, -1, 'RightHand']].forEach(function (a) {
+        gripPoint(a[1], a[0].position);
+        B[a[2]].getWorldQuaternion(q); a[0].quaternion.copy(q.premultiply(mq));
+      });
+    } else if (S.dbMode === 'center') {
+      var l = gripPoint(1, new T.Vector3()), rr = gripPoint(-1, new T.Vector3());
+      P.dbC.position.copy(l).add(rr).multiplyScalar(0.5);
+      var el = mPos(B.LeftForeArm, new T.Vector3()).add(mPos(B.RightForeArm, new T.Vector3())).multiplyScalar(0.5);
+      var dir = P.dbC.position.clone().sub(el).normalize();
+      P.dbC.quaternion.setFromUnitVectors(new T.Vector3(0, 0, 1), dir);
+      P.dbC.position.addScaledVector(dir, 0.05);
+    }
   }
 
   function setMode(k) {
@@ -398,6 +560,7 @@
     if (!k) {
       S.ex = null; S.pivot.rotation.y = S.yaw0; S.vel = 0;
       if (S.shadow) S.shadow.visible = false;
+      hideProps(); S.dbMode = null; S.matTop = 0;
       S.loadsStr = null; resize(); return;
     }
     var def = window.KS_EX[k];
@@ -408,10 +571,12 @@
     // encuadre: todas las poses de la animación
     S.pivot.updateMatrixWorld(true);
     var box = new T.Box3(), p = new T.Vector3(), foot = new T.Box3();
+    S.matTop = 0; S.exLow = Infinity; S.exHigh = -Infinity;
     var steps = def.loop === 'hold' ? 1 : 16, total = def.loop === 'hold' ? 0 : (def.t || 1) * (def.loop === 'cycle' ? keys.length : 2 * (keys.length - 1));
     for (var s = 0; s <= steps; s++) {
       setPose(sample(S.ex, total * s / steps));
       FRAMEB.forEach(function (n) { if (!S.B[n]) return; S.B[n].getWorldPosition(p); box.expandByPoint(p); foot.expandByPoint(S.model.worldToLocal(p.clone())); });
+      var hy0 = mPos(S.B.Hips, new T.Vector3()).y - S.floorY; S.exLow = Math.min(S.exLow, hy0); S.exHigh = Math.max(S.exHigh, hy0);
     }
     box.expandByScalar(0.09); box.min.y = Math.min(box.min.y, S.pivot.localToWorld(new T.Vector3(0, S.floorY, 0)).y);
     S.exBox = box;
@@ -424,10 +589,11 @@
       S.shadow.rotation.x = -Math.PI / 2; S.shadow.renderOrder = -1; S.model.add(S.shadow);
     }
     var fc = foot.getCenter(new T.Vector3()), fs = foot.getSize(new T.Vector3());
-    S.shadow.position.set(fc.x, S.floorY + 0.002, fc.z);
+    setupProps(def, foot);
+    S.shadow.position.set(fc.x, S.floorY + (S.matTop || 0) + 0.002, fc.z);
     S.shadow.scale.set(Math.max(0.5, fs.x * 1.1), Math.max(0.5, fs.z * 1.1), 1);
     S.shadow.visible = true;
-    setPose(sample(S.ex, 0));
+    setPoseFull(sample(S.ex, 0));
     S.loadsStr = null;
     exCamera();
   }
@@ -443,7 +609,7 @@
     S.camera.updateProjectionMatrix();
   }
 
-  function debugPose(k, t) { if (!S.ready) return false; if (k !== S.exKey) setMode(k); S.ext = t; setPose(sample(S.ex, t)); paint(S.ex.def.loads || {}); draw(); return true; }
+  function debugPose(k, t) { if (!S.ready) return false; if (k !== S.exKey) setMode(k); S.ext = t; setPoseFull(sample(S.ex, t)); paint(S.ex.def.loads || {}); draw(); return true; }
 
   window.Body3D = { sync: sync, state: S, debug: debugPose };
 })();
