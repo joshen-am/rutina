@@ -321,7 +321,9 @@
     if (!S.drag && Math.abs(S.vel) > 0.05) { S.pivot.rotation.y += S.vel * dt; S.vel *= Math.pow(0.04, dt); }
     if (S.exKey) {
       S.ext += dt;
-      setPoseFull(sample(S.ex, S.ext));
+      var Px = sample(S.ex, S.ext);
+      setPoseFull(Px);
+      follow(Px, dt);
     } else {
       if (!S.drag && Math.abs(S.vel) <= 0.05) S.pivot.rotation.y += 0.32 * dt;
       if (S.mixer) S.mixer.update(dt);
@@ -363,7 +365,7 @@
   function eul(a, out, k) { var T = S.three, d = Math.PI / 180; k = k || 1; return out.setFromEuler(new T.Euler(a[0] * d * k, a[1] * d * k, a[2] * d * k, 'YXZ')); }
 
   // resuelve la pose completa sobre el esqueleto
-  function setPose(P) {
+  function solve(P) {
     var T = S.three, B = S.B; if (!B || !B.Hips) return;
     CTRL.forEach(function (n) { if (B[n]) B[n].quaternion.identity(); });
     eul(P.hips.r, B.Hips.quaternion);
@@ -410,18 +412,57 @@
       if (q3) end.quaternion.copy(q2.clone().invert().multiply(q3));
     });
     S.model.updateMatrixWorld(true);
-    if (P.ground || !P.hips.p) {
-      var lo2 = Infinity, p = new T.Vector3();
-      lo2 = Infinity;
-      CONTACT.forEach(function (c) { if (B[c[0]]) { mPos(B[c[0]], p); lo2 = Math.min(lo2, p.y - c[1]); } });
-      var dy = S.floorY + (S.matTop || 0) - lo2;
-      var hm = mPos(B.Hips, new T.Vector3()); hm.y += dy;
-      B.Hips.position.copy(B.Hips.parent.worldToLocal(S.model.localToWorld(hm)));
-      S.model.updateMatrixWorld(true);
+  }
+
+  function lowest() {
+    var T = S.three, lo = Infinity, p = new T.Vector3();
+    CONTACT.forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); lo = Math.min(lo, p.y - c[1]); } });
+    return lo - (S.floorY + (S.matTop || 0));
+  }
+  // la cadera se acomoda para que manos y pies lleguen a su apoyo, y el cuerpo queda siempre tocando el suelo
+  function setPose(P0) {
+    var T = S.three, P = JSON.parse(JSON.stringify(P0)), p = new T.Vector3();
+    if (!P.hips.p) { P.hips.p = [0, 0.5, 0]; P.ground = 1; }
+    var iks = LIMBS.filter(function (L) { return P[L[0]] && P[L[0]].ik; });
+    for (var it = 0; it < 7; it++) {
+      solve(P);
+      var c = [0, 0, 0], n = 0;
+      iks.forEach(function (L) {
+        var t = P[L[0]].ik; mPos(S.B[L[3]], p);
+        var e = [t[0] - p.x, S.floorY + t[1] - p.y, t[2] - p.z];
+        if (Math.abs(e[0]) + Math.abs(e[1]) + Math.abs(e[2]) > 0.006) { c[0] += e[0]; c[1] += e[1]; c[2] += e[2]; }
+        n++;
+      });
+      var g = lowest(), up = g < -0.002 ? -g : 0;
+      if (!up && !(Math.abs(c[0]) + Math.abs(c[1]) + Math.abs(c[2]))) break;
+      if (n) P.hips.p = [P.hips.p[0] + c[0] / n * 0.85, P.hips.p[1] + c[1] / n * 0.85, P.hips.p[2] + c[2] / n * 0.85];
+      P.hips.p[1] += up;
+    }
+    solve(P);
+    var g2 = lowest();
+    if (Math.abs(g2) > 0.001) {   // si nada toca el suelo, baja todo (incluidos los apoyos) hasta tocarlo
+      P.hips.p[1] -= g2;
+      if (g2 > 0) iks.forEach(function (L) { P[L[0]].ik[1] -= g2; });
+      solve(P);
     }
   }
 
   function setPoseFull(P) { setPose(P); syncProps(); }
+  // la cabeza, los hombros y los brazos libres siguen al cuerpo con un leve retraso: el movimiento se siente menos mecánico
+  function follow(P, dt) {
+    var B = S.B, a = 1 - Math.exp(-dt / 0.11);
+    var list = ['Neck', 'Head', 'LeftShoulder', 'RightShoulder', 'Spine2'];
+    LIMBS.forEach(function (L) { if (P[L[0]] && !P[L[0]].ik && L[0].indexOf('Arm') > 0) list.push(L[1], L[2], L[3]); });
+    S.lag = S.lag || {};
+    list.forEach(function (n) {
+      var b = B[n]; if (!b) return;
+      var prev = S.lag[n];
+      if (prev && S.lagKey === S.exKey) { prev.slerp(b.quaternion, a); b.quaternion.copy(prev); }
+      else S.lag[n] = b.quaternion.clone();
+    });
+    S.lagKey = S.exKey;
+    S.model.updateMatrixWorld(true); syncProps();
+  }
   // de una pose con IK a direcciones (para mezclar poses con tipos distintos)
   function toDirs(P) {
     setPose(P);
@@ -611,5 +652,20 @@
 
   function debugPose(k, t) { if (!S.ready) return false; if (k !== S.exKey) setMode(k); S.ext = t; setPoseFull(sample(S.ex, t)); paint(S.ex.def.loads || {}); draw(); return true; }
 
-  window.Body3D = { sync: sync, state: S, debug: debugPose };
+  function metrics(k) {
+    if (!S.ready) return null; if (k !== S.exKey) setMode(k);
+    var T = S.three, def = S.ex.def, total = def.loop === 'hold' ? 0.01 : (def.t || 1) * (def.loop === 'cycle' ? S.ex.keys.length : 2 * (S.ex.keys.length - 1));
+    var out = { float: 0, pen: 0, ik: 0, at: 0, who: '' }, p = new T.Vector3();
+    for (var i = 0; i < 24; i++) {
+      var P = sample(S.ex, total * i / 24); setPoseFull(P);
+      var lo = Infinity, who = ''; CONTACT.forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); if (p.y - c[1] < lo) { lo = p.y - c[1]; who = c[0]; } } });
+      var g = lo - (S.floorY + (S.matTop || 0));
+      if (g > out.float) { out.float = g; out.at = i; }
+      if (g < out.pen) { out.pen = g; out.who = who; }
+      LIMBS.forEach(function (L) { var sp = P[L[0]]; if (sp && sp.ik) { mPos(S.B[L[3]], p); var e = p.distanceTo(new T.Vector3(sp.ik[0], S.floorY + sp.ik[1], sp.ik[2])); out.ik = Math.max(out.ik, e); } });
+    }
+    out.float = Math.round(out.float * 1000) / 1000; out.pen = Math.round(out.pen * 1000) / 1000; out.ik = Math.round(out.ik * 1000) / 1000;
+    return out;
+  }
+  window.Body3D = { sync: sync, state: S, debug: debugPose, metrics: metrics };
 })();

@@ -57,8 +57,8 @@
       stand({ lArm: { a: [1, 0.2, 0], b: [1, 0.2, 0] } }), stand({ lArm: { a: [1, 0, 0.2], b: [1, 0, 0.2] } }),
       stand({ lArm: { a: [1, -0.2, 0], b: [1, -0.2, 0] } }), stand({ lArm: { a: [1, 0, -0.2], b: [1, 0, -0.2] } })] },
     gato_vaca: { view: 78, elev: 14, loop: 'pingpong', t: 1.6, loads: { abs: 0.45, lowback: 0.5 }, keys: [
-      P({ p: [0, 0.57, -0.02], r: [91, 0, 0], spine: [15, 0, 0], head: [6, 0, 0], lLeg: Q_KNEE, lFoot: 'follow', lArm: Q_HAND, lHand: 'flat' }),
-      P({ p: [0, 0.52, -0.02], r: [80, 0, 0], spine: [-22, 0, 0], head: [-30, 0, 0], lLeg: Q_KNEE, lFoot: 'follow', lArm: Q_HAND, lHand: 'flat' })] },
+      P({ p: [0, 0.57, -0.02], r: [91, 0, 0], spine: [15, 0, 0], head: [6, 0, 0], lLeg: Q_KNEE, lFoot: 165, lArm: Q_HAND, lHand: 'flat' }),
+      P({ p: [0, 0.52, -0.02], r: [80, 0, 0], spine: [-22, 0, 0], head: [-30, 0, 0], lLeg: Q_KNEE, lFoot: 165, lArm: Q_HAND, lHand: 'flat' })] },
     circulos_cadera: { view: 20, loop: 'cycle', smooth: 1, t: 0.6, loads: { glutes: 0.35, abs: 0.35, lowback: 0.35 }, keys: [[0.06, 0], [0, 0.06], [-0.06, 0], [0, -0.06]].map(function (d) {
       return stand({ p: [d[0], 1.04, d[1]], r: [d[1] * 110, 0, -d[0] * 110], spine: [-d[1] * 150, 0, d[0] * 150], lLeg: { ik: [0.13, A, 0], pole: [0.2, 0, 1] },
         lArm: { ik: [0.16, 1.0, 0.03], pole: [1, 0, -0.6] } });
@@ -76,8 +76,8 @@
       stand({ lLeg: { a: [0.05, -0.75, 0.66], b: [0.05, -0.8, 0.6] }, lFoot: 'follow', rLeg: { ik: [-0.1, A, 0], pole: [0, 0, 1] }, lArm: { a: [1, -0.35, 0], b: [1, -0.3, 0.1] } }),
       stand({ lLeg: { a: [0.05, -0.85, -0.52], b: [0.05, -1, -0.3] }, lFoot: 'follow', rLeg: { ik: [-0.1, A, 0], pole: [0, 0, 1] }, lArm: { a: [1, -0.35, 0], b: [1, -0.3, 0.1] } })] },
     flex_rodillas: { view: 80, elev: 12, loop: 'pingpong', t: 1.2, loads: { chest: 0.8, triceps: 0.6, deltF: 0.5 }, keys: [
-      P({ p: [0, 0.42, -0.06], r: [66, 0, 0], lLeg: { ik: [0.1, 0.08, -0.84], pole: [0, -1, 0] }, lFoot: 'follow', lArm: { ik: [0.26, 0.05, 0.46], pole: [0.6, 0, -1] }, lHand: 'flat' }),
-      P({ p: [0, 0.22, -0.02], r: [80, 0, 0], head: [-10, 0, 0], lLeg: { ik: [0.1, 0.08, -0.84], pole: [0, -1, 0] }, lFoot: 'follow', lArm: { ik: [0.26, 0.05, 0.46], pole: [0.6, 0, -1] }, lHand: 'flat' })] },
+      P({ p: [0, 0.42, -0.06], r: [66, 0, 0], lLeg: { ik: [0.1, 0.08, -0.84], pole: [0, -1, 0] }, lFoot: 165, lArm: { ik: [0.26, 0.05, 0.46], pole: [0.6, 0, -1] }, lHand: 'flat' }),
+      P({ p: [0, 0.22, -0.02], r: [80, 0, 0], head: [-10, 0, 0], lLeg: { ik: [0.1, 0.08, -0.84], pole: [0, -1, 0] }, lFoot: 165, lArm: { ik: [0.26, 0.05, 0.46], pole: [0.6, 0, -1] }, lHand: 'flat' })] },
     remo_marco: { view: 72, loop: 'pingpong', t: 1.1, loads: { lats: 0.75, traps: 0.5, biceps: 0.55, deltB: 0.45 }, props: { door: { x: 0.42, z: 0.46 } }, keys: [
       stand({ p: [0, 0.98, -0.2], r: [-20, 0, 0], lLeg: { ik: [0.11, A, 0.16], pole: [0.1, 0, 1] }, lArm: { ik: [0.37, 1.15, 0.44], pole: [0.4, -1, -0.3] } }),
       stand({ p: [0, 1.01, -0.03], r: [-8, 0, 0], lLeg: { ik: [0.11, A, 0.16], pole: [0.1, 0, 1] }, lArm: { ik: [0.37, 1.15, 0.44], pole: [0.6, -1, -0.8] } })] },
@@ -105,11 +105,11 @@
       stand({ p: [0, 1.02, 0.1], r: [5, 0, 0], lLeg: { ik: [0.1, A, 0.36], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.1, A, -0.22], pole: [0, 0, 1] }, rFoot: 'flat',
         lArm: { ik: [0.46, 1.66, -0.02], pole: [0.4, -1, -0.4] } })] },
     flexor_cadera: { view: 80, loop: 'hold', loads: { quads: 0.55, glutes: 0.3 }, keys: [
-      P({ p: [0, 0.56, -0.06], r: [-6, 0, 0], lLeg: { ik: [0.12, A, 0.42], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.1, 0.09, -0.56], pole: [0, -1, 0.2] }, rFoot: 'follow',
+      P({ p: [0, 0.56, -0.06], r: [-6, 0, 0], lLeg: { ik: [0.12, A, 0.42], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.1, 0.09, -0.56], pole: [0, -1, 0.2] }, rFoot: 165,
         lArm: { ik: [0.12, 0.62, 0.36], pole: [1, -0.4, -0.5] } })] },
     zancada_atras: { view: 80, loop: 'pingpong', t: 1.3, loads: { quads: 0.8, glutes: 0.7, hams: 0.3 }, keys: [
       stand({ lLeg: { ik: [0.11, A, 0.04], pole: [0.15, 0, 1] }, lArm: { ik: [0.17, 1.0, 0.02], pole: [1, 0, -0.6] } }),
-      P({ p: [0, 0.58, -0.22], r: [4, 0, 0], lLeg: { ik: [0.11, A, 0.06], pole: [0.15, 0, 1] }, rLeg: { ik: [-0.11, 0.13, -0.66], pole: [0, -0.3, 1] }, rFoot: 40,
+      P({ p: [0, 0.58, -0.22], r: [4, 0, 0], lLeg: { ik: [0.11, A, 0.06], pole: [0.15, 0, 1] }, rLeg: { ik: [-0.11, 0.17, -0.66], pole: [0, -0.3, 1] }, rFoot: 46,
         lArm: { ik: [0.17, 0.54, 0.0], pole: [1, 0, -0.6] } })] },
     pm_rumano: { view: 82, loop: 'pingpong', t: 1.5, loads: { hams: 0.8, glutes: 0.7, lowback: 0.4 }, keys: [
       stand({ lLeg: { ik: [0.09, A, 0.02], pole: [0, 0, 1] }, rLeg: { a: [-0.06, -1, -0.12], b: [-0.03, -1, -0.32] }, rFoot: 'follow' }),
@@ -121,7 +121,7 @@
     plancha_lateral: { view: 8, elev: 8, loop: 'hold', loads: { abs: 0.8, glutes: 0.35, deltF: 0.3 }, keys: [
       P({ ground: 1, r: [0, 0, 66], lLeg: LEGS_LONG, lFoot: 'follow', rArm: { a: [0, -1, 0.04], b: [0.02, 0.05, 1], w: 1 }, lArm: { a: [0, 1, 0], b: [0, 1, 0], w: 1 } })] },
     bird_dog: { view: 78, elev: 14, loop: 'pingpong', t: 1.4, loads: { abs: 0.55, glutes: 0.55, lowback: 0.5, deltF: 0.3 }, keys: [
-      P({ p: [0, 0.55, -0.02], r: [86, 0, 0], head: [-6, 0, 0], lLeg: Q_KNEE, lFoot: 'follow', rLeg: { a: [-0.06, -1, -0.04], b: [-0.03, -1, -0.04] }, rFoot: 'follow',
+      P({ p: [0, 0.55, -0.02], r: [86, 0, 0], head: [-6, 0, 0], lLeg: Q_KNEE, lFoot: 165, rLeg: { a: [-0.06, -1, -0.04], b: [-0.03, -1, -0.04] }, rFoot: 'follow',
           rArm: mirLimb(Q_HAND), rHand: 'flat', lArm: { a: [0.12, 1, -0.05], b: [0.1, 1, -0.05] } }),
       null] },
     crunch_invertido: { view: 80, elev: 18, loop: 'pingpong', t: 1.2, loads: { abs: 0.85 }, keys: [
@@ -138,8 +138,8 @@
       P({ ground: 1, r: [90, 0, 0], head: [-10, 0, 0], lLeg: LEGS_LONG, lFoot: 'follow', lArm: { a: [0.45, 1, -0.25], b: [0.4, 1, -0.25] } }),
       P({ ground: 1, r: [90, 0, 0], head: [-14, 0, 0], lLeg: LEGS_LONG, lFoot: 'follow', lArm: { a: [0.95, -0.25, -0.3], b: [0.2, 0.95, -0.25] } })] },
     flex_pica: { view: 82, elev: 8, loop: 'pingpong', t: 1.4, loads: { deltF: 0.8, triceps: 0.6, traps: 0.35 }, keys: [
-      P({ p: [0, 0.86, -0.04], r: [138, 0, 0], head: [-20, 0, 0], lLeg: { ik: [0.12, A, -0.58], pole: [0, 0, 1] }, lFoot: 30, lArm: { ik: [0.24, 0.05, 0.6], pole: [0.5, 0, -1] }, lHand: 'flat' }),
-      P({ p: [0, 0.8, 0.02], r: [146, 0, 0], head: [-30, 0, 0], lLeg: { ik: [0.12, A, -0.58], pole: [0, 0, 1] }, lFoot: 30, lArm: { ik: [0.24, 0.05, 0.6], pole: [0.6, 0.3, -1] }, lHand: 'flat' })] },
+      P({ p: [0, 0.86, -0.04], r: [138, 0, 0], head: [-20, 0, 0], lLeg: { ik: [0.12, 0.14, -0.58], pole: [0, 0, 1] }, lFoot: 40, lArm: { ik: [0.24, 0.05, 0.6], pole: [0.5, 0, -1] }, lHand: 'flat' }),
+      P({ p: [0, 0.8, 0.02], r: [146, 0, 0], head: [-30, 0, 0], lLeg: { ik: [0.12, 0.14, -0.58], pole: [0, 0, 1] }, lFoot: 40, lArm: { ik: [0.24, 0.05, 0.6], pole: [0.6, 0.3, -1] }, lHand: 'flat' })] },
     fondo_suelo: { view: 80, elev: 10, loop: 'pingpong', t: 1.2, loads: { triceps: 0.85, deltF: 0.4, chest: 0.3 }, keys: [
       P({ p: [0, 0.32, 0.0], r: [-28, 0, 0], lLeg: { ik: [0.13, A, 0.56], pole: [0.1, 1, 0.2] }, lArm: { ik: [0.18, 0.05, -0.3], pole: [0.2, 0, -1] }, lHand: 'flat' }),
       P({ p: [0, 0.2, 0.02], r: [-36, 0, 0], lLeg: { ik: [0.13, A, 0.56], pole: [0.1, 1, 0.2] }, lArm: { ik: [0.18, 0.05, -0.3], pole: [0.2, 0.3, -1] }, lHand: 'flat' })] },
@@ -147,8 +147,8 @@
       P({ ground: 1, r: [-90, 0, 0], lLeg: { a: [0.04, -1, 0.1], b: [0.03, -1, 0.1] }, lFoot: 'follow', lArm: ARMS_FLOOR }),
       P({ ground: 1, r: [-90, 0, 0], lLeg: { a: [0.04, -0.05, 1], b: [0.03, -0.05, 1] }, lFoot: 'follow', lArm: ARMS_FLOOR })] },
     zancada_estatica: { view: 80, loop: 'pingpong', t: 1.3, loads: { quads: 0.8, glutes: 0.65 }, keys: [
-      P({ p: [0, 0.94, -0.04], lLeg: { ik: [0.11, A, 0.36], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.11, 0.13, -0.42], pole: [0, 0, 1] }, rFoot: 40, lArm: { ik: [0.17, 0.92, -0.02], pole: [1, 0, -0.6] } }),
-      P({ p: [0, 0.6, -0.08], lLeg: { ik: [0.11, A, 0.36], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.11, 0.13, -0.42], pole: [0, -0.3, 1] }, rFoot: 40, lArm: { ik: [0.17, 0.58, -0.06], pole: [1, 0, -0.6] } })] },
+      P({ p: [0, 0.94, -0.04], lLeg: { ik: [0.11, A, 0.36], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.11, 0.17, -0.42], pole: [0, 0, 1] }, rFoot: 46, lArm: { ik: [0.17, 0.92, -0.02], pole: [1, 0, -0.6] } }),
+      P({ p: [0, 0.6, -0.08], lLeg: { ik: [0.11, A, 0.36], pole: [0.1, 0, 1] }, rLeg: { ik: [-0.11, 0.17, -0.42], pole: [0, -0.3, 1] }, rFoot: 46, lArm: { ik: [0.17, 0.58, -0.06], pole: [1, 0, -0.6] } })] },
     sumo: { view: 14, loop: 'pingpong', t: 1.4, loads: { quads: 0.7, glutes: 0.75, hams: 0.3 }, props: { db: 'center' }, keys: [
       stand({ p: [0, 1.0, 0], lLeg: { ik: [0.3, A, 0.02], pole: [1, 0, 0.7] }, lArm: { a: [-0.1, -1, 0.12], b: [-0.08, -1, 0.06], w: 1 } }),
       stand({ p: [0, 0.6, -0.06], r: [12, 0, 0], spine: [-6, 0, 0], lLeg: { ik: [0.3, A, 0.02], pole: [1, 0, 0.7] }, lArm: { a: [-0.1, -1, 0.14], b: [-0.08, -1, 0.06], w: 1 } })] },
@@ -165,9 +165,11 @@
       stand({ lArm: { a: [0.18, -1, 0.04], b: [0.14, -1, 0.1] } }), stand({ lArm: { a: [1, -0.08, 0.14], b: [1, -0.02, 0.26] } })] },
   };
   // poses que se completan con la otra mitad en espejo
-  ['marcha'].forEach(function (k) { EX[k].keys[1] = swapLR(EX[k].keys[0]); });
+  // marcha: rodilla arriba, los dos pies abajo, la otra rodilla, los dos pies abajo
+  var MA = EX.marcha.keys[0], MN = stand({ lArm: { a: [0.18, -1, 0.04], b: [0.12, -1, 0.12] } });
+  EX.marcha.keys = [MA, MN, swapLR(MA), MN]; EX.marcha.loop = 'cycle'; EX.marcha.t = 0.42;
   // brazo y pierna contrarios, pasando por la posición neutra entre un lado y el otro
-  var BD_N = P({ p: [0, 0.55, -0.02], r: [86, 0, 0], head: [-6, 0, 0], lLeg: Q_KNEE, lFoot: 'follow', lArm: Q_HAND, lHand: 'flat' });
+  var BD_N = P({ p: [0, 0.55, -0.02], r: [86, 0, 0], head: [-6, 0, 0], lLeg: Q_KNEE, lFoot: 165, lArm: Q_HAND, lHand: 'flat' });
   var DB_N = P({ ground: 1, r: [-90, 0, 0], lLeg: { a: [0.06, 0, 1], b: [0.02, -1, 0.02] }, lFoot: 'follow', lArm: { a: [0.1, 0.1, 1], b: [0.1, 0.1, 1] } });
   EX.bird_dog.keys = [EX.bird_dog.keys[0], BD_N, swapLR(EX.bird_dog.keys[0]), BD_N]; EX.bird_dog.loop = 'cycle'; EX.bird_dog.t = 1.0;
   EX.deadbug.keys = [EX.deadbug.keys[0], DB_N, swapLR(EX.deadbug.keys[0]), DB_N]; EX.deadbug.loop = 'cycle'; EX.deadbug.t = 1.0;
