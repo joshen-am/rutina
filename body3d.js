@@ -414,15 +414,163 @@
     S.model.updateMatrixWorld(true);
   }
 
-  function lowest() {
+  // partes que deben quedar apoyadas en el suelo en una pose (P.touch); altura de la articulación cuando apoya
+  var TOUCH = { toes: [['LeftToeBase', 0.02], ['RightToeBase', 0.02]], knees: [['LeftLeg', 0.065], ['RightLeg', 0.065]],
+    hands: [['LeftHand', 0.035], ['RightHand', 0.035]], forearms: [['LeftForeArm', 0.05], ['RightForeArm', 0.05], ['LeftHand', 0.035], ['RightHand', 0.035]],
+    hips: [['Hips', 0.11]], back: [['Spine2', 0.13]], chest: [['Spine2', 0.08]], head: [['Head', 0.1]] };
+  var ARMB = { LeftForeArm: 'lArm', LeftHand: 'lArm', RightForeArm: 'rArm', RightHand: 'rArm' };
+  function touchList(P) {
+    if (!P.touch) return [];
+    var out = [], seen = {};
+    P.touch.forEach(function (t) {
+      var m = String(t).split(':'), L = TOUCH[m[0]];
+      if (!L) { var c0 = CONTACT.filter(function (c) { return c[0] === m[0]; })[0]; L = [[m[0], m[1] != null ? +m[1] : (c0 ? c0[1] : 0.05)]]; }
+      L.forEach(function (c) { if (!seen[c[0]]) { seen[c[0]] = 1; out.push(c); } });
+    });
+    return out;
+  }
+  function touches(P, n) { return touchList(P).some(function (c) { return c[0] === n; }); }
+  // un brazo libre (sin IK y sin apoyo declarado) no levanta el cuerpo si roza el suelo: se dobla él
+  function freeArm(P, n) { var k = ARMB[n]; return k && P && P[k] && !P[k].ik && !touches(P, n); }
+  // la mano o el pie con IK está donde se pidió: si roza el suelo no debe levantar todo el cuerpo
+  var IKEND = { LeftFoot: 'lLeg', LeftToeBase: 'lLeg', RightFoot: 'rLeg', RightToeBase: 'rLeg', LeftHand: 'lArm', RightHand: 'rArm' };
+  function ikEnd(P, n) { var k = IKEND[n]; return k && P && P[k] && P[k].ik; }
+  function lowest(P, noIk) {
     var T = S.three, lo = Infinity, p = new T.Vector3();
-    CONTACT.forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); lo = Math.min(lo, p.y - c[1]); } });
+    CONTACT.forEach(function (c) { if (S.B[c[0]] && !freeArm(P, c[0]) && !(noIk && ikEnd(P, c[0]))) { mPos(S.B[c[0]], p); lo = Math.min(lo, p.y - c[1]); } });
     return lo - (S.floorY + (S.matTop || 0));
+  }
+  // errores de una pose: apoyos que no tocan, manos o pies que no llegan a su punto, partes que atraviesan el suelo
+  function poseRes(P, iks) {
+    var T = S.three, p = new T.Vector3(), out = [], fl = S.floorY + (S.matTop || 0);
+    solve(P);
+    var base = P.ground ? lowest(P) : 0;
+    touchList(P).forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); out.push((p.y - fl - base - c[1]) * 2); } });
+    iks.forEach(function (L) { var t = P[L[0]].ik; mPos(S.B[L[3]], p); out.push(p.x - t[0], (p.y - S.floorY - t[1]) * 1.5, p.z - t[2]); });
+    if (!P.ground) CONTACT.forEach(function (c) { if (S.B[c[0]] && !freeArm(P, c[0]) && !ikEnd(P, c[0])) { mPos(S.B[c[0]], p); var h = p.y - fl - c[1]; out.push(h < 0 ? h * 3 : 0); } });
+    var pr = (S.ex && S.ex.def.props) || {};
+    if (!P.ground && !pr.wall && !pr.door && !touchList(P).length) out.push(Math.max(0, unbalance(fl) - 0.02) * 3);
+    return out;
+  }
+  // de pie: el centro de masa debe caer sobre los pies que apoyan (si no, el cuerpo se ve a punto de caerse)
+  var MASS = [['Hips', 3], ['Spine', 2], ['Spine2', 3], ['Head', 1], ['LeftUpLeg', 1], ['RightUpLeg', 1], ['LeftLeg', 1.5], ['RightLeg', 1.5], ['LeftFoot', 0.5], ['RightFoot', 0.5],
+              ['LeftArm', 0.5], ['RightArm', 0.5], ['LeftForeArm', 0.4], ['RightForeArm', 0.4], ['LeftHand', 0.2], ['RightHand', 0.2]];
+  var SUPB = [['LeftToeBase', 0.02], ['RightToeBase', 0.02], ['LeftFoot', 0.11], ['RightFoot', 0.11], ['LeftToe_End', 0.01], ['RightToe_End', 0.01], ['LeftHand', 0.035], ['RightHand', 0.035],
+              ['LeftForeArm', 0.05], ['RightForeArm', 0.05], ['LeftLeg', 0.065], ['RightLeg', 0.065], ['Hips', 0.11], ['Spine2', 0.13], ['Head', 0.1]];
+  function unbalance(fl) {
+    var T = S.three, p = new T.Vector3(), pts = [], cm = [0, 0], w = 0;
+    SUPB.forEach(function (c) { var b = S.B[c[0]]; if (!b) return; mPos(b, p); if (p.y - fl - c[1] < 0.03) pts.push([p.x, p.z]); });
+    MASS.forEach(function (c) { var b = S.B[c[0]]; if (!b) return; mPos(b, p); cm[0] += p.x * c[1]; cm[1] += p.z * c[1]; w += c[1]; });
+    if (!pts.length) return 0;
+    cm = [cm[0] / w, cm[1] / w];
+    pts.sort(function (a, b) { return a[0] - b[0] || a[1] - b[1]; });
+    var cr = function (o, a, b) { return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]); }, lo = [], up = [];
+    pts.forEach(function (q) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], q) <= 0) lo.pop(); lo.push(q); });
+    pts.slice().reverse().forEach(function (q) { while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], q) <= 0) up.pop(); up.push(q); });
+    var H = pts.length < 3 ? pts : lo.slice(0, -1).concat(up.slice(0, -1));
+    var seg = function (a, b) { var dx = b[0] - a[0], dz = b[1] - a[1], L = dx * dx + dz * dz || 1e-9, t = Math.max(0, Math.min(1, ((cm[0] - a[0]) * dx + (cm[1] - a[1]) * dz) / L)); return Math.hypot(cm[0] - a[0] - t * dx, cm[1] - a[1] - t * dz); };
+    if (H.length === 1) return seg(H[0], H[0]);
+    if (H.length === 2) return seg(H[0], H[1]);
+    var inside = true, d = 9;
+    for (var i = 0; i < H.length; i++) { var a = H[i], b = H[(i + 1) % H.length]; if ((b[0] - a[0]) * (cm[1] - a[1]) - (b[1] - a[1]) * (cm[0] - a[0]) < 0) inside = false; d = Math.min(d, seg(a, b)); }
+    return inside ? 0 : d;
+  }
+  // Levenberg-Marquardt sobre la cadera (posición y dos giros) para que la pose se sostenga en sus apoyos
+  function fitHips(P0) {
+    var P = JSON.parse(JSON.stringify(P0)); delete P._seg;
+    if (!P.hips.p) { P.hips.p = [0, 0.5, 0]; P.ground = 1; }
+    var p0 = P.hips.p.slice(), r0 = P.hips.r.slice();
+    var iks = LIMBS.filter(function (L) { return P[L[0]] && P[L[0]].ik; });
+    var np = P.ground ? [0, 2, 3, 4] : [0, 1, 2, 3, 4], eps = [0.004, 0.004, 0.004, 0.6, 0.6], reg = [0.25, 0.25, 0.25, 0.004, 0.004];
+    var x = [0, 0, 0, 0, 0], lam = 0.01;
+    function at(x) { P.hips.p = [p0[0] + x[0], p0[1] + x[1], p0[2] + x[2]]; P.hips.r = [r0[0] + x[3], r0[1], r0[2] + x[4]]; var v = poseRes(P, iks); np.forEach(function (i) { v.push(x[i] * reg[i]); }); return v; }
+    function sq(v) { return v.reduce(function (a, b) { return a + b * b; }, 0); }
+    var f = at(x), E = sq(f);
+    if (!touchList(P).length && !iks.length) return [0, 0, 0, 0, 0];
+    for (var it = 0; it < 8; it++) {
+      var J = np.map(function (i) { var y = x.slice(); y[i] += eps[i]; var g = at(y); return g.map(function (gv, k) { return (gv - f[k]) / eps[i]; }); });
+      var m = np.length, A = [], b = [];
+      for (var a = 0; a < m; a++) { A.push([]); b.push(-J[a].reduce(function (s2, v, k) { return s2 + v * f[k]; }, 0)); for (var c = 0; c < m; c++) A[a].push(J[a].reduce(function (s2, v, k) { return s2 + v * J[c][k]; }, 0)); }
+      var ok = false;
+      for (var tries = 0; tries < 4 && !ok; tries++) {
+        var M = A.map(function (row, i) { return row.map(function (v, j) { return v + (i === j ? lam * (A[i][i] + 1e-6) : 0); }); }), d = gauss(M, b.slice());
+        var y = x.slice(); np.forEach(function (i, k) { y[i] += d[k]; });
+        var g2 = at(y), E2 = sq(g2);
+        if (E2 < E) { x = y; f = g2; E = E2; lam = Math.max(1e-4, lam * 0.3); ok = true; } else lam *= 8;
+      }
+      if (!ok || E < 1e-6) break;
+    }
+    return x;
+  }
+  function gauss(M, b) {
+    var n = b.length;
+    for (var i = 0; i < n; i++) {
+      var mx = i; for (var k = i + 1; k < n; k++) if (Math.abs(M[k][i]) > Math.abs(M[mx][i])) mx = k;
+      var t = M[i]; M[i] = M[mx]; M[mx] = t; var tb = b[i]; b[i] = b[mx]; b[mx] = tb;
+      if (Math.abs(M[i][i]) < 1e-12) continue;
+      for (var k2 = i + 1; k2 < n; k2++) { var q = M[k2][i] / M[i][i]; for (var j = i; j < n; j++) M[k2][j] -= q * M[i][j]; b[k2] -= q * b[i]; }
+    }
+    var xs = new Array(n).fill(0);
+    for (var i2 = n - 1; i2 >= 0; i2--) { var sm = b[i2]; for (var j2 = i2 + 1; j2 < n; j2++) sm -= M[i2][j2] * xs[j2]; xs[i2] = Math.abs(M[i2][i2]) < 1e-12 ? 0 : sm / M[i2][i2]; }
+    return xs;
+  }
+  // tabla de ajustes a lo largo de cada tramo de la animación (se calcula una vez por ejercicio)
+  var FITF = [0, 0.25, 0.5, 0.75, 1];
+  // huella de un ejercicio: si cambia su definición, el ajuste precalculado (exfit.js) deja de valer
+  function exHash(def) {
+    var str = JSON.stringify([def.keys, def.loop, def.smooth, def.props || null]), h = 2166136261;
+    for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(36);
+  }
+  function buildFit(ex, key) {
+    var bk = key && window.KS_FIT && window.KS_FIT[key];
+    if (bk && bk.h === exHash(ex.def)) return bk.f;
+    S.fitCache = S.fitCache || {};
+    if (key && S.fitCache[key] && S.fitCache[key].h === exHash(ex.def)) return S.fitCache[key].f;
+    var f0 = buildFit0(ex);
+    if (key) S.fitCache[key] = { h: exHash(ex.def), f: f0 };
+    return f0;
+  }
+  function buildFit0(ex) {
+    var K = ex.keys, n = K.length, def = ex.def, segs = [];
+    if (def.loop === 'hold' || n === 1) segs.push([0, 0]);
+    else if (def.loop === 'cycle') { if (def.smooth) return {}; for (var i = 0; i < n; i++) segs.push([i, (i + 1) % n]); }
+    else for (var j = 0; j < n - 1; j++) segs.push([j, j + 1]);
+    var fit = {};
+    segs.forEach(function (sg, si) {
+      var any = K[sg[0]].touch || K[sg[1]].touch || (K[sg[0]].hips.p && K[sg[1]].hips.p); if (!any) return;
+      fit[si] = FITF.map(function (f) { return fitHips(mix(K[sg[0]], K[sg[1]], f, ex.dirs[sg[0]], ex.dirs[sg[1]])); });
+    });
+    return fit;
+  }
+  function applyFit(P) {
+    var tb = P._seg != null && S.ex && S.ex.fit && S.ex.fit[P._seg]; if (!tb) return false;
+    var x = Math.min(1, Math.max(0, P._f || 0)) * (tb.length - 1), i0 = Math.min(tb.length - 2, Math.floor(x)), u = x - i0, a = tb[i0], b = tb[i0 + 1];
+    var c = a.map(function (v, i) { return v + (b[i] - v) * u; });
+    P.hips.p = [P.hips.p[0] + c[0], P.hips.p[1] + c[1], P.hips.p[2] + c[2]]; P.hips.r = [P.hips.r[0] + c[3], P.hips.r[1], P.hips.r[2] + c[4]];
+    return true;
+  }
+  // brazos libres que atraviesan el suelo, o manos que deben apoyar: el brazo se dobla hasta el suelo
+  function clampArms(P) {
+    var T = S.three, fl = S.floorY + (S.matTop || 0), ch = false;
+    LIMBS.forEach(function (L) {
+      var sp = P[L[0]]; if (!sp || sp.ik || L[0].indexOf('Arm') < 0) return;
+      var sh = mPos(S.B[L[1]], new T.Vector3()), el = mPos(S.B[L[2]], new T.Vector3()), hd = mPos(S.B[L[3]], new T.Vector3());
+      var tH = touches(P, L[3]), pen = Math.max(fl + 0.035 - hd.y, fl + 0.05 - el.y);
+      if (!(pen > 0.004 || (tH && Math.abs(hd.y - fl - 0.035) > 0.008))) return;
+      var ty = tH ? fl + 0.035 : Math.max(hd.y, fl + 0.035);
+      var line = hd.clone().sub(sh).normalize(), pole = el.clone().sub(sh); pole.addScaledVector(line, -pole.dot(line));
+      if (touches(P, L[2])) pole.y -= 0.3; else if (el.y < fl + 0.046) pole.y += 0.3;
+      if (pole.lengthSq() < 1e-6) pole.set(0, 1, 0);
+      P[L[0]] = { ik: [hd.x, ty - S.floorY, hd.z], pole: [pole.x, pole.y, pole.z] }; ch = true;
+    });
+    if (ch) solve(P);
   }
   // la cadera se acomoda para que manos y pies lleguen a su apoyo, y el cuerpo queda siempre tocando el suelo
   function setPose(P0) {
     var T = S.three, P = JSON.parse(JSON.stringify(P0)), p = new T.Vector3();
     if (!P.hips.p) { P.hips.p = [0, 0.5, 0]; P.ground = 1; }
+    var fitted = applyFit(P);
     var iks = LIMBS.filter(function (L) { return P[L[0]] && P[L[0]].ik; });
     for (var it = 0; it < 7; it++) {
       solve(P);
@@ -430,21 +578,23 @@
       iks.forEach(function (L) {
         var t = P[L[0]].ik; mPos(S.B[L[3]], p);
         var e = [t[0] - p.x, S.floorY + t[1] - p.y, t[2] - p.z];
-        if (Math.abs(e[0]) + Math.abs(e[1]) + Math.abs(e[2]) > 0.006) { c[0] += e[0]; c[1] += e[1]; c[2] += e[2]; }
+        if (!fitted && Math.abs(e[0]) + Math.abs(e[1]) + Math.abs(e[2]) > 0.006) { c[0] += e[0]; c[1] += e[1]; c[2] += e[2]; }
         n++;
       });
-      var g = lowest(), up = g < -0.002 ? -g : 0;
+      var g = lowest(P, 1), up = g < -0.002 ? -g : 0;
       if (!up && !(Math.abs(c[0]) + Math.abs(c[1]) + Math.abs(c[2]))) break;
       if (n) P.hips.p = [P.hips.p[0] + c[0] / n * 0.85, P.hips.p[1] + c[1] / n * 0.85, P.hips.p[2] + c[2] / n * 0.85];
       P.hips.p[1] += up;
     }
     solve(P);
-    var g2 = lowest();
+    var g2 = lowest(P);
+    if (g2 < 0) g2 = Math.min(0, lowest(P, 1));
     if (Math.abs(g2) > 0.001) {   // si nada toca el suelo, baja todo (incluidos los apoyos) hasta tocarlo
       P.hips.p[1] -= g2;
       if (g2 > 0) iks.forEach(function (L) { P[L[0]].ik[1] -= g2; });
       solve(P);
     }
+    clampArms(P);
   }
 
   function setPoseFull(P) { setPose(P); syncProps(); }
@@ -480,6 +630,7 @@
   function mix(A, Bk, f, dA, dB) {
     var o = { hips: { r: lerpV(A.hips.r, Bk.hips.r, f) }, spine: lerpV(A.spine, Bk.spine, f), head: lerpV(A.head, Bk.head, f), sh: lerpV(A.sh, Bk.sh, f), ground: A.ground || Bk.ground };
     if (A.neck || Bk.neck) o.neck = lerpV(A.neck || [0, 0, 0], Bk.neck || [0, 0, 0], f);
+    if (A.touch && Bk.touch) { var tb = touchList(Bk).map(function (c) { return c[0]; }); o.touch = touchList(A).filter(function (c) { return tb.indexOf(c[0]) >= 0; }).map(function (c) { return c[0] + ':' + c[1]; }); }
     if (A.hips.p && Bk.hips.p) o.hips.p = lerpV(A.hips.p, Bk.hips.p, f);
     LIMBS.forEach(function (L) {
       var a = A[L[0]], b = Bk[L[0]];
@@ -498,11 +649,12 @@
   function sample0(ex, t) {
     var K = ex.keys, n = K.length, T = ex.def.t || 1;
     if (ex.def.loop === 'hold' || n === 1) {
-      var P0 = JSON.parse(JSON.stringify(K[0])); P0.spine = [P0.spine[0] + 1.6 * Math.sin(t * 2.1), P0.spine[1], P0.spine[2]]; P0.sh = [P0.sh[0], P0.sh[1], P0.sh[2] + 2 * Math.sin(t * 2.1)]; return P0;
+      var P0 = JSON.parse(JSON.stringify(K[0])); P0._seg = 0; P0._f = 0; P0.spine = [P0.spine[0] + 1.6 * Math.sin(t * 2.1), P0.spine[1], P0.spine[2]]; P0.sh = [P0.sh[0], P0.sh[1], P0.sh[2] + 2 * Math.sin(t * 2.1)]; return P0;
     }
     var u = t / T, i, j, f;
     if (ex.def.loop === 'cycle') {
       u = u % n; i = Math.floor(u); j = (i + 1) % n; f = u - i;
+      if (!ex.def.smooth) { var oc = mix(K[i], K[j], ease(f), ex.dirs[i], ex.dirs[j]); oc._seg = i; oc._f = ease(f); return oc; }
       if (ex.def.smooth) {   // movimiento continuo (círculos): curva suave entre las cuatro poses vecinas
         var h = (i + n - 1) % n, k2 = (j + 1) % n;
         var a = mix(K[h], K[i], 0.5 + 0.5 * f, ex.dirs[h], ex.dirs[i]), b = mix(K[j], K[k2], 0.5 * f, ex.dirs[j], ex.dirs[k2]);
@@ -519,7 +671,9 @@
       else if ((r2 -= T * tp[0]) < dw[1]) { i = si; j = si + 1; f = 1; }
       else { r2 -= dw[1]; i = si + 1; j = si; f = ease(r2 / (T * tp[1])); }
     }
-    return mix(K[i], K[j], f, ex.dirs[i], ex.dirs[j]);
+    var o2 = mix(K[i], K[j], f, ex.dirs[i], ex.dirs[j]);
+    if (i < j) { o2._seg = i; o2._f = f; } else { o2._seg = j; o2._f = 1 - f; }
+    return o2;
   }
 
 
@@ -572,7 +726,7 @@
     if (floorish) {
       var c = foot.getCenter(new T.Vector3()), z = foot.getSize(new T.Vector3());
       P.mat.visible = true; P.mat.position.set(c.x, S.floorY + 0.004, c.z);
-      P.mat.scale.set(Math.min(1.1, Math.max(0.62, z.x + 0.28)), 1, Math.min(2.0, Math.max(0.62, z.z + 0.34)));
+      P.mat.scale.set(Math.min(2.0, Math.max(0.62, z.x + 0.3)), 1, Math.min(2.0, Math.max(0.62, z.z + 0.34)));
     }
     S.matTop = floorish ? 0.008 : 0;
   }
@@ -613,6 +767,7 @@
     var def = window.KS_EX[k];
     var keys = def.keys.map(function (p) { return JSON.parse(JSON.stringify(p)); });
     S.ex = { def: def, keys: keys, dirs: keys.map(toDirs) };
+    S.ex.fit = buildFit(S.ex, k);
     S.ext = 0; S.vel = 0;
     S.pivot.rotation.y = S.yaw0 + (def.view || 0) * Math.PI / 180 + (window.B3_YAW || 0);
     // encuadre: todas las poses de la animación
@@ -670,6 +825,8 @@
       var g = lo - (S.floorY + (S.matTop || 0));
       if (g > out.float) { out.float = g; out.at = i; }
       if (g < out.pen) { out.pen = g; out.who = who; }
+      var fl = S.floorY + (S.matTop || 0);
+      touchList(P).forEach(function (c) { mPos(S.B[c[0]], p); var gp = p.y - fl - c[1]; if (Math.abs(gp) > Math.abs(out.gap || 0)) { out.gap = gp; out.gapWho = c[0] + '@' + i; } });
       LIMBS.forEach(function (L) { var sp = P[L[0]]; if (sp && sp.ik) { mPos(S.B[L[3]], p); var e = p.distanceTo(new T.Vector3(sp.ik[0], S.floorY + sp.ik[1], sp.ik[2])); out.ik = Math.max(out.ik, e); } });
     }
     // recorrido: cuánto se mueve la articulación que más se mueve
@@ -681,5 +838,6 @@
     out.float = Math.round(out.float * 1000) / 1000; out.pen = Math.round(out.pen * 1000) / 1000; out.ik = Math.round(out.ik * 1000) / 1000;
     return out;
   }
-  window.Body3D = { sync: sync, state: S, debug: debugPose, metrics: metrics, loopLen: function (k) { var e = window.KS_EX[k]; return loopLen(e, e.keys.length); } };
+  window.Body3D = { sync: sync, state: S, debug: debugPose, metrics: metrics,
+    bake: function (k) { var e = window.KS_EX[k]; setMode(k); return { h: exHash(e), f: JSON.parse(JSON.stringify(S.ex.fit, function (kk, v) { return typeof v === 'number' ? Math.round(v * 10000) / 10000 : v; })) }; }, loopLen: function (k) { var e = window.KS_EX[k]; return loopLen(e, e.keys.length); } };
 })();
