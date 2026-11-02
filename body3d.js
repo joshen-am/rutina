@@ -374,8 +374,8 @@
     B.Hips.position.copy(B.Hips.parent.worldToLocal(S.model.localToWorld(target.clone())));
     var sp = [P.spine[0] / 3, P.spine[1] / 3, P.spine[2] / 3];
     ['Spine', 'Spine1', 'Spine2'].forEach(function (n) { eul(sp, B[n].quaternion); });
-    var hd = [P.head[0] / 2, P.head[1] / 2, P.head[2] / 2];
-    eul(hd, B.Neck.quaternion); eul(hd, B.Head.quaternion);
+    if (P.neck) { eul(P.neck, B.Neck.quaternion); eul(P.head, B.Head.quaternion); }
+    else { var hd = [P.head[0] / 2, P.head[1] / 2, P.head[2] / 2]; eul(hd, B.Neck.quaternion); eul(hd, B.Head.quaternion); }
     eul(P.sh, B.LeftShoulder.quaternion); eul([P.sh[0], -P.sh[1], -P.sh[2]], B.RightShoulder.quaternion);
     S.model.updateMatrixWorld(true);
     var Fq = mQuat(B.Hips, _q[0]).clone(), FqI = Fq.clone().invert();
@@ -479,6 +479,7 @@
   function lerpV(a, b, f) { return a.map(function (x, i) { return x + (b[i] - x) * f; }); }
   function mix(A, Bk, f, dA, dB) {
     var o = { hips: { r: lerpV(A.hips.r, Bk.hips.r, f) }, spine: lerpV(A.spine, Bk.spine, f), head: lerpV(A.head, Bk.head, f), sh: lerpV(A.sh, Bk.sh, f), ground: A.ground || Bk.ground };
+    if (A.neck || Bk.neck) o.neck = lerpV(A.neck || [0, 0, 0], Bk.neck || [0, 0, 0], f);
     if (A.hips.p && Bk.hips.p) o.hips.p = lerpV(A.hips.p, Bk.hips.p, f);
     LIMBS.forEach(function (L) {
       var a = A[L[0]], b = Bk[L[0]];
@@ -493,6 +494,7 @@
   function ease(u) { var t = Math.min(1, Math.max(0, (u - 0.14) / 0.72)); return t * t * (3 - 2 * t); }
   function breathe(P, t) { P.spine = [P.spine[0] + 1.2 * Math.sin(t * 2.2), P.spine[1], P.spine[2]]; P.sh = [P.sh[0], P.sh[1], P.sh[2] + 1.5 * Math.sin(t * 2.2)]; return P; }
   function sample(ex, t) { var P = sample0(ex, t); if (ex.def.loop !== 'hold') breathe(P, t); placeProps(P); return P; }
+  function loopLen(def, n) { var T = def.t || 1, dw = def.dwell || [0, 0]; return def.loop === 'hold' ? 4 : def.loop === 'cycle' ? T * n : (T * 2 + dw[0] + dw[1]) * (n - 1); }
   function sample0(ex, t) {
     var K = ex.keys, n = K.length, T = ex.def.t || 1;
     if (ex.def.loop === 'hold' || n === 1) {
@@ -510,8 +512,12 @@
     }
     else {
       // ida y vuelta: la ida (bajar) un poco más lenta que la vuelta
-      var tp = ex.def.tempo || [1.12, 0.88], seg = T * (tp[0] + tp[1]), w2 = t % (seg * (n - 1)), si = Math.floor(w2 / seg), r2 = w2 - si * seg;
-      if (r2 < T * tp[0]) { i = si; j = si + 1; f = ease(r2 / (T * tp[0])); } else { i = si + 1; j = si; f = ease((r2 - T * tp[0]) / (T * tp[1])); }
+      var tp = ex.def.tempo || [1.12, 0.88], dw = ex.def.dwell || [0, 0], seg = T * (tp[0] + tp[1]) + dw[0] + dw[1];
+      var w2 = t % (seg * (n - 1)), si = Math.floor(w2 / seg), r2 = w2 - si * seg;
+      if (r2 < dw[0]) { i = si; j = si + 1; f = 0; }
+      else if ((r2 -= dw[0]) < T * tp[0]) { i = si; j = si + 1; f = ease(r2 / (T * tp[0])); }
+      else if ((r2 -= T * tp[0]) < dw[1]) { i = si; j = si + 1; f = 1; }
+      else { r2 -= dw[1]; i = si + 1; j = si; f = ease(r2 / (T * tp[1])); }
     }
     return mix(K[i], K[j], f, ex.dirs[i], ex.dirs[j]);
   }
@@ -613,7 +619,7 @@
     S.pivot.updateMatrixWorld(true);
     var box = new T.Box3(), p = new T.Vector3(), foot = new T.Box3();
     S.matTop = 0; S.exLow = Infinity; S.exHigh = -Infinity;
-    var steps = def.loop === 'hold' ? 1 : 16, total = def.loop === 'hold' ? 0 : (def.t || 1) * (def.loop === 'cycle' ? keys.length : 2 * (keys.length - 1));
+    var steps = def.loop === 'hold' ? 1 : 16, total = def.loop === 'hold' ? 0 : loopLen(def, keys.length);
     for (var s = 0; s <= steps; s++) {
       setPose(sample(S.ex, total * s / steps));
       FRAMEB.forEach(function (n) { if (!S.B[n]) return; S.B[n].getWorldPosition(p); box.expandByPoint(p); foot.expandByPoint(S.model.worldToLocal(p.clone())); });
@@ -641,6 +647,8 @@
 
   function exCamera() {
     var T = S.three, box = S.exBox; if (!box || !S.camera) return;
+    var fo = S.ex && S.ex.def.focus;   // [y mín, y máx] en metros: acercar la cámara a una parte del cuerpo
+    if (fo) { box = box.clone(); box.min.y = Math.max(box.min.y, S.floorY + fo[0]); box.max.y = Math.min(box.max.y, S.floorY + fo[1]); }
     var c = box.getCenter(new T.Vector3()), sz = box.getSize(new T.Vector3());
     var el = ((S.ex && S.ex.def.elev) || 6) * Math.PI / 180, vfov = T.MathUtils.degToRad(S.camera.fov);
     var needH = sz.y * Math.cos(el) + sz.z * Math.sin(el) * 0.6, needW = sz.x;
@@ -654,7 +662,7 @@
 
   function metrics(k) {
     if (!S.ready) return null; if (k !== S.exKey) setMode(k);
-    var T = S.three, def = S.ex.def, total = def.loop === 'hold' ? 0.01 : (def.t || 1) * (def.loop === 'cycle' ? S.ex.keys.length : 2 * (S.ex.keys.length - 1));
+    var T = S.three, def = S.ex.def, total = def.loop === 'hold' ? 0.01 : loopLen(def, S.ex.keys.length);
     var out = { float: 0, pen: 0, ik: 0, at: 0, who: '' }, p = new T.Vector3();
     for (var i = 0; i < 24; i++) {
       var P = sample(S.ex, total * i / 24); setPoseFull(P);
@@ -664,8 +672,14 @@
       if (g < out.pen) { out.pen = g; out.who = who; }
       LIMBS.forEach(function (L) { var sp = P[L[0]]; if (sp && sp.ik) { mPos(S.B[L[3]], p); var e = p.distanceTo(new T.Vector3(sp.ik[0], S.floorY + sp.ik[1], sp.ik[2])); out.ik = Math.max(out.ik, e); } });
     }
+    // recorrido: cuánto se mueve la articulación que más se mueve
+    var pts = {}, names = ['Head', 'Hips', 'LeftHand', 'RightHand', 'LeftFoot', 'RightFoot', 'LeftForeArm', 'RightForeArm', 'LeftLeg', 'RightLeg', 'Spine2'];
+    for (var j = 0; j < 24; j++) { setPoseFull(sample(S.ex, total * j / 24)); names.forEach(function (nm) { (pts[nm] = pts[nm] || []).push(mPos(S.B[nm], new T.Vector3())); }); }
+    out.amp = 0; out.ampj = '';
+    names.forEach(function (nm) { var b = new T.Box3().setFromPoints(pts[nm]), d = b.getSize(new T.Vector3()).length(); if (d > out.amp) { out.amp = d; out.ampj = nm; } });
+    out.amp = Math.round(out.amp * 100) / 100;
     out.float = Math.round(out.float * 1000) / 1000; out.pen = Math.round(out.pen * 1000) / 1000; out.ik = Math.round(out.ik * 1000) / 1000;
     return out;
   }
-  window.Body3D = { sync: sync, state: S, debug: debugPose, metrics: metrics };
+  window.Body3D = { sync: sync, state: S, debug: debugPose, metrics: metrics, loopLen: function (k) { var e = window.KS_EX[k]; return loopLen(e, e.keys.length); } };
 })();
