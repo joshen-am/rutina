@@ -28,8 +28,8 @@ def mark(h, st, l1, l2):
 def brand_footer():
     from orbtpl import orb_tpl
     return ('<div aria-label="keystone" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px">'
-            + orb_tpl(44) + '<span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em; margin-top: 6px">keystone</span>'
-            '<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: {{ th.tertiary }}">HECHA PARA {{ prefs.nombre }}</span></div>')
+            + orb_tpl(44) + '<span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em; margin-top: 8px">keystone</span>'
+            '<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Hecha para {{ prefs.nombre }}</span></div>')
 
 
 tpl = open(os.path.join(HERE, 'Main3.tpl.html')).read()

@@ -179,6 +179,7 @@
   // marcha: rodilla arriba, los dos pies abajo, la otra rodilla, los dos pies abajo
   var MA = EX.marcha.keys[0], MN = stand({ lArm: { a: [0.18, -1, 0.04], b: [0.12, -1, 0.12] } });
   EX.marcha.keys = [MA, MN, swapLR(MA), MN]; EX.marcha.loop = 'cycle'; EX.marcha.t = 0.42;
+  EX.marcha.pass = [1, 3];   // con los dos pies abajo el cuerpo no frena: de una rodilla pasa a la otra
   // brazo y pierna contrarios, pasando por la posición neutra entre un lado y el otro
   var BD_N = P({ touch: ['knees', 'hands', 'toes'], p: [0, 0.55, -0.02], r: [86, 0, 0], head: [-6, 0, 0], lLeg: Q_KNEE, lFoot: 122, lArm: Q_HAND, lHand: 'flat' });
   var DB_N = P({ touch: ['back', 'hips', 'head'], ground: 1, r: [-90, 0, 0], lLeg: { a: [0.06, 0, 1], b: [0.02, -1, 0.02] }, lFoot: 'follow', lArm: { a: [0.1, 0.1, 1], b: [0.1, 0.1, 1] } });

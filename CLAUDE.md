@@ -20,7 +20,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 ```
 cd fuente/gen
 python3 build3.py
-python3 build_pwa3.py 21        # sube el número en cada versión publicada (cambia la caché del service worker)
+python3 build_pwa3.py 22        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 21
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -52,5 +52,5 @@ Necesita Python 3 con `uharfbuzz` y `fontTools` (`pip install uharfbuzz fonttool
 - Nunca subas claves de API, tokens ni la clave privada VAPID. La clave de IA la pone el usuario en la app y queda solo en su teléfono.
 - Los datos del usuario viven en el navegador (`localStorage` `tracker-rutinas-v3` e IndexedDB `rutina`). No rompas su formato sin migrarlo.
 - La app nativa (Capacitor/Xcode, carpeta `nativo/`, workflow `app-ios.yml`) quedó abandonada a pedido de Joshen. No la retomes si él no lo pide.
-- La marca es keystone, con la esfera cromada plateada (`img/orb-plata.png`, íconos `-plata`). El color de la esfera cambia según la salud (`orb-s1`…`s5`).
+- La marca es keystone, con la esfera cromada plateada (`img/orb-plata.png`). Los íconos salen de la esfera de `brand/icon-1024.png` y se publican con el sufijo `-orbe` (pestaña: `favicon-32`/`favicon-192`, esfera sola; inicio: esfera sobre blanco). Si cambian, cambia el sufijo para que el navegador no muestre los viejos. El color de la esfera cambia según la salud (`orb-s1`…`s5`).
 - `fuente/canvas/Main.dc.html` es la misma página que el lienzo de diseño en claude.ai.

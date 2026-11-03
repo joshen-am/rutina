@@ -1789,7 +1789,7 @@ class Component extends DCLogic {
       dateLabel: this.longDate(date), canNext: !isToday, nextOp: isToday ? 0.3 : 1, prevOp: (st.fday || 0) > -30 ? 1 : 0.3,
       prev: () => { this.sfx('tap'); this.setState({ fday: Math.max(-30, (st.fday || 0) - 1) }); },
       next: () => { if (isToday) return; this.sfx('tap'); this.setState({ fday: (st.fday || 0) + 1 }); },
-      kcal: r0(tot.kcal), goal: this.fmt(T.kcal), left: this.fmt(Math.abs(left)), leftLabel: left >= 0 ? 'restantes' : 'sobre tu meta',
+      kcal: r0(tot.kcal), goal: this.fmt(T.kcal), left: this.fmt(Math.abs(left)), leftLabel: left >= 0 ? 'Restantes' : 'Sobre tu meta',
       ringOff: (603.2 * (1 - Math.min(1, tot.kcal / T.kcal))).toFixed(1), ringColor: tot.kcal > T.kcal * 1.05 ? c.heat : th.text,
       macros: [macro('Proteína', tot.p, T.prot, c.prot), macro('Carbohidratos', tot.c, T.carb, c.carb), macro('Grasa', tot.f, T.fat, c.fat), macro('Fibra', tot.fib, T.fib, c.fib)],
       micro: [
@@ -2430,12 +2430,12 @@ class Component extends DCLogic {
 
   theme(dark) {
     return dark ? {
-      bg: '#09090B', card: '#161619', raised: '#1E1E22', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#5C5C66', sep: '#27272A',
+      bg: '#09090B', card: '#161619', raised: '#1E1E22', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#8A8A93', sep: '#27272A',
       fill: '#232327', btn2: '#232327', segBg: '#232327', segSel: '#3F3F46', bodyBase: '#26262B', muscleOff: '#3F3F46', barOff: '#3F3F46',
       bar: 'rgba(9, 9, 11, 0.82)', scrim: 'rgba(0, 0, 0, 0.6)', shadow: '0 24px 60px rgba(0, 0, 0, 0.6)', danger: '#F87171',
       inv: '#FAFAFA', onInv: '#09090B', line: 'rgba(255, 255, 255, 0.06)', input: '#232327'
     } : {
-      bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#71717A', tertiary: '#A1A1AA', sep: '#E4E4E7',
+      bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
       bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#DC2626',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
@@ -2600,7 +2600,7 @@ class Component extends DCLogic {
     const startMon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * (HW - 1));
     const mshort = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     const items = [];
-    const dayCol = (f) => (f <= 0 ? this.mix(th.fill, this.healthColor(0, dark), dark ? 0.42 : 0.3) : this.mix(th.fill, this.healthColor(f * 100, dark), 0.42 + 0.58 * f));
+    const dayCol = (f) => (f <= 0 ? th.fill : this.mix(th.fill, c.constancia, 0.22 + 0.78 * f));
     let hFull = 0, hAny = 0, prevMonth = -1;
     for (let w = 0; w < HW; w++) {
       const col = new Date(startMon.getFullYear(), startMon.getMonth(), startMon.getDate() + 7 * w);

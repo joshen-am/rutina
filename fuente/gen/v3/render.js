@@ -86,7 +86,7 @@
     const startMon = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * (HW - 1));
     const mshort = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
     const items = [];
-    const dayCol = (f) => (f <= 0 ? this.mix(th.fill, this.healthColor(0, dark), dark ? 0.42 : 0.3) : this.mix(th.fill, this.healthColor(f * 100, dark), 0.42 + 0.58 * f));
+    const dayCol = (f) => (f <= 0 ? th.fill : this.mix(th.fill, c.constancia, 0.22 + 0.78 * f));
     let hFull = 0, hAny = 0, prevMonth = -1;
     for (let w = 0; w < HW; w++) {
       const col = new Date(startMon.getFullYear(), startMon.getMonth(), startMon.getDate() + 7 * w);

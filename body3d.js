@@ -324,8 +324,9 @@
       var Px = sample(S.ex, S.ext);
       setPoseFull(Px);
       follow(Px, dt);
+      blendIn();
     } else {
-      if (!S.drag && Math.abs(S.vel) <= 0.05) S.pivot.rotation.y += 0.32 * dt;
+      if (!S.drag && Math.abs(S.vel) <= 0.05 && !REDUCED()) S.pivot.rotation.y += 0.32 * dt;
       if (S.mixer) S.mixer.update(dt);
     }
     draw();
@@ -595,22 +596,66 @@
       solve(P);
     }
     clampArms(P);
+    S.lastP = P;   // la pose ya resuelta (con los brazos que quedaron apoyando), para el resorte de follow()
   }
 
   function setPoseFull(P) { setPose(P); syncProps(); }
-  // la cabeza, los hombros y los brazos libres siguen al cuerpo con un leve retraso: el movimiento se siente menos mecánico
+  // la cabeza, el pecho y los brazos libres siguen al cuerpo con un resorte amortiguado (ζ 0,8): arrancan con suavidad
+  // y se asientan con un rebote apenas visible, como un cuerpo con peso. Lo que apoya (manos o antebrazos en el suelo,
+  // en la pared o en el marco) no lleva resorte, para que no se despegue de su sitio.
+  var SPR = { w: 15, z: 0.8 };
+  function armPlanted(Q, L) { return !Q[L[0]] || Q[L[0]].ik || touches(Q, L[3]) || touches(Q, L[2]); }
   function follow(P, dt) {
-    var B = S.B, a = 1 - Math.exp(-dt / 0.11);
-    var list = ['Neck', 'Head', 'LeftShoulder', 'RightShoulder', 'Spine2'];
-    LIMBS.forEach(function (L) { if (P[L[0]] && !P[L[0]].ik && L[0].indexOf('Arm') > 0) list.push(L[1], L[2], L[3]); });
-    S.lag = S.lag || {};
+    var T = S.three, B = S.B, Q = S.lastP || P;
+    var arms = LIMBS.filter(function (L) { return L[0].indexOf('Arm') > 0; });
+    var list = ['Neck', 'Head'];
+    if (!arms.some(function (L) { return armPlanted(Q, L); })) list.push('Spine2');
+    arms.forEach(function (L) { if (!armPlanted(Q, L)) list.push(L[5] > 0 ? 'LeftShoulder' : 'RightShoulder', L[1], L[2], L[3]); });
+    if (S.lagKey !== S.exKey) S.lag = {};
+    S.lagKey = S.exKey;
+    var dq = S._dq || (S._dq = new T.Quaternion()), inv = S._iq || (S._iq = new T.Quaternion()), ax = S._ax || (S._ax = new T.Vector3());
+    var keep = {};
     list.forEach(function (n) {
       var b = B[n]; if (!b) return;
-      var prev = S.lag[n];
-      if (prev && S.lagKey === S.exKey) { prev.slerp(b.quaternion, a); b.quaternion.copy(prev); }
-      else S.lag[n] = b.quaternion.clone();
+      keep[n] = 1;
+      var st = S.lag[n];
+      if (!st) { S.lag[n] = { q: b.quaternion.clone(), w: new T.Vector3() }; return; }
+      // error de giro hacia la pose buscada, como eje × ángulo
+      dq.copy(b.quaternion).multiply(inv.copy(st.q).invert());
+      if (dq.w < 0) dq.set(-dq.x, -dq.y, -dq.z, -dq.w);
+      var ang = 2 * Math.acos(Math.min(1, dq.w)), s = Math.sqrt(Math.max(0, 1 - dq.w * dq.w));
+      if (ang > 1.2) { st.q.copy(b.quaternion); st.w.set(0, 0, 0); return; }   // salto grande: no se persigue
+      if (s > 1e-6) ax.set(dq.x / s, dq.y / s, dq.z / s).multiplyScalar(ang); else ax.set(0, 0, 0);
+      // resorte semi-implícito, estable con cuadros de hasta 50 ms: v = (v + ω²·error·dt) / (1 + 2ζω·dt)
+      st.w.addScaledVector(ax, SPR.w * SPR.w * dt).multiplyScalar(1 / (1 + 2 * SPR.z * SPR.w * dt));
+      var wl = st.w.length();
+      if (wl > 1e-7) { dq.setFromAxisAngle(ax.copy(st.w).multiplyScalar(1 / wl), wl * dt); st.q.premultiply(dq).normalize(); }
+      b.quaternion.copy(st.q);
     });
-    S.lagKey = S.exKey;
+    Object.keys(S.lag).forEach(function (n) { if (!keep[n]) delete S.lag[n]; });   // un brazo que pasa a apoyar suelta su resorte
+    S.model.updateMatrixWorld(true); syncProps();
+  }
+  // al pasar de un ejercicio a otro, el cuerpo y la cámara van de la pose anterior a la nueva en 0,45 s, en vez de saltar
+  var BLEND = 0.45;
+  function REDUCED() { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) { return false; } }
+  function snapBlend() {
+    if (!S.ready || S.statik || !S.exKey || !S.B || REDUCED()) return null;
+    var q = {};
+    CTRL.forEach(function (n) { if (S.B[n]) q[n] = S.B[n].quaternion.clone(); });
+    return { q: q, hp: S.B.Hips.position.clone(), yaw: S.pivot.rotation.y, cam: S.camera.position.clone(), look: S.camLook ? S.camLook.clone() : null };
+  }
+  function blendIn() {
+    var bl = S.blend; if (!bl || !bl.on) return;
+    var u = S.ext / BLEND;
+    if (u >= 1) { S.blend = null; exCamera(); return; }
+    var w = 1 - mj(u), T = S.three;
+    CTRL.forEach(function (n) { var b = S.B[n]; if (b && bl.q[n]) b.quaternion.slerp(bl.q[n], w); });
+    S.B.Hips.position.lerp(bl.hp, w);
+    if (!S.drag) { var dy = Math.atan2(Math.sin(bl.yaw - bl.yaw1), Math.cos(bl.yaw - bl.yaw1)); S.pivot.rotation.y = bl.yaw1 + dy * w; }
+    if (bl.look && bl.look1) {
+      S.camera.position.lerpVectors(bl.cam1, bl.cam, w);
+      S.camera.lookAt(new T.Vector3().lerpVectors(bl.look1, bl.look, w));
+    }
     S.model.updateMatrixWorld(true); syncProps();
   }
   // de una pose con IK a direcciones (para mezclar poses con tipos distintos)
@@ -642,9 +687,30 @@
     });
     return o;
   }
-  function ease(u) { var t = Math.min(1, Math.max(0, (u - 0.14) / 0.72)); return t * t * (3 - 2 * t); }
-  function breathe(P, t) { P.spine = [P.spine[0] + 1.2 * Math.sin(t * 2.2), P.spine[1], P.spine[2]]; P.sh = [P.sh[0], P.sh[1], P.sh[2] + 1.5 * Math.sin(t * 2.2)]; return P; }
-  function sample(ex, t) { var P = sample0(ex, t); if (ex.def.loop !== 'hold') breathe(P, t); placeProps(P); return P; }
+  // curva de mínimo tirón (Flash y Hogan, 1985): así aceleran y frenan los movimientos humanos; sale y llega sin sacudida
+  function mj(t) { t = Math.min(1, Math.max(0, t)); return t * t * t * (10 + t * (6 * t - 15)); }
+  // un respiro corto en cada extremo (5 %) para que la pose se lea; la curva ya pasa más tiempo cerca de los extremos
+  function ease(u) { return mj((u - 0.05) / 0.9); }
+  // poses de paso (def.pass): el cuerpo pasa por ellas sin detenerse, pero llega con algo de freno (velocidad PASS en vez de 0):
+  // así no se congela con los dos pies abajo y el pie tampoco golpea el suelo. Curvas de Hermite con esa velocidad en la pose de paso
+  var PASS = 0.8;
+  function easeSeg(f, fromPass, toPass) {
+    if (fromPass && toPass) return f;
+    if (toPass) { var u = Math.max(0, (f - 0.05) / 0.95); return 3 * u * u - 2 * u * u * u + PASS * (u * u * u - u * u); }
+    if (fromPass) { var v = Math.min(1, f / 0.95); return PASS * (v - 2 * v * v + v * v * v) + 3 * v * v - 2 * v * v * v; }
+    return ease(f);
+  }
+  // respiración: en las repeticiones va con el movimiento (inspira en la ida, que es la fase lenta, y exhala en la vuelta,
+  // el esfuerzo); en las posturas sostenidas y en los ciclos, un ritmo tranquilo de unas 20 respiraciones por minuto
+  function breathe(P, t, k) {
+    var s = k != null ? k : Math.sin(t * 2.2);
+    P.spine = [P.spine[0] + 1.2 * s, P.spine[1], P.spine[2]]; P.sh = [P.sh[0], P.sh[1], P.sh[2] + 1.5 * s]; return P;
+  }
+  function sample(ex, t) {
+    var P = sample0(ex, t), d = ex.def;
+    if (d.loop !== 'hold') breathe(P, t, d.loop !== 'cycle' && !((d.dwell || [0, 0])[1] > 0.8) ? 2 * (P._f || 0) - 1 : null);
+    placeProps(P); return P;
+  }
   function loopLen(def, n) { var T = def.t || 1, dw = def.dwell || [0, 0]; return def.loop === 'hold' ? 4 : def.loop === 'cycle' ? T * n : (T * 2 + dw[0] + dw[1]) * (n - 1); }
   function sample0(ex, t) {
     var K = ex.keys, n = K.length, T = ex.def.t || 1;
@@ -654,7 +720,10 @@
     var u = t / T, i, j, f;
     if (ex.def.loop === 'cycle') {
       u = u % n; i = Math.floor(u); j = (i + 1) % n; f = u - i;
-      if (!ex.def.smooth) { var oc = mix(K[i], K[j], ease(f), ex.dirs[i], ex.dirs[j]); oc._seg = i; oc._f = ease(f); return oc; }
+      if (!ex.def.smooth) {
+        var ps = ex.def.pass || [], fe = easeSeg(f, ps.indexOf(i) >= 0, ps.indexOf(j) >= 0);
+        var oc = mix(K[i], K[j], fe, ex.dirs[i], ex.dirs[j]); oc._seg = i; oc._f = fe; return oc;
+      }
       if (ex.def.smooth) {   // movimiento continuo (círculos): curva suave entre las cuatro poses vecinas
         var h = (i + n - 1) % n, k2 = (j + 1) % n;
         var a = mix(K[h], K[i], 0.5 + 0.5 * f, ex.dirs[h], ex.dirs[i]), b = mix(K[j], K[k2], 0.5 * f, ex.dirs[j], ex.dirs[k2]);
@@ -756,6 +825,8 @@
 
   function setMode(k) {
     var T = S.three;
+    var from = k ? snapBlend() : null;   // la pose del ejercicio que se va, antes de que el encuadre la cambie
+    S.blend = null;
     S.exKey = k;
     document.body.classList.toggle('ex3d-on', !!k);
     if (!k) {
@@ -798,6 +869,7 @@
     setPoseFull(sample(S.ex, 0));
     S.loadsStr = null;
     exCamera();
+    if (from) { from.yaw1 = S.pivot.rotation.y; from.cam1 = S.camera.position.clone(); from.look1 = S.camLook ? S.camLook.clone() : null; from.on = true; S.blend = from; }
   }
 
   function exCamera() {
@@ -809,7 +881,7 @@
     var needH = sz.y * Math.cos(el) + sz.z * Math.sin(el) * 0.6, needW = sz.x;
     var dist = Math.max(needH / (2 * Math.tan(vfov / 2)), needW / (2 * Math.tan(vfov / 2) * S.camera.aspect)) + sz.z * 0.5;
     S.camera.position.set(c.x, c.y + Math.sin(el) * dist, c.z + Math.cos(el) * dist);
-    S.camera.lookAt(c);
+    S.camera.lookAt(c); S.camLook = c;
     S.camera.updateProjectionMatrix();
   }
 

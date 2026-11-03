@@ -26,9 +26,8 @@ def rep(s, a, b, n):
 # fluid, full-screen layout with the iPhone safe areas
 tpl = rep(tpl, 'width: 390px; height: 844px;', 'width: 100%; max-width: 640px; margin: 0 auto; height: 100%;', 1)
 tpl = rep(tpl, 'padding: 60px 16px', 'padding: calc(env(safe-area-inset-top) + 44px) 16px', None)
-tpl = rep(tpl, 'padding: 54px', 'padding: calc(env(safe-area-inset-top) + 30px)', None)
+tpl = rep(tpl, 'padding: 56px', 'padding: calc(env(safe-area-inset-top) + 32px)', None)
 tpl = rep(tpl, 'padding: 12px 16px 34px', 'padding: 12px 16px calc(env(safe-area-inset-bottom) + 12px)', None)
-tpl = rep(tpl, 'padding: 10px 16px 34px', 'padding: 10px 16px calc(env(safe-area-inset-bottom) + 14px)', None)
 tpl = rep(tpl, 'padding: 12px 20px 34px', 'padding: 12px 20px calc(env(safe-area-inset-bottom) + 12px)', None)
 tpl = rep(tpl, 'height: 83px', 'height: calc(49px + env(safe-area-inset-bottom))', 1)
 tpl = rep(tpl, 'bottom: 83px', 'bottom: calc(49px + env(safe-area-inset-bottom))', None)
@@ -221,10 +220,11 @@ HTML = f'''<!doctype html>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="keystone">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192-plata.png">
-<link rel="apple-touch-icon" href="icons/apple-touch-icon-plata.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32-orbe.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/favicon-192-orbe.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-orbe.png">
 <link rel="preload" href="fonts/Geist-Variable.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1170x2532-plata.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash-1170x2532-orbe.png">
 <style>
 @font-face{{font-family:'Geist';src:url('fonts/Geist-Variable.woff2') format('woff2');font-weight:100 900;font-display:swap}}
 @font-face{{font-family:'Geist Mono';src:url('fonts/GeistMono-Variable.woff2') format('woff2');font-weight:100 900;font-display:swap}}
@@ -295,7 +295,7 @@ ORBS = sorted(os.listdir(os.path.join(HERE, 'orbimg')))
 for f in ORBS:
     shutil.copy(os.path.join(HERE, 'orbimg', f), os.path.join(OUT, 'img', f))
 for f in os.listdir(os.path.join(HERE, 'icons')):
-    shutil.copy(os.path.join(HERE, 'icons', f), os.path.join(OUT, 'icons', f.replace('.png', '-plata.png')))
+    shutil.copy(os.path.join(HERE, 'icons', f), os.path.join(OUT, 'icons', f.replace('.png', '-orbe.png')))
 
 manifest = {
     'name': 'keystone', 'short_name': 'keystone', 'lang': 'es',
@@ -303,9 +303,9 @@ manifest = {
     'start_url': './', 'scope': './', 'display': 'standalone', 'orientation': 'portrait',
     'background_color': '#FAFAFB', 'theme_color': '#FFFFFF',
     'icons': [
-        {'src': 'icons/icon-192-plata.png', 'sizes': '192x192', 'type': 'image/png'},
-        {'src': 'icons/icon-512-plata.png', 'sizes': '512x512', 'type': 'image/png'},
-        {'src': 'icons/icon-maskable-512-plata.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'}
+        {'src': 'icons/icon-192-orbe.png', 'sizes': '192x192', 'type': 'image/png'},
+        {'src': 'icons/icon-512-orbe.png', 'sizes': '512x512', 'type': 'image/png'},
+        {'src': 'icons/icon-maskable-512-orbe.png', 'sizes': '512x512', 'type': 'image/png', 'purpose': 'maskable'}
     ]
 }
 json.dump(manifest, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), ensure_ascii=False, indent=1)
@@ -313,7 +313,7 @@ json.dump(manifest, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), ensure
 files = ['./', 'index.html', 'manifest.webmanifest', 'vendor/morphdom-umd.min.js', 'fonts/Geist-Variable.woff2', 'fonts/GeistMono-Variable.woff2',
          'body3d.js', 'exercises.js', 'exfit.js', 'vendor/three/three.module.min.js', 'vendor/three/GLTFLoader.js', 'vendor/three/RoomEnvironment.js',
          'vendor/three/BufferGeometryUtils.js', 'vendor/three/body.glb', 'img/body-light.png', 'img/body-dark.png'] + ['img/' + f for f in ORBS] + \
-        ['img/' + k + '.svg' for k in sorted(blobmap.values())] + ['icons/' + f.replace('.png', '-plata.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
+        ['img/' + k + '.svg' for k in sorted(blobmap.values())] + ['icons/' + f.replace('.png', '-orbe.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
 SW = f'''// Funciona sin conexión: guarda la app en el teléfono y la actualiza cuando hay internet.
 const CACHE = 'rutina-v{VERSION}';
 const FILES = {json.dumps(files)};
@@ -368,7 +368,7 @@ self.addEventListener('push', (e) => {{
   let m = {{ type: 'aviso', title: 'keystone', body: 'Tienes un recordatorio.' }};
   try {{ if (e.data) m = Object.assign(m, e.data.json()); }} catch (err) {{}}
   e.waitUntil(personalizar(m).catch(() => m).then((n) => self.registration.showNotification(n.title, {{
-    body: n.body, tag: n.tag || ('rutina-' + n.type), icon: 'icons/icon-192-plata.png', badge: 'icons/icon-192-plata.png',
+    body: n.body, tag: n.tag || ('rutina-' + n.type), icon: 'icons/icon-192-orbe.png', badge: 'icons/icon-192-orbe.png',
     data: {{ url: './?aviso=' + n.type }}
   }})));
 }});

@@ -286,12 +286,12 @@ class Component extends DCLogic {
 
   theme(dark) {
     return dark ? {
-      bg: '#09090B', card: '#161619', raised: '#1E1E22', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#5C5C66', sep: '#27272A',
+      bg: '#09090B', card: '#161619', raised: '#1E1E22', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#8A8A93', sep: '#27272A',
       fill: '#232327', btn2: '#232327', segBg: '#232327', segSel: '#3F3F46', bodyBase: '#26262B', muscleOff: '#3F3F46', barOff: '#3F3F46',
       bar: 'rgba(9, 9, 11, 0.82)', scrim: 'rgba(0, 0, 0, 0.6)', shadow: '0 24px 60px rgba(0, 0, 0, 0.6)', danger: '#F87171',
       inv: '#FAFAFA', onInv: '#09090B', line: 'rgba(255, 255, 255, 0.06)', input: '#232327'
     } : {
-      bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#71717A', tertiary: '#A1A1AA', sep: '#E4E4E7',
+      bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
       bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#DC2626',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
