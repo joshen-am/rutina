@@ -1,0 +1,170 @@
+{
+ "marcha": {
+  "frames": 1,
+  "poses": 1
+ },
+ "circulos_brazos": {
+  "frames": 1,
+  "poses": 1
+ },
+ "gato_vaca": {
+  "frames": 8,
+  "poses": 2
+ },
+ "circulos_cadera": {
+  "frames": 1,
+  "poses": 1
+ },
+ "escapular_pared": {
+  "frames": 8,
+  "poses": 2
+ },
+ "sentadilla": {
+  "frames": 8,
+  "poses": 2
+ },
+ "puente": {
+  "frames": 8,
+  "poses": 2
+ },
+ "balanceo_pierna": {
+  "frames": 8,
+  "poses": 2
+ },
+ "chin_tuck": {
+  "frames": 8,
+  "poses": 2
+ },
+ "angeles": {
+  "frames": 8,
+  "poses": 2
+ },
+ "pecho_marco": {
+  "frames": 1,
+  "poses": 1
+ },
+ "flexor_cadera": {
+  "frames": 1,
+  "poses": 1
+ },
+ "flex_rodillas": {
+  "frames": 8,
+  "poses": 2
+ },
+ "remo_marco": {
+  "frames": 8,
+  "poses": 2
+ },
+ "laterales": {
+  "frames": 8,
+  "poses": 2
+ },
+ "curl": {
+  "frames": 8,
+  "poses": 2
+ },
+ "triceps": {
+  "frames": 8,
+  "poses": 2
+ },
+ "ytw": {
+  "frames": 15,
+  "poses": 3
+ },
+ "deadbug": {
+  "frames": 8,
+  "poses": 2
+ },
+ "plancha": {
+  "frames": 1,
+  "poses": 1
+ },
+ "zancada_atras": {
+  "frames": 8,
+  "poses": 2
+ },
+ "pm_rumano": {
+  "frames": 8,
+  "poses": 2
+ },
+ "talones_suelo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "plancha_lateral": {
+  "frames": 1,
+  "poses": 1
+ },
+ "bird_dog": {
+  "frames": 8,
+  "poses": 2
+ },
+ "sentadilla_talones": {
+  "frames": 8,
+  "poses": 2
+ },
+ "escalador": {
+  "frames": 8,
+  "poses": 2
+ },
+ "boxeo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "crunch_invertido": {
+  "frames": 8,
+  "poses": 2
+ },
+ "hollow": {
+  "frames": 1,
+  "poses": 1
+ },
+ "esfinge": {
+  "frames": 1,
+  "poses": 1
+ },
+ "flex_suelo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "jalon_suelo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "flex_pica": {
+  "frames": 8,
+  "poses": 2
+ },
+ "fondo_suelo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "elev_piernas": {
+  "frames": 8,
+  "poses": 2
+ },
+ "zancada_estatica": {
+  "frames": 8,
+  "poses": 2
+ },
+ "sumo": {
+  "frames": 8,
+  "poses": 2
+ },
+ "puente_isquios": {
+  "frames": 8,
+  "poses": 2
+ },
+ "puente_una2": {
+  "frames": 8,
+  "poses": 2
+ },
+ "sentadilla_pared": {
+  "frames": 1,
+  "poses": 1
+ },
+ "curl_martillo": {
+  "frames": 8,
+  "poses": 2
+ }
+}

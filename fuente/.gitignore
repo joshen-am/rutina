@@ -1,0 +1,12 @@
+__pycache__/
+gen/b3d/t/body3d.js
+gen/b3d/t/exercises.js
+gen/b3d/t/exfit.js
+gen/b3d/t/vendor/
+gen/b3d/exs/
+gen/b3d/gif/
+gen/b3d/*.png
+!gen/b3d/body-light.png
+!gen/b3d/body-dark.png
+pruebas/salida/
+node_modules/

@@ -1,0 +1,86 @@
+<div class="push scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 16px 16px 32px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 0 4px">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ ss.phaseColor }}">{{ ss.phase }}</span>
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}">{{ ss.round }}</span>
+</div>
+
+<sc-if value="{{ ss.hasImg }}" hint-placeholder-val="{{ true }}">
+<div role="img" aria-label="{{ ss.imgAlt }}" style="position: relative; width: 100%; aspect-ratio: 354 / 300; border-radius: 24px; overflow: hidden; background: {{ ss.imgBg }}">
+<img class="ex3d-img" src="{{ ss.img }}" alt="" style="position: absolute; left: 0; top: 0; height: 100%; width: {{ ss.imgW }}%; max-width: none; transform: translateX(-{{ ss.shift }}%); filter: {{ ss.imgFilter }}">
+<div class="body3d" data-key="ex" data-ex="{{ ss.k }}" data-dark="{{ b3.dark }}" data-loads="{}" aria-hidden="true" style="position: absolute; inset: 0"></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ ss.isRestStep }}" hint-placeholder-val="{{ false }}">
+<div style="position: relative; overflow: hidden; background: #0B0B0C; color: #FAFAFA; border-radius: 26px; padding: 30px 20px 22px; display: flex; flex-direction: column; align-items: center; gap: 18px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}"></span>
+<span style="position: relative; font-size: 72px; line-height: 72px; font-weight: 300; letter-spacing: -0.06em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
+<div style="position: relative; width: 100%; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.16); overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: #FAFAFA"></div></div>
+<div style="position: relative; display: flex; gap: 10px">
+<button type="button" onClick="{{ restAdd }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 18px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #FAFAFA; font-size: 15px; font-weight: 500">+15 s</button>
+<button type="button" onClick="{{ sesNext }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 18px; border-radius: 999px; background: #FAFAFA; color: #09090B; font-size: 15px; font-weight: 500">Saltar descanso</button>
+</div>
+</div>
+</sc-if>
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 0 4px">
+<h1 style="margin: 0; font-size: 30px; line-height: 34px; font-weight: 500; letter-spacing: -0.04em">{{ ss.name }}</h1>
+<div style="display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px">
+<span style="font-family: {{ mono }}; font-size: 17px; font-variant-numeric: tabular-nums">{{ ss.dose }}</span>
+<sc-if value="{{ ss.hasRest }}" hint-placeholder-val="{{ true }}"><span style="font-size: 14px; color: {{ th.sub }}">descanso {{ ss.restLabel }} entre series</span></sc-if>
+</div>
+<sc-if value="{{ ss.hasWorks }}" hint-placeholder-val="{{ true }}"><p style="margin: 2px 0 0; font-size: 14px; line-height: 20px; color: {{ th.sub }}">{{ ss.works }}</p></sc-if>
+</div>
+
+<sc-if value="{{ ss.hasSets }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Series" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<span style="font-size: 16px; font-weight: 500">Series</span>
+<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums">{{ ss.setsDone }}/{{ ss.sets }}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat({{ ss.sets }}, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ ss.setBtns }}" as="sb" hint-placeholder-count="4">
+<button type="button" onClick="{{ sb.pick }}" aria-label="{{ sb.aria }}" aria-pressed="{{ sb.pressed }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; border-radius: 18px; background: {{ sb.bg }}; color: {{ sb.fg }}; box-shadow: {{ sb.ring }}; font-family: {{ mono }}; font-size: 16px; display: flex; align-items: center; justify-content: center; transition: background 0.2s">
+<sc-if value="{{ sb.pressed }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></sc-if>
+<sc-if value="{{ sb.open }}" hint-placeholder-val="{{ true }}"><span>{{ sb.n }}</span></sc-if>
+</button>
+</sc-for>
+</div>
+<sc-if value="{{ ss.resting }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 12px; border-top: 0.5px solid {{ th.sep }}; padding-top: 14px">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: {{ th.sub }}">DESCANSA</span>
+<div style="height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: {{ c.accent }}"></div></div>
+</div>
+<span style="font-size: 30px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
+<button type="button" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 14px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">Saltar</button>
+</div>
+</sc-if>
+<sc-if value="{{ ss.hasSetHint }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ ss.setHint }}</p></sc-if>
+</section>
+</sc-if>
+
+<sc-if value="{{ ss.hasHow }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Cómo hacerlo" style="background: {{ th.card }}; border-radius: 22px; padding: 4px 18px">
+<ol style="list-style: none; margin: 0; padding: 0">
+<sc-for list="{{ ss.how }}" as="hw" hint-placeholder-count="3">
+<li style="display: flex; align-items: flex-start; gap: 14px; padding: 14px 0; box-shadow: {{ hw.line }}">
+<span style="font-family: {{ mono }}; font-size: 11px; color: {{ c.accentText }}; padding-top: 3px; flex: none">0{{ hw.n }}</span>
+<span style="font-size: 16px; line-height: 22px">{{ hw.text }}</span>
+</li>
+</sc-for>
+</ol>
+</section>
+</sc-if>
+
+<sc-if value="{{ ss.hasNotes }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Consejos" style="background: {{ th.card }}; border-radius: 22px; padding: 4px 18px">
+<sc-for list="{{ ss.notes }}" as="nt" hint-placeholder-count="2">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 14px 0; box-shadow: {{ nt.line }}">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ nt.color }}">{{ nt.label }}</span>
+<span style="font-size: 16px; line-height: 22px">{{ nt.text }}</span>
+</div>
+</sc-for>
+</section>
+</sc-if>
+</div>

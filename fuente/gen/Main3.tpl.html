@@ -1,0 +1,1126 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>keystone</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400..600&amp;display=swap">
+<style>
+body{margin:0}
+button{-webkit-tap-highlight-color:transparent;transition:opacity .12s, transform .12s}
+button:active{opacity:.7;transform:scale(.985)}
+input::placeholder,textarea::placeholder{color:#A1A1AA}
+input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #71717A;outline-offset:2px}
+@keyframes present{from{transform:translateY(100%)}to{transform:none}}
+@keyframes sheet{from{transform:translateY(105%)}to{transform:none}}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+@keyframes menu{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes push{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
+@keyframes breathe{0%,100%{opacity:.75}50%{opacity:1}}
+.scroll>*{flex-shrink:0}
+.scroll{scrollbar-width:none}
+.scroll::-webkit-scrollbar{display:none}
+.push{animation:push .38s cubic-bezier(.32,.72,0,1) both}
+@media (prefers-reduced-motion: reduce){.push{animation:none}}
+</style>
+</helmet>
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; -webkit-font-smoothing: antialiased; letter-spacing: -0.01em">
+<sc-if value="{{ showInicio }}" hint-placeholder-val="{{ false }}">
+<div id="sc-showInicio" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 210px; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; flex-direction: column; gap: 22px; padding: 0 4px 4px"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span aria-label="keystone" style="display: flex; align-items: center; gap: 8px"><img src="img/orb-{{ orb.k }}.png" alt="" aria-hidden="true" style="width: 24px; height: 24px; flex: none; border-radius: 50%; box-shadow: 0 0.7px 1.9px rgba(0, 0, 0, 0.22)"><span style="font-size: 22px; font-weight: 500; letter-spacing: -0.055em">keystone</span></span><button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button></div><div style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ dateLabel }}</span><h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">{{ greeting }}</h1></div></header>
+<sc-if value="{{ showBackupNudge }}" hint-placeholder-val="{{ false }}">
+<section aria-label="Respaldo" style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 500">Respalda tus datos</span><span style="font-size: 14px; line-height: 20px; color: {{ th.sub }}">Guarda una copia en Archivos o iCloud Drive por si cambias de teléfono.</span></span>
+<div style="display: flex; gap: 8px"><button type="button" onClick="{{ exportBackup }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1">Respaldar</button><button type="button" onClick="{{ snoozeBackup }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1">Ahora no</button></div>
+</section>
+</sc-if>
+<div style="order: {{ ho.salud.order }}; display: {{ ho.salud.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.salud.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.salud.up }}" aria-label="Subir" style="opacity: {{ ho.salud.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.salud.down }}" aria-label="Bajar" style="opacity: {{ ho.salud.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.salud.toggle }}" aria-pressed="{{ ho.salud.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.salud.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.salud.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<sc-if value="{{ hs.has }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ goSalud }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 18px; min-height: 236px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62)">8 ÁREAS</span></span>
+<span style="position: relative; display: flex; align-items: flex-end; gap: 14px">
+<span style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; font-variant-numeric: tabular-nums;">{{ hs.overall }}</span>
+<span style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {{ hs.gColor }}; color: {{ hs.gColor }}; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 12px; font-weight: 500">{{ hs.grade }}</span><span style="font-size: 15px; font-weight: 500">{{ hs.gLabel }}</span></span>
+<span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">de 100 · evaluación {{ hs.evalAgo }}</span>
+</span>
+</span>
+<sc-if value="{{ hs.hasFocus }}" hint-placeholder-val="{{ true }}">
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">ENFÓCATE EN</span>
+<sc-for list="{{ hs.focus }}" as="fo" hint-placeholder-count="2">
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ fo.gColor }}; flex: none"></span><span style="flex: 1; font-size: 15px">{{ fo.name }}</span><span style="font-size: 13px; color: rgba(250, 250, 250, 0.62)">{{ fo.status }}</span></span>
+</sc-for>
+</span>
+</sc-if>
+</button>
+</sc-if>
+<sc-if value="{{ hs.none }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ hs.startEval }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 270px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span></span>
+<span style="position: relative; font-size: 30px; line-height: 34px; font-weight: 400; letter-spacing: -0.04em; max-width: 290px">Conoce tu punto de partida</span>
+<span style="position: relative; font-size: 15px; line-height: 21px; color: rgba(250, 250, 250, 0.72); max-width: 300px">Una evaluación de 3 minutos arma tu perfil y califica 8 áreas: sueño, nutrición, hidratación, fuerza, cardio, cuerpo, corazón y mente.</span>
+<span style="position: relative; margin-top: auto; align-self: flex-start; height: 48px; padding: 0 22px; border-radius: 999px; background: #FAFAFA; color: #09090B; font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px">Empezar evaluación <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</button>
+</sc-if>
+</div>
+</div>
+<div style="order: {{ ho.hist.order }}; display: {{ ho.hist.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.hist.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.hist.up }}" aria-label="Subir" style="opacity: {{ ho.hist.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.hist.down }}" aria-label="Bajar" style="opacity: {{ ho.hist.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.hist.toggle }}" aria-pressed="{{ ho.hist.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.hist.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.hist.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<section aria-labelledby="hist" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<h2 id="hist" style="margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.02em">Historial</h2>
+<span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ hist.summary }}</span>
+</div>
+<div style="display: flex; gap: 6px">
+<div aria-hidden="true" style="display: grid; grid-template-rows: 14px repeat(7, 15px); row-gap: 3px; font-family: {{ mono }}; font-size: 9px; line-height: 15px; color: {{ th.tertiary }}">
+<span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
+</div>
+<div role="img" aria-label="{{ hist.aria }}" style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat({{ hist.weeks }}, minmax(0, 1fr)); grid-template-rows: 14px repeat(7, 15px); grid-auto-flow: column; gap: 3px">
+<sc-for list="{{ hist.items }}" as="hc" hint-placeholder-count="136">
+<sc-if value="{{ hc.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 9px; line-height: 14px; color: {{ th.tertiary }}; white-space: nowrap; overflow: visible">{{ hc.text }}</span></sc-if>
+<sc-if value="{{ hc.isCell }}" hint-placeholder-val="{{ true }}"><span style="border-radius: 4px; background: {{ hc.bg }}; box-shadow: {{ hc.ring }}"></span></sc-if>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; color: {{ th.sub }}">
+<span>Hábitos y entrenos de cada día</span>
+<span style="display: flex; align-items: center; gap: 3px">Nada
+<sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="5"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{ hs.bg }}"></span></sc-for>
+Todo</span>
+</div>
+</section>
+</div>
+</div>
+<div style="order: {{ ho.habitos.order }}; display: {{ ho.habitos.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.habitos.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.habitos.up }}" aria-label="Subir" style="opacity: {{ ho.habitos.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.habitos.down }}" aria-label="Bajar" style="opacity: {{ ho.habitos.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.habitos.toggle }}" aria-pressed="{{ ho.habitos.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.habitos.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.habitos.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<button type="button" onClick="{{ goHabitos }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; width: 100%; background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; align-items: center; gap: 16px">
+<span style="position: relative; width: 52px; height: 52px; flex: none"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26.0" cy="26.0" r="22" fill="none" stroke="{{ th.fill }}" stroke-width="5"></circle><circle cx="26.0" cy="26.0" r="22" fill="none" stroke="{{ th.text }}" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="{{ hd.ringOff52 }}" transform="rotate(-90 26.0 26.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
+<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 12px; font-variant-numeric: tabular-nums;">{{ hd.done }}/{{ hd.total }}</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 17px; font-weight: 500; letter-spacing: -0.02em">Hábitos de hoy</span><span style="font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.sub }}</span></span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</div>
+</div>
+<div style="order: {{ ho.comida.order }}; display: {{ ho.comida.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.comida.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.comida.up }}" aria-label="Subir" style="opacity: {{ ho.comida.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.comida.down }}" aria-label="Bajar" style="opacity: {{ ho.comida.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.comida.toggle }}" aria-pressed="{{ ho.comida.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.comida.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.comida.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<div style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; align-items: center; gap: 14px">
+<button type="button" onClick="{{ goComida }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; flex: 1; min-width: 0; padding: 0; background: transparent; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Comida de hoy</span>
+<span style="font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ fh.kcal }}<span style="font-size: 15px; color: {{ th.sub }}; letter-spacing: -0.01em"> / {{ fh.goal }} kcal</span></span>
+</button>
+<button type="button" onClick="{{ fh.add }}" aria-label="Registrar comida" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.inv }}; color: {{ th.onInv }}; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg></button>
+</div>
+<div style="display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px">
+<sc-for list="{{ fh.macros }}" as="mc" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="font-size: 11px; color: {{ th.sub }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ mc.label }}</span>
+<div style="height: 4px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; width: {{ mc.pct }}%; background: {{ mc.color }}; border-radius: 2px"></div></div>
+<span style="font-family: {{ mono }}; font-size: 11px; font-variant-numeric: tabular-nums;">{{ mc.val }}<span style="color: {{ th.tertiary }}">/{{ mc.goal }}</span></span>
+</div>
+</sc-for>
+</div>
+</div>
+</div>
+</div>
+<div style="order: {{ ho.agua.order }}; display: {{ ho.agua.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.agua.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.agua.up }}" aria-label="Subir" style="opacity: {{ ho.agua.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.agua.down }}" aria-label="Bajar" style="opacity: {{ ho.agua.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.agua.toggle }}" aria-pressed="{{ ho.agua.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.agua.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.agua.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<sc-if value="{{ hd.water.on }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="agua-home" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Agua</span><h2 id="agua-home" style="margin: 0; font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ hd.water.liters }}<span style="font-size: 15px; color: {{ th.sub }}; letter-spacing: -0.01em"> / {{ hd.water.goalL }} L</span></h2></div>
+<span style="font-size: 13px; color: {{ th.sub }}; padding-top: 2px">{{ hd.water.left }}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px">
+<sc-for list="{{ hd.water.glasses }}" as="g" hint-placeholder-count="10">
+<button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 38px; border-radius: 10px; background: {{ g.bg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg width="15" height="15" viewBox="0 0 24 24" fill="{{ g.fill }}" stroke="{{ g.stroke }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg></button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<button type="button" onClick="{{ hd.water.sub }}" aria-label="Quitar un vaso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<button type="button" onClick="{{ hd.water.add }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 15px; font-weight: 500">+ Vaso 250 ml</button>
+<button type="button" onClick="{{ hd.water.add2 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 15px; font-weight: 500">+ Botella 500</button>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.water.cue }}</p>
+</section>
+</sc-if>
+</div>
+</div>
+<div style="order: {{ ho.recup.order }}; display: {{ ho.recup.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.recup.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.recup.up }}" aria-label="Subir" style="opacity: {{ ho.recup.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.recup.down }}" aria-label="Bajar" style="opacity: {{ ho.recup.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.recup.toggle }}" aria-pressed="{{ ho.recup.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.recup.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.recup.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<section aria-labelledby="recup" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px">
+<h2 id="recup" style="margin: 0; font-size: 17px; font-weight: 500; letter-spacing: -0.02em">Recuperación</h2>
+<span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}">{{ rec.summary }}</span>
+</div>
+<div style="display: flex; align-items: center; gap: 12px">
+<div id="b3-rec" class="body3d" role="img" aria-label="Cuerpo con la carga de cada músculo" data-loads="{{ b3.rec }}" data-dark="{{ b3.dark }}" data-key="rec" style="width: 128px; height: 210px; flex: none; background: url({{ b3.fallback }}) center / contain no-repeat"></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
+<sc-if value="{{ rec.has }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ rec.top }}" as="rt" hint-placeholder-count="3">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 44px; box-shadow: inset 0 -0.5px 0 {{ th.sep }}">
+<span style="display: flex; flex-direction: column; gap: 1px; min-width: 0"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ rt.name }}</span><span style="font-size: 12px; color: {{ th.sub }}">{{ rt.ready }}</span></span>
+<span style="font-family: {{ mono }}; font-size: 13px; color: {{ c.heatText }}; font-variant-numeric: tabular-nums;">{{ rt.pct }}%</span>
+</div>
+</sc-for>
+</sc-if>
+<sc-if value="{{ rec.none }}" hint-placeholder-val="{{ false }}">
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: {{ th.sub }}">Todos tus músculos están recuperados. Al terminar una sesión verás cuáles trabajaste y cuándo vuelven a estar listos.</p>
+</sc-if>
+</div>
+</div>
+</section>
+</div>
+</div>
+<div style="order: {{ ho.semana.order }}; display: {{ ho.semana.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.semana.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.semana.up }}" aria-label="Subir" style="opacity: {{ ho.semana.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.semana.down }}" aria-label="Bajar" style="opacity: {{ ho.semana.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.semana.toggle }}" aria-pressed="{{ ho.semana.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.semana.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.semana.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<nav aria-label="Semana" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{ days }}" as="d" hint-placeholder-count="7">
+<button type="button" onClick="{{ d.pick }}" aria-label="{{ d.aria }}" aria-pressed="{{ d.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 72px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: {{ d.bg }}; color: {{ d.fg }}; box-shadow: {{ d.ring }}">
+<span style="font-family: {{ mono }}; font-size: 10px; color: {{ d.sub }}">{{ d.letter }}</span>
+<span style="font-size: 17px; font-weight: 500; font-variant-numeric: tabular-nums;">{{ d.num }}</span>
+<span style="height: 10px; display: flex; align-items: center; justify-content: center">
+<sc-if value="{{ d.isDone }}" hint-placeholder-val="{{ false }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="{{ d.mark }}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></sc-if>
+<sc-if value="{{ d.isMissed }}" hint-placeholder-val="{{ false }}"><span style="width: 8px; height: 1.5px; border-radius: 1px; background: {{ d.sub }}"></span></sc-if>
+<sc-if value="{{ d.isPlanned }}" hint-placeholder-val="{{ false }}"><span style="width: 4px; height: 4px; border-radius: 50%; background: {{ d.sub }}"></span></sc-if>
+</span>
+</button>
+</sc-for>
+</nav>
+</div>
+</div>
+<div style="order: {{ ho.rutina.order }}; display: {{ ho.rutina.display }}; border-radius: 26px; padding: {{ ho.pad }}; box-shadow: {{ ho.frame }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 10px">
+<span style="font-size: 15px; font-weight: 500">{{ ho.rutina.label }}</span>
+<div style="display: flex; align-items: center; gap: 6px">
+<button type="button" onClick="{{ ho.rutina.up }}" aria-label="Subir" style="opacity: {{ ho.rutina.upOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ho.rutina.down }}" aria-label="Bajar" style="opacity: {{ ho.rutina.downOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
+<button type="button" onClick="{{ ho.rutina.toggle }}" aria-pressed="{{ ho.rutina.hidden }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 14px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500">{{ ho.rutina.toggleLabel }}</button>
+</div>
+</div>
+</sc-if>
+<div style="opacity: {{ ho.rutina.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 22px; display: flex; flex-direction: column; gap: 14px">
+<sc-if value="{{ hasRoutine }}" hint-placeholder-val="{{ true }}">
+<section aria-label="Rutina del día" style="background: {{ th.card }}; border-radius: 22px; overflow: hidden">
+<div style="padding: 18px 18px 14px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Rutina · {{ r.minutes }} min</span>
+<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{ r.name }}</h2>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: {{ th.sub }}">{{ r.title }}</p>
+</div>
+<sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}"><span style="flex: none; display: flex; align-items: center; gap: 5px; font-family: {{ mono }}; font-size: 11px; padding: 6px 10px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>HECHA</span></sc-if>
+<sc-if value="{{ isMissed }}" hint-placeholder-val="{{ false }}"><span style="flex: none; font-family: {{ mono }}; font-size: 11px; padding: 6px 10px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.sub }}">{{ missedLabel }}</span></sc-if>
+</div>
+<ol style="list-style: none; margin: 0; padding: 0 0 0 18px">
+<sc-for list="{{ r.exercises }}" as="e" hint-placeholder-count="6">
+<li style="display: flex; align-items: center; gap: 14px; min-height: 56px; padding: 8px 18px 8px 0; box-sizing: border-box; border-top: 0.5px solid {{ th.sep }}">
+<span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}; width: 18px; flex: none">{{ e.n }}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 16px; line-height: 21px">{{ e.name }}</span><span style="font-family: {{ mono }}; font-size: 12px; line-height: 16px; color: {{ th.sub }}">{{ e.sub }}</span></span>
+</li>
+</sc-for>
+</ol>
+<p style="margin: 0; padding: 12px 18px 16px; border-top: 0.5px solid {{ th.sep }}; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ r.note }}</p>
+</section>
+</sc-if>
+<sc-if value="{{ isRest }}" hint-placeholder-val="{{ false }}">
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 20px 18px; display: flex; flex-direction: column; gap: 6px">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Rutina</span>
+<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">Descanso</h2>
+<p style="margin: 0; font-size: 14px; line-height: 20px; color: {{ th.sub }}">No hay rutina programada para este día. Recuperarse también es parte del plan.</p>
+</section>
+</sc-if>
+</div>
+</div>
+<div style="order: 100; display: flex; justify-content: center; padding-top: 4px">
+<button type="button" onClick="{{ toggleEdit }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 14px; display: flex; align-items: center; gap: 6px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"></path></svg>{{ editLabel }}</button>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ showInicio }}" hint-placeholder-val="{{ true }}">
+<sc-if value="{{ editHome }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; right: 0; bottom: 83px; box-sizing: border-box; padding: 10px 16px 12px; background: {{ th.bg }}; display: flex; flex-direction: column; gap: 8px">
+<p style="margin: 0; text-align: center; font-size: 13px; color: {{ th.sub }}">Ordena las secciones con las flechas u oculta las que no uses.</p>
+<button type="button" onClick="{{ toggleEdit }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Listo</button>
+</div>
+</sc-if>
+<sc-if value="{{ showBarNow }}" hint-placeholder-val="{{ true }}">
+<div style="position: absolute; left: 0; right: 0; bottom: 83px; box-sizing: border-box; padding: 18px 16px 4px; background: linear-gradient(180deg, transparent, {{ th.bg }} 26%); display: flex; flex-direction: column; gap: 2px">
+<sc-if value="{{ canFinish }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ startSession }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; "><svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"></path></svg>{{ startLabel }}</button>
+<div style="display: flex; justify-content: center; gap: 4px">
+<button type="button" onClick="{{ openConfirm }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 10px; background: transparent; color: {{ th.sub }}; font-size: 14px">Ya la hice, solo registrarla</button>
+<sc-if value="{{ hasSess }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ discardSession }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 10px; background: transparent; color: {{ th.danger }}; font-size: 14px">Descartar</button></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ showSummary }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Ver resumen</button><span style="height: 40px"></span></sc-if>
+<sc-if value="{{ isMissed }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ openConfirm }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Sí la completé</button><span style="height: 40px"></span></sc-if>
+<sc-if value="{{ isFuture }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; height: 52px; display: flex; align-items: center; justify-content: center; font-size: 14px; color: {{ th.sub }}">Programada para el {{ selName }}</p><span style="height: 40px"></span></sc-if>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ showHabitos }}" hint-placeholder-val="{{ false }}">
+<div id="sc-showHabitos" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 110px; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ hd.dateLabel }}</span>
+<h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">Hábitos</h1>
+</div>
+<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button>
+</header>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: {{ th.card }}; border-radius: 999px; padding: 4px">
+<button type="button" onClick="{{ hd.prev }}" aria-label="Día anterior" style="opacity: {{ hd.prevOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: transparent; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<span style="font-size: 15px; font-weight: 500">{{ hd.dayLabel }}</span>
+<button type="button" onClick="{{ hd.next }}" aria-label="Día siguiente" style="opacity: {{ hd.nextOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: transparent; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+<section aria-label="Resumen del día" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; align-items: center; gap: 18px">
+<div style="position: relative; width: 84px; height: 84px; flex: none"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ th.fill }}" stroke-width="7"></circle><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ th.text }}" stroke-width="7" stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="{{ hd.ringOff84 }}" transform="rotate(-90 42.0 42.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ hd.done }}/{{ hd.total }}</div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 20px; line-height: 25px; font-weight: 500; letter-spacing: -0.03em">{{ hd.title }}</span><span style="font-size: 14px; line-height: 20px; color: {{ th.sub }}">{{ hd.sub }}</span></div>
+</section>
+<sc-if value="{{ hd.water.on }}" hint-placeholder-val="{{ true }}">
+<section aria-labelledby="agua-h" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 6px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Agua</span><h2 id="agua-h" style="margin: 0; font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ hd.water.liters }}<span style="font-size: 15px; color: {{ th.sub }}; letter-spacing: -0.01em"> / {{ hd.water.goalL }} L</span></h2></div>
+<span style="font-size: 13px; color: {{ th.sub }}; padding-top: 2px">{{ hd.water.left }}</span>
+</div>
+<div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 5px">
+<sc-for list="{{ hd.water.glasses }}" as="g" hint-placeholder-count="10">
+<button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 38px; border-radius: 10px; background: {{ g.bg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg width="15" height="15" viewBox="0 0 24 24" fill="{{ g.fill }}" stroke="{{ g.stroke }}" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg></button>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<button type="button" onClick="{{ hd.water.sub }}" aria-label="Quitar un vaso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<button type="button" onClick="{{ hd.water.add }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 15px; font-weight: 500">+ Vaso 250 ml</button>
+<button type="button" onClick="{{ hd.water.add2 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 15px; font-weight: 500">+ Botella 500</button>
+</div>
+<p style="margin: 0; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hd.water.cue }}</p>
+</section>
+</sc-if>
+<section aria-label="Hábitos" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 18px">
+<sc-for list="{{ hd.items }}" as="h" hint-placeholder-count="6">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 16px 18px 16px 0; box-shadow: {{ h.line }}">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 38px; height: 38px; border-radius: 12px; flex: none; background: {{ h.tint }}; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ h.color }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ h.icon }}"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 500; letter-spacing: -0.015em">{{ h.name }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ h.status }}</span></div>
+<sc-if value="{{ h.isBin }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ h.toggle }}" aria-label="{{ h.name }}" aria-pressed="{{ h.met }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; border-radius: 50%; flex: none; background: {{ h.checkBg }}; color: {{ h.checkFg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></button>
+</sc-if>
+<sc-if value="{{ h.isNum }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; gap: 6px; flex: none">
+<button type="button" onClick="{{ h.minus }}" aria-label="Restar" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<span style="min-width: 30px; text-align: center; font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums;">{{ h.valueShort }}</span>
+<button type="button" onClick="{{ h.plus }}" aria-label="Sumar" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+</sc-if>
+<sc-if value="{{ h.isAuto }}" hint-placeholder-val="{{ false }}">
+<span style="width: 40px; height: 40px; border-radius: 50%; flex: none; background: {{ h.checkBg }}; color: {{ h.checkFg }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>
+</sc-if>
+</div>
+<sc-if value="{{ h.hasBar }}" hint-placeholder-val="{{ false }}">
+<div style="margin-left: 50px; height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ h.pct }}%; background: {{ h.barColor }}; transition: width 0.3s"></div></div>
+</sc-if>
+<span style="margin-left: 50px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ h.cue }}</span>
+<sc-if value="{{ h.atRisk }}" hint-placeholder-val="{{ false }}">
+<div style="margin-left: 50px; display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 14px; background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}">
+<span style="flex: 1; font-size: 13px; line-height: 18px"><b style="font-weight: 500">Nunca falles dos veces.</b> Ayer no se cumplió: hoy basta con la versión mínima, {{ h.mini }}.</span>
+<button type="button" onClick="{{ h.doMini }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; flex: none; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 13px; font-weight: 500">La hice</button>
+</div>
+</sc-if>
+</div>
+</sc-for>
+</section>
+<button type="button" onClick="{{ openHabEditor }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Elegir y ajustar hábitos</button>
+<p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Cada hábito tiene una señal concreta para empezarlo y una versión mínima para los días difíciles. Lo importante es no fallar dos días seguidos.</p>
+</div>
+</sc-if>
+<sc-if value="{{ isHabEditor }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.45s cubic-bezier(.32,.72,0,1) both">
+<div style="padding: 54px 8px 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; align-items: center">
+<span></span>
+<span style="text-align: center; font-size: 16px; font-weight: 500">Tus hábitos</span>
+<button type="button" onClick="{{ closeHabEditor }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; justify-self: end; height: 40px; padding: 0 14px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 14px; font-weight: 500">Listo</button>
+</div>
+<div class="scroll" style="flex: 1; overflow-y: auto; padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 12px">
+<p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: {{ th.sub }}">Empieza con pocos. Escribe la señal como «Después de [algo que ya haces], voy a [hábito]» y una versión mínima para los días sin ganas.</p>
+<sc-for list="{{ he }}" as="e" hint-placeholder-count="12">
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 38px; height: 38px; border-radius: 12px; flex: none; background: {{ e.tint }}; display: flex; align-items: center; justify-content: center"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="{{ e.color }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ e.icon }}"></path></svg></span>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 500">{{ e.name }}</span><span style="font-size: 13px; line-height: 17px; color: {{ th.sub }}">{{ e.desc }}</span></div>
+<button type="button" role="switch" aria-checked="{{ e.on }}" aria-label="{{ e.name }}" onClick="{{ e.toggle }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ e.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ e.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
+</div>
+<sc-if value="{{ e.hasGoal }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 0.5px solid {{ th.sep }}; padding-top: 12px">
+<span style="font-size: 15px">Meta diaria</span>
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ e.goalLabel }}</span><button type="button" onClick="{{ e.goalMinus }}" aria-label="Bajar meta" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ e.goalPlus }}" aria-label="Subir meta" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+</div>
+</sc-if>
+<sc-if value="{{ e.showCue }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px; border-top: 0.5px solid {{ th.sep }}; padding-top: 12px">
+<label for="{{ e.cueId }}" style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}">Señal</label>
+<input id="{{ e.cueId }}" type="text" autocomplete="off" value="{{ e.cue }}" onChange="{{ e.setCue }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-size: 15px">
+<label for="{{ e.miniId }}" style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; margin-top: 4px">Versión mínima</label>
+<input id="{{ e.miniId }}" type="text" autocomplete="off" value="{{ e.mini }}" onChange="{{ e.setMini }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-size: 15px">
+</div>
+</sc-if>
+</section>
+</sc-for>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showComida }}" hint-placeholder-val="{{ false }}">
+<div id="sc-showComida" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 200px; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ fd.dateLabel }}</span>
+<h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">Comida</h1>
+</div>
+<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button>
+</header>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; background: {{ th.card }}; border-radius: 999px; padding: 4px">
+<button type="button" onClick="{{ fd.prev }}" aria-label="Día anterior" style="opacity: {{ fd.prevOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: transparent; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<span style="font-size: 15px; font-weight: 500">{{ fd.dayLabel }}</span>
+<button type="button" onClick="{{ fd.next }}" aria-label="Día siguiente" style="opacity: {{ fd.nextOp }}; appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: transparent; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+<sc-if value="{{ fd.noAi }}" hint-placeholder-val="{{ false }}">
+<section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Análisis con IA</span></span>
+<span style="position: relative; font-size: 24px; line-height: 28px; font-weight: 400; letter-spacing: -0.035em">Saca una foto y obtén calorías, proteína, fibra y más</span>
+<span style="position: relative; font-size: 14px; line-height: 20px; color: rgba(250, 250, 250, 0.72)">Conecta una IA una sola vez. Gemini de Google tiene un plan gratis que alcanza de sobra.</span>
+<span style="position: relative; align-self: flex-start"><button type="button" onClick="{{ goAiSettings }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 46px; padding: 0 22px; border-radius: 999px; background: #FAFAFA; color: #09090B; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Conectar IA</button></span>
+</section>
+</sc-if>
+<section aria-label="Energía del día" style="background: {{ th.card }}; border-radius: 22px; padding: 20px 18px; display: flex; flex-direction: column; gap: 20px">
+<div style="display: flex; align-items: center; gap: 20px">
+<div style="position: relative; width: 128px; height: 128px; flex: none"><svg width="128" height="128" viewBox="0 0 128 128" aria-hidden="true"><circle cx="64.0" cy="64.0" r="56" fill="none" stroke="{{ th.fill }}" stroke-width="9"></circle><circle cx="64.0" cy="64.0" r="56" fill="none" stroke="{{ fd.ringColor }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="{{ fd.ringOff }}" transform="rotate(-90 64.0 64.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 30px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ fd.kcal }}</span><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">KCAL</span></div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ fd.leftLabel }}</span><span style="font-size: 30px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ fd.left }}</span></div>
+<div style="display: flex; flex-direction: column; gap: 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Meta diaria</span><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums;">{{ fd.goal }} kcal</span></div>
+</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 12px">
+<sc-for list="{{ fd.macros }}" as="mc" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 7px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 14px">{{ mc.label }}</span><span style="font-family: {{ mono }}; font-size: 13px; font-variant-numeric: tabular-nums;">{{ mc.val }}<span style="color: {{ th.tertiary }}"> / {{ mc.goal }} {{ mc.unit }}</span></span></div>
+<div style="height: 5px; border-radius: 3px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 3px; width: {{ mc.pct }}%; background: {{ mc.color }}; transition: width 0.5s cubic-bezier(.32,.72,0,1)"></div></div>
+</div>
+</sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ fd.micro }}" as="mi" hint-placeholder-count="2">
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 12px; color: {{ th.sub }}">{{ mi.label }}</span><span style="font-family: {{ mono }}; font-size: 14px; color: {{ mi.color }}; font-variant-numeric: tabular-nums;">{{ mi.val }}</span><span style="font-size: 11px; color: {{ th.tertiary }}">{{ mi.goal }}</span></div>
+</sc-for>
+</div>
+</section>
+<sc-for list="{{ fd.meals }}" as="ml" hint-placeholder-count="5">
+<section aria-label="{{ ml.name }}" style="background: {{ th.card }}; border-radius: 22px; padding: 14px 14px 14px 18px; display: flex; flex-direction: column; gap: 10px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; align-items: baseline; gap: 10px"><span style="font-size: 16px; font-weight: 500; letter-spacing: -0.015em">{{ ml.name }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ ml.kcal }}</span></span>
+<button type="button" onClick="{{ ml.add }}" aria-label="Agregar a {{ ml.name }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 34px; height: 34px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+<sc-for list="{{ ml.entries }}" as="en" hint-placeholder-count="1">
+<button type="button" onClick="{{ en.open }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; width: 100%; padding: 0; background: transparent; display: flex; align-items: center; gap: 12px">
+<sc-if value="{{ en.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ en.photo }}" alt="" style="width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex: none"></sc-if>
+<sc-if value="{{ en.noPhoto }}" hint-placeholder-val="{{ true }}"><span style="width: 52px; height: 52px; border-radius: 14px; flex: none; background: {{ th.fill }}; display: flex; align-items: center; justify-content: center; color: {{ th.tertiary }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4"></path></svg></span></sc-if>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ en.title }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ en.sub }}</span></span>
+<sc-if value="{{ en.hasQ }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 12px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{ en.qColor }}; color: {{ en.qColor }}; flex: none">{{ en.q }}/10</span></sc-if>
+</button>
+</sc-for>
+</section>
+</sc-for>
+<section aria-labelledby="como" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 4px">
+<h2 id="como" style="margin: 0 0 6px; font-size: 17px; font-weight: 500; letter-spacing: -0.02em">Cómo vas</h2>
+<sc-for list="{{ fd.insights }}" as="ins" hint-placeholder-count="2">
+<div style="display: flex; gap: 12px; padding: 10px 0; box-shadow: {{ ins.line }}"><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}; padding-top: 2px">{{ ins.n }}</span><span style="font-size: 14px; line-height: 20px">{{ ins.text }}</span></div>
+</sc-for>
+</section>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Últimos 7 días</h2><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ fd.week.days }} de 7 días con registro</span></div>
+<section aria-label="Semana" style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 16px">
+<div style="position: relative; height: 104px; display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; align-items: end">
+<div style="position: absolute; left: 0; right: 0; bottom: {{ fd.week.targetPx }}px; border-top: 1px dashed {{ th.tertiary }}"></div>
+<sc-for list="{{ fd.week.bars }}" as="wb" hint-placeholder-count="7"><div style="height: {{ wb.h }}px; min-height: 3px; border-radius: 6px; background: {{ wb.bg }}"></div></sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 10px; margin-top: -8px">
+<sc-for list="{{ fd.week.bars }}" as="wb" hint-placeholder-count="7"><span style="font-family: {{ mono }}; font-size: 10px; text-align: center; color: {{ wb.lc }}">{{ wb.label }}</span></sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{ th.sub }}">Energía promedio</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.week.avgK }} kcal</span></div>
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{ th.sub }}">Proteína promedio</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.week.avgP }} g</span></div>
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{ th.sub }}">Días con meta de proteína</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.week.protDays }} de {{ fd.week.days }}</span></div>
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{ th.sub }}">Calidad promedio</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.week.avgQ }} / 10</span></div>
+</div>
+<sc-if value="{{ fd.hasRev }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 10px; border-top: 0.5px solid {{ th.sep }}; padding-top: 14px">
+<span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Análisis de la semana</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}">{{ fd.rev.ago }}</span></span>
+<span style="font-size: 17px; line-height: 23px; letter-spacing: -0.02em">{{ fd.rev.resumen }}</span>
+<sc-if value="{{ fd.rev.hasBien }}" hint-placeholder-val="{{ true }}">
+<sc-for list="{{ fd.rev.bien }}" as="rb" hint-placeholder-count="2"><span style="display: flex; gap: 10px; font-size: 14px; line-height: 20px"><span style="color: {{ c.gA }}; flex: none"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></span>{{ rb.text }}</span></sc-for>
+</sc-if>
+<sc-for list="{{ fd.rev.mejorar }}" as="rm2" hint-placeholder-count="3"><span style="display: flex; gap: 12px; font-size: 14px; line-height: 20px"><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}; padding-top: 2px; flex: none">{{ rm2.n }}</span>{{ rm2.text }}</span></sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ fd.hasAi }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ fd.askReview }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 46px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">{{ fd.revLabel }}</button></sc-if>
+<sc-if value="{{ fd.hasRevErr }}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; font-size: 13px; line-height: 18px; color: {{ c.heatText }}">{{ fd.revErr }}</p></sc-if>
+</section>
+<p style="margin: 0; padding: 0 4px; font-size: 12px; line-height: 17px; color: {{ th.sub }}">{{ fd.targetsNote }} Las estimaciones de la IA pueden variar un 15 a 25 %: úsalas como guía.</p>
+</div>
+</sc-if>
+<sc-if value="{{ showComida }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; left: 0; right: 0; bottom: 83px; box-sizing: border-box; padding: 18px 16px 12px; background: linear-gradient(180deg, transparent, {{ th.bg }} 30%)">
+<button type="button" onClick="{{ fh.add }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>Registrar comida</button>
+</div>
+</sc-if>
+<sc-if value="{{ fd.sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 30">
+<button type="button" aria-label="Cerrar" onClick="{{ fd.closeSheet }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="Registrar comida" class="scroll" style="position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: {{ th.menu }}; border-radius: 28px 28px 0 0; padding: 10px 16px 34px; display: flex; flex-direction: column; gap: 14px; animation: sheet 0.42s cubic-bezier(.32,.72,0,1) both">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: {{ th.fill }}; margin-bottom: 4px"></span>
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Registrar</span><h2 style="margin: 0; font-size: 26px; line-height: 30px; font-weight: 500; letter-spacing: -0.04em">¿Qué comiste?</h2></div>
+<div role="group" aria-label="Comida" style="display: flex; flex-wrap: wrap; gap: 6px">
+<sc-for list="{{ fd.mealOpts }}" as="mo" hint-placeholder-count="5">
+<button type="button" onClick="{{ mo.pick }}" aria-pressed="{{ mo.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; background: {{ mo.bg }}; color: {{ mo.fg }}; font-size: 14px; font-weight: 500">{{ mo.label }}</button>
+</sc-for>
+</div>
+<label style="position: relative; height: 56px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 16px; font-weight: 500; cursor: pointer">
+<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg>Tomar o elegir foto
+<input type="file" accept="image/*" aria-label="Tomar o elegir foto" onChange="{{ fd.onPhoto }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer">
+</label>
+<div style="display: flex; align-items: center; gap: 10px; color: {{ th.tertiary }}"><span style="flex: 1; height: 0.5px; background: {{ th.sep }}"></span><span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em">O DESCRÍBELO</span><span style="flex: 1; height: 0.5px; background: {{ th.sep }}"></span></div>
+<textarea aria-label="Describe lo que comiste" placeholder="Ej: dos huevos revueltos, una marraqueta con palta y un café con leche" onChange="{{ fd.onText }}" style="appearance: none; border: 0; outline: none; resize: none; height: 96px; border-radius: 18px; padding: 14px; background: {{ th.card }}; color: {{ th.text }}; font: inherit; font-size: 15px; line-height: 21px">{{ fd.ftext }}</textarea>
+<button type="button" onClick="{{ fd.analyzeText }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; opacity: {{ fd.textOp }}">Analizar descripción</button>
+<sc-if value="{{ fd.noAi }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; text-align: center; font-size: 13px; color: {{ c.heatText }}">Primero conecta la IA en Ajustes.</p></sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ fd.draftOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 30">
+<button type="button" aria-label="Cerrar" onClick="{{ fd.discardDraft }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="Análisis de comida" class="scroll" style="position: absolute; left: 0; right: 0; bottom: 0; top: 54px; overflow-y: auto; box-sizing: border-box; background: {{ th.menu }}; border-radius: 28px 28px 0 0; padding: 10px 16px 34px; display: flex; flex-direction: column; gap: 14px; animation: sheet 0.42s cubic-bezier(.32,.72,0,1) both">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: {{ th.fill }}; margin-bottom: 4px"></span>
+
+<sc-if value="{{ fd.dHasThumb }}" hint-placeholder-val="{{ false }}"><img src="{{ fd.dThumb }}" alt="Foto de tu comida" style="width: 100%; height: 210px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
+<sc-if value="{{ fd.dLoading }}" hint-placeholder-val="{{ true }}">
+<div style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 22px; padding: 22px 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 6px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; animation: breathe 2.4s ease-in-out infinite; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Analizando</span></span>
+<span style="position: relative; font-size: 20px; line-height: 25px; letter-spacing: -0.03em">Identificando alimentos y porciones…</span>
+</div>
+</sc-if>
+<sc-if value="{{ fd.dReady }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Resultado</span><h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{ fd.dTitle }}</h2></div>
+<sc-if value="{{ fd.dHasQ }}" hint-placeholder-val="{{ true }}"><span style="flex: none; font-family: {{ mono }}; font-size: 12px; padding: 6px 10px; border-radius: 999px; background: {{ th.card }}">Calidad {{ fd.dQ }}/10</span></sc-if>
+</div>
+<div style="display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: 6px">
+<div style="background: {{ th.inv }}; color: {{ th.onInv }}; border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; opacity: 0.7">KCAL</span><span style="font-size: 20px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ fd.dTot.kcal }}</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">PROT</span><span style="font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.dTot.p }}</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">CARB</span><span style="font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.dTot.c }}</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">GRASA</span><span style="font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.dTot.f }}</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 8px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">FIBRA</span><span style="font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.dTot.fib }}</span></div>
+</div>
+<section aria-label="Alimentos" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px">
+<sc-for list="{{ fd.dItems }}" as="it" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 10px; padding: 12px 12px 12px 0; box-shadow: {{ it.line }}">
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px">
+<span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-size: 15px">{{ it.n }}</span><span style="font-family: {{ mono }}; font-size: 13px; font-variant-numeric: tabular-nums;">{{ it.kcal }}</span></span>
+<span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.sub }}">{{ it.por }} · {{ it.macros }}</span>
+</div>
+<button type="button" onClick="{{ it.minus }}" aria-label="Menos cantidad" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 30px; height: 30px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ it.plus }}" aria-label="Más cantidad" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 30px; height: 30px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button><button type="button" onClick="{{ it.remove }}" aria-label="Quitar" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 30px; height: 30px; flex: none; border-radius: 50%; background: transparent; color: {{ th.sub }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+</div>
+</sc-for>
+</section>
+<sc-if value="{{ fd.dHasNote }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: {{ th.sub }}">{{ fd.dNote }}</p></sc-if>
+<sc-if value="{{ fd.dLow }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ c.heatText }}">La IA no está muy segura. Ajusta las cantidades con − y + si algo no calza.</p></sc-if>
+<button type="button" onClick="{{ fd.saveDraft }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Guardar</button>
+<button type="button" onClick="{{ fd.discardDraft }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 22px; border-radius: 999px; background: transparent; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; color: {{ th.sub }}">Descartar</button>
+</sc-if>
+<sc-if value="{{ fd.dError }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 4px 4px 0"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">No se pudo analizar</span><p style="margin: 0; font-size: 16px; line-height: 22px">{{ fd.dErr }}</p></div>
+<button type="button" onClick="{{ fd.retryDraft }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Intentar de nuevo</button>
+<button type="button" onClick="{{ fd.discardDraft }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 22px; border-radius: 999px; background: transparent; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; color: {{ th.sub }}">Cerrar</button>
+</sc-if>
+</div>
+</div>
+</sc-if>
+<sc-if value="{{ fd.entryOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 30">
+<button type="button" aria-label="Cerrar" onClick="{{ fd.closeEntry }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="Detalle de comida" class="scroll" style="position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: {{ th.menu }}; border-radius: 28px 28px 0 0; padding: 10px 16px 34px; display: flex; flex-direction: column; gap: 14px; animation: sheet 0.42s cubic-bezier(.32,.72,0,1) both">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: {{ th.fill }}; margin-bottom: 4px"></span>
+
+<sc-if value="{{ fd.fe.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ fd.fe.photo }}" alt="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
+<div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
+<div style="display: flex; flex-direction: column; gap: 6px; min-width: 0"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ fd.fe.meal }} · {{ fd.fe.time }}</span><h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{ fd.fe.title }}</h2></div>
+<sc-if value="{{ fd.fe.hasQ }}" hint-placeholder-val="{{ false }}"><span style="flex: none; font-family: {{ mono }}; font-size: 12px; padding: 6px 10px; border-radius: 999px; background: {{ th.card }}">Calidad {{ fd.fe.q }}/10</span></sc-if>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px">
+<div style="background: {{ th.inv }}; color: {{ th.onInv }}; border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; opacity: 0.7">KCAL</span><span style="font-size: 20px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ fd.fe.tot.kcal }}</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">PROTEÍNA</span><span style="font-size: 18px; font-variant-numeric: tabular-nums;">{{ fd.fe.tot.p }} g</span></div>
+<div style="background: {{ th.card }}; border-radius: 16px; padding: 10px 12px; display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; color: {{ th.sub }}">FIBRA</span><span style="font-size: 18px; font-variant-numeric: tabular-nums;">{{ fd.fe.tot.fib }} g</span></div>
+</div>
+<p style="margin: 0; padding: 0 4px; font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}">Carbohidratos {{ fd.fe.tot.c }} g · Grasa {{ fd.fe.tot.f }} g · Azúcar {{ fd.fe.tot.sug }} g · Sodio {{ fd.fe.tot.na }} mg</p>
+<section aria-label="Alimentos" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px">
+<sc-for list="{{ fd.fe.items }}" as="it" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 3px; padding: 12px 16px 12px 0; box-shadow: {{ it.line }}">
+<span style="display: flex; justify-content: space-between; gap: 8px"><span style="font-size: 15px">{{ it.n }}</span><span style="font-family: {{ mono }}; font-size: 13px; font-variant-numeric: tabular-nums;">{{ it.kcal }} kcal</span></span>
+<span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.sub }}">{{ it.por }} · {{ it.macros }}</span>
+</div>
+</sc-for>
+</section>
+<sc-if value="{{ fd.fe.hasNote }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; padding: 0 4px; font-size: 14px; line-height: 20px; color: {{ th.sub }}">{{ fd.fe.note }}</p></sc-if>
+<button type="button" onClick="{{ fd.fe.del }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 22px; border-radius: 999px; background: transparent; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; color: {{ th.danger }}">{{ fd.fe.delLabel }}</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ showSalud }}" hint-placeholder-val="{{ false }}">
+<div id="sc-showSalud" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 110px; display: flex; flex-direction: column; gap: 14px">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Perfil de salud</span>
+<h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">Salud</h1>
+</div>
+<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button>
+</header>
+<sc-if value="{{ hv.has }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ noop }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px 20px 18px; display: flex; flex-direction: column; gap: 18px; min-height: 236px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62)">8 ÁREAS</span></span>
+<span style="position: relative; display: flex; align-items: flex-end; gap: 14px">
+<span style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; font-variant-numeric: tabular-nums;">{{ hv.overall }}</span>
+<span style="display: flex; flex-direction: column; gap: 6px; padding-bottom: 6px">
+<span style="display: flex; align-items: center; gap: 8px"><span style="width: 26px; height: 26px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {{ hv.gColor }}; color: {{ hv.gColor }}; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 12px; font-weight: 500">{{ hv.grade }}</span><span style="font-size: 15px; font-weight: 500">{{ hv.gLabel }}</span></span>
+<span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">de 100 · evaluación {{ hv.evalAgo }}</span>
+</span>
+</span>
+<sc-if value="{{ hv.hasFocus }}" hint-placeholder-val="{{ true }}">
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px 14px; border-radius: 16px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">ENFÓCATE EN</span>
+<sc-for list="{{ hv.focus }}" as="fo" hint-placeholder-count="2">
+<span style="display: flex; align-items: center; gap: 10px"><span style="width: 8px; height: 8px; border-radius: 50%; background: {{ fo.gColor }}; flex: none"></span><span style="flex: 1; font-size: 15px">{{ fo.name }}</span><span style="font-size: 13px; color: rgba(250, 250, 250, 0.62)">{{ fo.status }}</span></span>
+</sc-for>
+</span>
+</sc-if>
+</button>
+</sc-if>
+<sc-if value="{{ hv.none }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ hv.startEval }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; position: relative; overflow: hidden; width: 100%; text-align: left; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 14px; min-height: 270px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Perfil de salud</span></span>
+<span style="position: relative; font-size: 30px; line-height: 34px; font-weight: 400; letter-spacing: -0.04em; max-width: 290px">Conoce tu punto de partida</span>
+<span style="position: relative; font-size: 15px; line-height: 21px; color: rgba(250, 250, 250, 0.72); max-width: 300px">Una evaluación de 3 minutos arma tu perfil y califica 8 áreas: sueño, nutrición, hidratación, fuerza, cardio, cuerpo, corazón y mente.</span>
+<span style="position: relative; margin-top: auto; align-self: flex-start; height: 48px; padding: 0 22px; border-radius: 999px; background: #FAFAFA; color: #09090B; font-size: 16px; font-weight: 500; display: flex; align-items: center; gap: 8px">Empezar evaluación <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></span>
+</button>
+</sc-if>
+<sc-if value="{{ hv.has }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Tus áreas</h2><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">A · B · C · D</span></div>
+<section aria-label="Áreas" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px">
+<sc-for list="{{ hv.areas }}" as="ar" hint-placeholder-count="8">
+<button type="button" onClick="{{ ar.open }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; width: 100%; padding: 14px 16px 14px 0; background: transparent; display: flex; align-items: center; gap: 14px; box-shadow: {{ ar.line }}">
+<span style="width: 34px; height: 34px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {{ ar.gColor }}; color: {{ ar.gColor }}; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 14px; font-weight: 500">{{ ar.grade }}</span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 500; letter-spacing: -0.015em">{{ ar.name }}</span><span style="font-size: 13px; color: {{ th.sub }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ ar.status }}</span></span>
+<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ ar.score }}</span>
+<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</sc-for>
+</section>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Mediciones</h2><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">Última: {{ hv.lastMeas }}</span></div>
+<section aria-label="Mediciones" style="background: {{ th.card }}; border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ hv.kpis }}" as="kp" hint-placeholder-count="4">
+<div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 12px; color: {{ th.sub }}">{{ kp.label }}</span><span style="font-size: 22px; line-height: 26px; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ kp.value }}<span style="font-size: 13px; color: {{ th.sub }}; letter-spacing: 0"> {{ kp.unit }}</span></span></div>
+</sc-for>
+</div>
+<button type="button" onClick="{{ hv.openMeas }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 46px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Registrar medición</button>
+</section>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Evaluación</h2></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 3px"><span style="font-size: 16px; font-weight: 500">Evaluación inicial</span><span style="font-size: 13px; color: {{ th.sub }}">Hecha {{ hv.evalAgo }}. Repítela cada 1 o 2 meses.</span></span>
+<button type="button" onClick="{{ hv.startEval }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; flex: none">Repetir</button>
+</section>
+</sc-if>
+<p style="margin: 0; padding: 4px 4px 0; font-size: 12px; line-height: 17px; color: {{ th.sub }}">Las notas combinan tu evaluación con lo que registras en la app y siguen guías de la OMS, la AHA y NICE. Son una referencia para mejorar hábitos y no reemplazan una evaluación médica.</p>
+</div>
+</sc-if>
+
+<sc-if value="{{ showAjustes }}" hint-placeholder-val="{{ false }}">
+<div id="sc-showAjustes" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 110px; display: flex; flex-direction: column; gap: 24px">
+<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
+<span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Configuración</span>
+<h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">Ajustes</h1>
+</div>
+<button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 40px; height: 40px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 500">{{ initial }}</button>
+</header>
+<section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">Perfil</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px">
+<label for="nombre" style="font-size: 16px">Nombre</label>
+<input id="nombre" type="text" autocomplete="off" value="{{ prefs.nombre }}" onChange="{{ setNombre }}" style="appearance: none; border: 0; outline: none; background: transparent; font: inherit; font-size: 16px; color: {{ th.sub }}; text-align: right; min-width: 0; flex: 1; height: 44px">
+</div>
+<button type="button" onClick="{{ hs.startEval }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: {{ th.text }}; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; text-align: left; border-top: 0.5px solid {{ th.sep }};"><span>Evaluación de salud</span><span style="display: flex; align-items: center; gap: 6px; color: {{ th.sub }}; font-size: 15px">{{ evalLabel }}<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span></button>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 16px">Peso</span><div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ pesoActual }} kg</span><button type="button" onClick="{{ pesoMenos }}" aria-label="Bajar peso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ pesoMas }}" aria-label="Subir peso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div></div></section>
+<section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">Entrenamiento</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding-right: 16px"><span style="font-size: 16px">Sesiones por semana</span><div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ prefs.meta }}</span><button type="button" onClick="{{ metaMenos }}" aria-label="Bajar meta" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ metaMas }}" aria-label="Subir meta" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>
+<sc-for list="{{ planRows }}" as="pr" hint-placeholder-count="7">
+<button type="button" onClick="{{ pr.pick }}" aria-label="{{ pr.aria }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px 0 0; background: transparent; font-size: 16px; border-top: 0.5px solid {{ th.sep }}">
+<span>{{ pr.day }}</span><span style="display: flex; align-items: center; gap: 6px; color: {{ pr.color }}; font-size: 15px">{{ pr.value }}<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path></svg></span>
+</button>
+</sc-for></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Toca un día para cambiar su rutina.</p></section>
+<div id="ia" style="display: contents"><section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">IA para comidas</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="padding: 14px 16px 14px 0; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-size: 16px">Estado</span><span style="display: flex; align-items: center; gap: 6px; font-size: 15px; color: {{ ai.stColor }}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ ai.stColor }}"></span>{{ ai.status }}</span></div>
+<div role="group" aria-label="Proveedor" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 3px; border-radius: 999px; background: {{ th.segBg }}">
+<sc-for list="{{ ai.provs }}" as="pv" hint-placeholder-count="2">
+<button type="button" onClick="{{ pv.pick }}" aria-pressed="{{ pv.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ pv.bg }}; color: {{ th.text }}; box-shadow: {{ pv.shadow }}; font-size: 13px; font-weight: {{ pv.weight }}">{{ pv.label }}</button>
+</sc-for>
+</div>
+<label for="aikey" style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}">Clave de API</label>
+<input id="aikey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{ ai.ph }}" value="{{ ai.key }}" onChange="{{ ai.setKey }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-family: {{ mono }}; font-size: 13px">
+<label for="aimodel" style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}">Modelo (opcional)</label>
+<input id="aimodel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{ ai.modelPh }}" value="{{ ai.model }}" onChange="{{ ai.setModel }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-family: {{ mono }}; font-size: 13px">
+<div style="display: flex; gap: 8px">
+<a href="{{ ai.url }}" target="_blank" rel="noopener" style="flex: 1; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 14px; font-weight: 500; text-decoration: none; display: flex; align-items: center; justify-content: center">Obtener clave</a>
+<button type="button" onClick="{{ ai.test }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; flex: 1; height: 44px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 14px; font-weight: 500">{{ ai.testLabel }}</button>
+</div>
+<sc-if value="{{ ai.hasMsg }}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; font-size: 13px; line-height: 18px; color: {{ ai.msgColor }}">{{ ai.msg }}</p></sc-if>
+</div></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ ai.help }}</p></section></div>
+<section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">Recordatorios</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><sc-if value="{{ rm.unsupported }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; padding: 14px 16px 14px 0; font-size: 14px; line-height: 20px">Para recibir notificaciones, abre la app desde el ícono de tu pantalla de inicio.</p></sc-if>
+<sc-for list="{{ rm.items }}" as="ri" hint-placeholder-count="5">
+<div style="padding-right: 16px; box-shadow: {{ ri.line }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px">{{ ri.label }}</span><span style="font-size: 13px; color: {{ th.sub }}">{{ ri.desc }}</span></span>
+<button type="button" role="switch" aria-checked="{{ ri.on }}" aria-label="{{ ri.label }}" onClick="{{ ri.toggle }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ ri.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ ri.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
+</div>
+<sc-for list="{{ ri.times }}" as="tm" hint-placeholder-count="1">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 14px; color: {{ th.sub }}">{{ tm.label }}</span><div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ tm.value }}</span><button type="button" onClick="{{ tm.minus }}" aria-label="Quince minutos antes" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ tm.plus }}" aria-label="Quince minutos después" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>
+</sc-for>
+<sc-if value="{{ ri.hasCycle }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 14px; color: {{ th.sub }}">Frecuencia</span><button type="button" onClick="{{ ri.cycle.pick }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-family: {{ mono }}; font-size: 13px">{{ ri.cycle.label }}</button></div>
+</sc-if>
+</div>
+</sc-for></div></section>
+<sc-if value="{{ rm.supported }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-if value="{{ rm.inactive }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ rm.enable }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Activar notificaciones</button></sc-if>
+<sc-if value="{{ rm.active }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ rm.copy }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Copiar código para GitHub</button>
+<a href="{{ rm.ghUrl }}" target="_blank" rel="noopener" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; text-decoration: none">Abrir GitHub para pegarlo</a></sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ rm.dirty }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ c.heatText }}">Cambiaste los horarios: copia el código otra vez y actualiza el secreto RUTINA_PUSH en GitHub.</p></sc-if>
+<sc-if value="{{ rm.hasMsg }}" hint-placeholder-val="{{ false }}"><p role="status" style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ c.constanciaText }}">{{ rm.msg }}</p></sc-if>
+<sc-if value="{{ rm.showCode }}" hint-placeholder-val="{{ false }}"><textarea readonly aria-label="Código para GitHub" style="height: 96px; border: 0; border-radius: 14px; padding: 10px; background: {{ th.card }}; color: {{ th.text }}; font-size: 11px; font-family: {{ mono }}; -webkit-user-select: text; user-select: text">{{ rm.code }}</textarea></sc-if>
+<p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Una sola vez: toca Activar, después Copiar código, y en GitHub crea un secreto llamado RUTINA_PUSH con ese código.</p>
+<section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">Apariencia</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="padding: 12px 16px 12px 0">
+<div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; border-radius: 999px; background: {{ th.segBg }}">
+<sc-for list="{{ temaOpts }}" as="o" hint-placeholder-count="3">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
+</sc-for>
+</div>
+</div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-snd" style="font-size: 16px">Sonidos</span><button type="button" role="switch" aria-checked="{{ prefs.sonido }}" aria-labelledby="lbl-snd" onClick="{{ toggleSnd }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ sndTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ sndKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-fx" style="font-size: 16px">Animaciones</span><button type="button" role="switch" aria-checked="{{ prefs.efectos }}" aria-labelledby="lbl-fx" onClick="{{ toggleFx }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ fxTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ fxKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
+<button type="button" onClick="{{ editFromSettings }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: {{ th.text }}; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; text-align: left; border-top: 0.5px solid {{ th.sep }};"><span>Ordenar inicio</span><span style="display: flex; align-items: center; gap: 6px; color: {{ th.sub }}; font-size: 15px"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span></button></div></section>
+<section style="display: flex; flex-direction: column; gap: 8px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; padding: 0 4px">Tus datos</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px"><span style="font-size: 16px">Guardado en este teléfono</span><span style="display: flex; align-items: center; gap: 6px; font-size: 15px; color: {{ c.constanciaText }}"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>{{ persistLabel }}</span></div>
+<button type="button" onClick="{{ exportBackup }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; border-top: 0.5px solid {{ th.sep }}"><span>Exportar respaldo</span><span style="font-size: 14px; color: {{ th.sub }}">Último: {{ backupLabel }}</span></button>
+<label style="position: relative; display: flex; align-items: center; min-height: 52px; font-size: 16px; cursor: pointer; border-top: 0.5px solid {{ th.sep }}">Restaurar respaldo
+<input type="file" accept=".json,application/json" onChange="{{ importBackup }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer"></label>
+<button type="button" onClick="{{ resetAll }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 100%; min-height: 52px; padding: 0; background: transparent; color: {{ th.danger }}; font-size: 16px; text-align: left; font-weight: {{ resetWeight }}; border-top: 0.5px solid {{ th.sep }}">{{ resetLabel }}</button></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Todo se guarda solo en este teléfono, en dos copias. El respaldo no incluye las fotos ni tu clave de IA.</p></section>
+%%BRAND%%
+</div>
+</sc-if>
+
+<sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
+<nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 83px; box-sizing: border-box; padding: 6px 8px 0; background: {{ th.bar }}; backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); box-shadow: inset 0 0.5px 0 {{ th.sep }}; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); z-index: 10">
+<button type="button" onClick="{{ tabGo.inicio }}" aria-current="{{ tabCur.inicio }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.inicio }}; font-size: 10px; font-weight: 500; letter-spacing: 0"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.inicio }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg><span>Inicio</span></button>
+<button type="button" onClick="{{ tabGo.habitos }}" aria-current="{{ tabCur.habitos }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.habitos }}; font-size: 10px; font-weight: 500; letter-spacing: 0"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.habitos }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l3.5 3.5L14 9.5M4 5h16M15 12h5M4 19h16"></path></svg><span>Hábitos</span></button>
+<button type="button" onClick="{{ tabGo.comida }}" aria-current="{{ tabCur.comida }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.comida }}; font-size: 10px; font-weight: 500; letter-spacing: 0"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.comida }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4"></path></svg><span>Comida</span></button>
+<button type="button" onClick="{{ tabGo.salud }}" aria-current="{{ tabCur.salud }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.salud }}; font-size: 10px; font-weight: 500; letter-spacing: 0"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.salud }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"></path></svg><span>Salud</span></button>
+<button type="button" onClick="{{ tabGo.ajustes }}" aria-current="{{ tabCur.ajustes }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.ajustes }}; font-size: 10px; font-weight: 500; letter-spacing: 0"><svg width="23" height="23" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.ajustes }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM9 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span>Ajustes</span></button>
+</nav>
+</sc-if>
+
+<sc-if value="{{ menuOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 40">
+<button type="button" aria-label="Cerrar menú" onClick="{{ closeMenu }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="Perfil y apariencia" style="position: absolute; top: 106px; right: 12px; width: 300px; box-sizing: border-box; background: {{ th.menu }}; border-radius: 24px; box-shadow: {{ th.shadow }}; padding: 16px; display: flex; flex-direction: column; gap: 16px; transform-origin: 270px -20px; animation: menu 0.32s cubic-bezier(.32,.72,0,1) both">
+<div style="display: flex; align-items: center; gap: 12px">
+<span style="width: 44px; height: 44px; border-radius: 50%; flex: none; background: {{ th.fill }}; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500">{{ initial }}</span>
+<span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 16px; font-weight: 500">{{ prefs.nombre }}</span><span style="font-size: 13px; color: {{ th.sub }}">{{ menuSub }}</span></span>
+</div>
+<div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 3px; border-radius: 999px; background: {{ th.segBg }}">
+<sc-for list="{{ temaOpts }}" as="o" hint-placeholder-count="3">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
+</sc-for>
+</div>
+<div style="display: flex; flex-direction: column; margin: 0 -6px -6px; border-top: 0.5px solid {{ th.sep }}; padding-top: 6px">
+<button type="button" onClick="{{ goSalud }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 8px; border-radius: 12px; background: transparent; font-size: 16px; text-align: left">Perfil de salud<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+<button type="button" onClick="{{ goAjustes }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: inherit; display: flex; align-items: center; justify-content: space-between; min-height: 46px; padding: 0 8px; border-radius: 12px; background: transparent; font-size: 16px; text-align: left">Ajustes<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
+</div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isArea }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div style="padding: 54px 12px 6px; display: flex; align-items: center">
+<button type="button" onClick="{{ closeArea }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 14px 0 8px; border-radius: 999px; background: {{ th.card }}; color: {{ th.text }}; font-size: 15px; display: flex; align-items: center; gap: 4px"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Salud</button>
+</div>
+<div class="scroll" style="flex: 1; overflow-y: auto; padding: 14px 16px 48px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Área</span><h1 style="margin: 0; font-size: 34px; line-height: 38px; font-weight: 500; letter-spacing: -0.04em">{{ hv.detail.name }}</h1></div>
+<section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; align-items: center; gap: 20px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ hv.detail.halo }}; transition: background 0.6s"></span>
+<div style="position: relative; width: 104px; height: 104px; flex: none"><svg width="104" height="104" viewBox="0 0 104 104" aria-hidden="true"><circle cx="52.0" cy="52.0" r="44" fill="none" stroke="rgba(255, 255, 255, 0.12)" stroke-width="6"></circle><circle cx="52.0" cy="52.0" r="44" fill="none" stroke="{{ hv.detail.gColor }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="276.5" stroke-dashoffset="{{ hv.detail.ringOff }}" transform="rotate(-90 52.0 52.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 30px; color: {{ hv.detail.gColor }}">{{ hv.detail.grade }}</div></div>
+<div style="position: relative; display: flex; flex-direction: column; gap: 4px">
+<span style="font-size: 44px; line-height: 44px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ hv.detail.score }}<span style="font-size: 15px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> / 100</span></span>
+<span style="font-size: 15px; font-weight: 500">{{ hv.detail.gLabel }}</span>
+<span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.6)">{{ hv.detail.source }}</span>
+</div>
+</section>
+<p style="margin: 0; padding: 0 4px; font-size: 15px; line-height: 22px; color: {{ th.sub }}">{{ hv.detail.what }}</p>
+<section aria-label="Tus datos" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 18px">
+<sc-for list="{{ hv.detail.metrics }}" as="me" hint-placeholder-count="3">
+<div style="display: flex; align-items: center; gap: 12px; padding: 14px 18px 14px 0; box-shadow: {{ me.line }}">
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px"><span style="font-size: 15px">{{ me.label }}</span><sc-if value="{{ me.hasIdeal }}" hint-placeholder-val="{{ true }}"><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}">ÓPTIMO: {{ me.ideal }}</span></sc-if></span>
+<span style="font-family: {{ mono }}; font-size: 14px; text-align: right; font-variant-numeric: tabular-nums;">{{ me.value }}</span>
+<span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: {{ me.dot }}"></span>
+</div>
+</sc-for>
+</section>
+<sc-if value="{{ hv.detail.hasNote }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">{{ hv.detail.note }}</p></sc-if>
+<sc-if value="{{ hv.detail.isMood }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Chequeo de hoy</h2></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; flex-direction: column; gap: 16px">
+<sc-for list="{{ hv.detail.moods }}" as="mo" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<span style="display: flex; justify-content: space-between; font-size: 14px"><span>{{ mo.label }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}">{{ mo.lo }} → {{ mo.hi }}</span></span>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px">
+<sc-for list="{{ mo.opts }}" as="mv" hint-placeholder-count="5"><button type="button" onClick="{{ mv.pick }}" aria-pressed="{{ mv.sel }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; border-radius: 12px; background: {{ mv.bg }}; color: {{ mv.fg }}; font-family: {{ mono }}; font-size: 14px">{{ mv.v }}</button></sc-for>
+</div>
+</div>
+</sc-for>
+</section>
+</sc-if>
+<sc-if value="{{ hv.detail.hasSeries }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">{{ hv.detail.seriesLabel }}</h2><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ hv.detail.targetLabel }}</span></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 18px; display: flex; flex-direction: column; gap: 8px">
+<div style="position: relative; height: 104px; display: grid; grid-template-columns: repeat({{ hv.detail.cols }}, minmax(0, 1fr)); gap: 8px; align-items: end">
+<sc-if value="{{ hv.detail.hasTarget }}" hint-placeholder-val="{{ true }}"><div style="position: absolute; left: 0; right: 0; bottom: {{ hv.detail.targetPx }}px; border-top: 1px dashed {{ th.tertiary }}"></div></sc-if>
+<sc-for list="{{ hv.detail.bars }}" as="bb" hint-placeholder-count="8"><div title="{{ bb.val }}" style="height: {{ bb.h }}px; border-radius: 6px; background: {{ bb.bg }}"></div></sc-for>
+</div>
+<div style="display: grid; grid-template-columns: repeat({{ hv.detail.cols }}, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ hv.detail.bars }}" as="bb" hint-placeholder-count="8"><span style="font-family: {{ mono }}; font-size: 9px; text-align: center; color: {{ th.sub }}; white-space: nowrap">{{ bb.label }}</span></sc-for>
+</div>
+</section>
+</sc-if>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Qué hacer</h2></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 4px 18px">
+<sc-for list="{{ hv.detail.actions }}" as="ac" hint-placeholder-count="3">
+<div style="display: flex; gap: 14px; padding: 14px 0; box-shadow: {{ ac.line }}"><span style="font-family: {{ mono }}; font-size: 11px; color: {{ c.accentText }}; padding-top: 3px; flex: none">{{ ac.n }}</span><span style="font-size: 15px; line-height: 21px">{{ ac.text }}</span></div>
+</sc-for>
+</section>
+<sc-if value="{{ hv.detail.hasLink }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ hv.detail.link }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">{{ hv.detail.linkLabel }}</button></sc-if>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ hv.measOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 30">
+<button type="button" aria-label="Cerrar" onClick="{{ hv.closeMeas }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="Registrar medición" class="scroll" style="position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: {{ th.menu }}; border-radius: 28px 28px 0 0; padding: 10px 16px 34px; display: flex; flex-direction: column; gap: 14px; animation: sheet 0.42s cubic-bezier(.32,.72,0,1) both">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: {{ th.fill }}; margin-bottom: 4px"></span>
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Hoy</span><h2 style="margin: 0; font-size: 26px; line-height: 30px; font-weight: 500; letter-spacing: -0.04em">Registrar medición</h2></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px">
+<sc-for list="{{ hv.mrows }}" as="mr" hint-placeholder-count="5">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding-right: 12px; border-top: 0.5px solid {{ th.sep }}">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 15px">{{ mr.label }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}">{{ mr.unit }}</span></span>
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ mr.val }}</span><button type="button" onClick="{{ mr.minus }}" aria-label="Bajar" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ mr.plus }}" aria-label="Subir" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+</div>
+</sc-for>
+</section>
+<p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 18px; color: {{ th.sub }}">Mide el pulso y la presión sentado, tranquilo, después de 5 minutos de reposo. Lo que dejes en «—» no se guarda.</p>
+<button type="button" onClick="{{ hv.saveMeas }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Guardar</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isEval }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 25; overflow: hidden">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ haloEval }}; transition: background 0.6s"></span>
+<div style="position: relative; padding: 54px 16px 0; display: flex; align-items: center; gap: 14px">
+<button type="button" onClick="{{ ev.close }}" aria-label="Cerrar evaluación" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 40px; height: 40px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: {{ ev.pct }}%; background: #FAFAFA; border-radius: 2px; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
+<span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62); font-variant-numeric: tabular-nums;">{{ ev.step }}/{{ ev.total }}</span>
+</div>
+<div class="push scroll" style="position: relative; flex: 1; overflow-y: auto; padding: 40px 20px 20px; display: flex; flex-direction: column; gap: 14px">
+<span style="font-family: {{ mono }}; font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(250, 250, 250, 0.62)">{{ ev.secNum }} / {{ ev.secTotal }} · {{ ev.sec }}</span>
+<h1 style="margin: 0; font-size: 30px; line-height: 35px; font-weight: 400; letter-spacing: -0.04em">{{ ev.q }}</h1>
+<sc-if value="{{ ev.hasHint }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 15px; line-height: 21px; color: rgba(250, 250, 250, 0.68)">{{ ev.hint }}</p></sc-if>
+<div style="height: 10px"></div>
+<sc-if value="{{ ev.isChoice }}" hint-placeholder-val="{{ true }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ ev.opts }}" as="o" hint-placeholder-count="4">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.sel }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; min-height: 56px; padding: 0 20px; border-radius: 999px; background: {{ o.bg }}; color: {{ o.fg }}; font-size: 16px; text-align: left; display: flex; align-items: center; justify-content: space-between; transition: background 0.15s">{{ o.label }}<sc-if value="{{ o.sel }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg></sc-if></button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ ev.isScale }}" hint-placeholder-val="{{ false }}">
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ ev.opts }}" as="o" hint-placeholder-count="5">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.sel }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 64px; border-radius: 20px; background: {{ o.bg }}; color: {{ o.fg }}; font-family: {{ mono }}; font-size: 20px">{{ o.label }}</button>
+</sc-for>
+</div>
+<div style="display: flex; justify-content: space-between; font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.62)"><span>{{ ev.lo }}</span><span>{{ ev.hi }}</span></div>
+</sc-if>
+<sc-if value="{{ ev.isNum }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 16px 0">
+<button type="button" onClick="{{ ev.minus }}" aria-label="Menos" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
+<span style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 72px; line-height: 72px; font-weight: 300; letter-spacing: -0.06em; font-variant-numeric: tabular-nums;">{{ ev.num }}</span><span style="font-family: {{ mono }}; font-size: 14px; color: rgba(250, 250, 250, 0.62)">{{ ev.unit }}</span></span>
+<button type="button" onClick="{{ ev.plus }}" aria-label="Más" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
+</div>
+<div style="display: flex; justify-content: center; gap: 8px">
+<button type="button" onClick="{{ ev.minus5 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 12px">−5</button>
+<button type="button" onClick="{{ ev.plus5 }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 14px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 12px">+5</button>
+</div>
+</sc-if>
+</div>
+<div style="position: relative; padding: 12px 20px 34px; display: flex; align-items: center; gap: 10px">
+<button type="button" onClick="{{ ev.back }}" aria-label="Pregunta anterior" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 52px; height: 52px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<sc-if value="{{ ev.optional }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ ev.skip }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 18px; border-radius: 999px; background: transparent; color: rgba(250, 250, 250, 0.72); font-size: 15px">No lo sé</button></sc-if>
+<button type="button" onClick="{{ ev.next }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; flex: 1; height: 52px; border-radius: 999px; background: #FAFAFA; color: #09090B; font-size: 16px; font-weight: 500; opacity: {{ ev.nextOp }}">Continuar</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSesion }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div style="padding: 54px 12px 0; display: grid; grid-template-columns: 96px minmax(0, 1fr) 96px; align-items: center">
+<button type="button" onClick="{{ sesClose }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; justify-self: start; height: 38px; padding: 0 14px 0 10px; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: {{ th.card }}; color: {{ th.text }}; font-size: 14px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg>Salir</button>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center">
+<span style="max-width: 100%; font-size: 15px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ ss.title }}</span>
+<span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">PASO {{ ss.num }}/{{ ss.total }}</span>
+</div>
+<span aria-label="Tiempo de sesión" style="justify-self: end; padding-right: 6px; font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums;">{{ ss.elapsed }}</span>
+</div>
+<div aria-hidden="true" style="margin: 12px 16px 0; height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.pct }}%; background: {{ c.accent }}; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
+<div style="position: relative; flex: 1; min-height: 0">
+%%SESSION_STEPS%%
+</div>
+<div style="padding: 12px 16px 34px; background: {{ th.bar }}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex; gap: 10px">
+<sc-if value="{{ ss.hasPrev }}" hint-placeholder-val="{{ true }}">
+<button type="button" onClick="{{ sesPrev }}" aria-label="Paso anterior" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 52px; height: 52px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+</sc-if>
+<button type="button" onClick="{{ sesNext }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1">{{ ss.nextLabel }}</button>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isConfirm }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; z-index: 30">
+<button type="button" aria-label="Cerrar" onClick="{{ closeConfirm }}" style="position: absolute; inset: 0; width: 100%; height: 100%; border: 0; margin: 0; padding: 0; background: {{ th.scrim }}; cursor: default; animation: fade 0.25s ease-out both"></button>
+<div role="dialog" aria-modal="true" aria-label="¿Completaste la rutina?" class="scroll" style="position: absolute; left: 0; right: 0; bottom: 0; max-height: 88%; overflow-y: auto; box-sizing: border-box; background: {{ th.menu }}; border-radius: 28px 28px 0 0; padding: 10px 16px 34px; display: flex; flex-direction: column; gap: 14px; animation: sheet 0.42s cubic-bezier(.32,.72,0,1) both">
+<span aria-hidden="true" style="align-self: center; width: 36px; height: 5px; border-radius: 3px; background: {{ th.fill }}; margin-bottom: 4px"></span>
+
+<div style="display: flex; flex-direction: column; gap: 6px; padding: 8px 4px 4px; text-align: center; align-items: center"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">{{ rc.name }}</span><h2 style="margin: 0; font-size: 26px; line-height: 30px; font-weight: 500; letter-spacing: -0.04em">¿Completaste la rutina?</h2><p style="margin: 0; font-size: 15px; line-height: 20px; color: {{ th.sub }}">{{ rcTitle }}</p></div>
+<div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px"><button type="button" onClick="{{ answerNo }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">No</button><button type="button" onClick="{{ answerYes }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; ">Sí</button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isTest }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div style="padding: 54px 12px 0; display: flex; justify-content: space-between; align-items: center">
+<button type="button" onClick="{{ quizBack }}" aria-label="Atrás" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: {{ th.card }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 6px" aria-hidden="true"><sc-for list="{{ q.bars }}" as="pb" hint-placeholder-count="3"><div style="height: 3px; border-radius: 2px; background: {{ pb.bg }}; transition: background 0.3s"></div></sc-for></div>
+<button type="button" onClick="{{ quizSkip }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 14px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 15px">Omitir</button>
+</div>
+<sc-if value="{{ q.s0 }}" hint-placeholder-val="{{ true }}">
+<div class="push scroll" style="flex: 1; overflow-y: auto; padding: 32px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Registro · {{ q.num }} de 3</span><h1 style="margin: 0; font-size: 30px; line-height: 35px; font-weight: 400; letter-spacing: -0.04em">{{ q.title }}</h1><p style="margin: 0; font-size: 15px; line-height: 21px; color: {{ th.sub }}">{{ q.hint }}</p></div>
+<sc-if value="{{ q.isGrid }}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
+<span style="font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 10px; color: {{ o.subFg }}">MIN</span></button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ q.isList }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: {{ o.fg }}; width: 100%; min-height: 68px; padding: 10px 20px; border-radius: 24px; display: flex; flex-direction: column; justify-content: center; gap: 2px; text-align: left; background: {{ o.bg }}; transition: background 0.15s">
+<span style="font-size: 16px; font-weight: 500">{{ o.label }}</span><span style="font-size: 14px; color: {{ o.subFg }}">{{ o.sub }}</span></button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ q.s1 }}" hint-placeholder-val="{{ false }}">
+<div class="push scroll" style="flex: 1; overflow-y: auto; padding: 32px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Registro · {{ q.num }} de 3</span><h1 style="margin: 0; font-size: 30px; line-height: 35px; font-weight: 400; letter-spacing: -0.04em">{{ q.title }}</h1><p style="margin: 0; font-size: 15px; line-height: 21px; color: {{ th.sub }}">{{ q.hint }}</p></div>
+<sc-if value="{{ q.isGrid }}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
+<span style="font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 10px; color: {{ o.subFg }}">MIN</span></button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ q.isList }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: {{ o.fg }}; width: 100%; min-height: 68px; padding: 10px 20px; border-radius: 24px; display: flex; flex-direction: column; justify-content: center; gap: 2px; text-align: left; background: {{ o.bg }}; transition: background 0.15s">
+<span style="font-size: 16px; font-weight: 500">{{ o.label }}</span><span style="font-size: 14px; color: {{ o.subFg }}">{{ o.sub }}</span></button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{ q.s2 }}" hint-placeholder-val="{{ false }}">
+<div class="push scroll" style="flex: 1; overflow-y: auto; padding: 32px 16px 24px; display: flex; flex-direction: column; gap: 22px">
+<div style="display: flex; flex-direction: column; gap: 10px; padding: 0 4px"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: {{ th.sub }}">Registro · {{ q.num }} de 3</span><h1 style="margin: 0; font-size: 30px; line-height: 35px; font-weight: 400; letter-spacing: -0.04em">{{ q.title }}</h1><p style="margin: 0; font-size: 15px; line-height: 21px; color: {{ th.sub }}">{{ q.hint }}</p></div>
+<sc-if value="{{ q.isGrid }}" hint-placeholder-val="{{ true }}">
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
+<span style="font-size: 28px; line-height: 30px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 10px; color: {{ o.subFg }}">MIN</span></button>
+</sc-for>
+</div>
+</sc-if>
+<sc-if value="{{ q.isList }}" hint-placeholder-val="{{ false }}">
+<div style="display: flex; flex-direction: column; gap: 8px">
+<sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="4">
+<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; color: {{ o.fg }}; width: 100%; min-height: 68px; padding: 10px 20px; border-radius: 24px; display: flex; flex-direction: column; justify-content: center; gap: 2px; text-align: left; background: {{ o.bg }}; transition: background 0.15s">
+<span style="font-size: 16px; font-weight: 500">{{ o.label }}</span><span style="font-size: 14px; color: {{ o.subFg }}">{{ o.sub }}</span></button>
+</sc-for>
+</div>
+</sc-if>
+</div>
+</sc-if>
+<div style="padding: 12px 20px 34px; border-top: 0.5px solid {{ th.sep }}; display: flex; align-items: center; justify-content: space-between; gap: 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px">Peso corporal</span><span style="font-size: 13px; color: {{ th.sub }}">Se usa para estimar la energía</span></span>
+<div style="display: flex; align-items: center; gap: 10px"><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ pesoActual }} kg</span><button type="button" onClick="{{ pesoMenos }}" aria-label="Bajar peso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ pesoMas }}" aria-label="Subir peso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; padding: 0; width: 36px; height: 36px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div>
+</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isVictory }}" hint-placeholder-val="{{ false }}">
+<div style="position: absolute; inset: 0; background: {{ th.bg }}; animation: present 0.55s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 120px; display: flex; flex-direction: column; gap: 14px">
+<section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 22px 20px 20px; display: flex; flex-direction: column; gap: 18px; min-height: 250px">
+<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
+<span style="position: relative"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 14px; letter-spacing: 0.08em; text-transform: uppercase; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Sesión completada · {{ v.dateLine }}</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 6px"><span style="font-size: 34px; line-height: 38px; font-weight: 400; letter-spacing: -0.045em">{{ v.name }}</span><span style="font-size: 15px; color: rgba(250, 250, 250, 0.7)">{{ v.title }}</span></span>
+<span style="position: relative; margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 12px">
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">DURACIÓN</span><span style="font-size: 30px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.minutes }}<span style="font-size: 14px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> min</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">ENERGÍA</span><span style="font-size: 30px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.kcalNow }}<span style="font-size: 14px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> kcal</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">INTENSIDAD</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{ v.intensity }}</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: rgba(250, 250, 250, 0.6)">SERIES</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;">{{ v.sets }}</span></span>
+</span>
+</section>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 16px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 15px">Sesiones esta semana</span><span style="font-family: {{ mono }}; font-size: 15px; font-variant-numeric: tabular-nums;">{{ v.week }}</span></section>
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 10px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 26px; font-weight: 500; letter-spacing: -0.025em">Músculos trabajados</h2></div>
+<section style="background: {{ th.card }}; border-radius: 22px; padding: 18px 18px 4px; display: flex; flex-direction: column; gap: 12px">
+<div id="b3-sum" class="body3d" role="img" aria-label="Cuerpo con los músculos trabajados" data-loads="{{ b3.sum }}" data-dark="{{ b3.dark }}" data-key="sum" style="width: 100%; height: 320px; background: url({{ b3.fallback }}) center / contain no-repeat"></div>
+<p style="margin: -4px 0 0; text-align: center; font-family: {{ mono }}; font-size: 10px; letter-spacing: 0.08em; color: {{ th.tertiary }}">DESLIZA PARA GIRAR</p>
+<ul style="list-style: none; margin: 0 -18px 0 0; padding: 0">
+<sc-for list="{{ v.muscles }}" as="m" hint-placeholder-count="4">
+<li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 18px; border-top: 0.5px solid {{ th.sep }}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 16px">{{ m.name }} <span style="font-size: 13px; color: {{ th.sub }}">{{ m.role }}</span></span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ c.heatText }}; font-variant-numeric: tabular-nums;">{{ m.pct }}%</span></div>
+<div style="height: 4px; background: {{ th.fill }}; border-radius: 2px; overflow: hidden"><div style="height: 100%; border-radius: 2px; background: {{ c.heat }}; width: {{ m.w }}%"></div></div>
+<span style="font-size: 12px; color: {{ th.sub }}">{{ m.ready }}</span>
+</li>
+</sc-for>
+</ul>
+</section>
+</div>
+<div style="position: absolute; left: 0; right: 0; bottom: 0; box-sizing: border-box; padding: 12px 16px 34px; background: {{ th.bar }}; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); display: flex"><button type="button" onClick="{{ goHome }}"  style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 22px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; letter-spacing: -0.01em; display: flex; align-items: center; justify-content: center; gap: 8px; flex: 1">Listo</button></div>
+</div>
+</sc-if>
+</div>
+</x-dc>
+%%SCRIPT%%
+</body>
+</html>
