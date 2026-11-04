@@ -20,7 +20,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 ```
 cd fuente/gen
 python3 build3.py
-python3 build_pwa3.py 22        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 21
+python3 build_pwa3.py 23        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 22
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -42,8 +42,10 @@ Necesita Python 3 con `uharfbuzz` y `fontTools` (`pip install uharfbuzz fonttool
 - `body3d.js`: three.js r170, `body.glb` y RoomEnvironment. En la app, cada `.body3d` con `data-ex="<clave>"` muestra ese ejercicio.
 - `exercises.js` define `window.KS_EX`: cada ejercicio tiene poses clave `P({...})` con `p` y `r` de la cadera, `spine`, `head`, `neck`, `sh` y extremidades, sea como `{ik, pole}` o como direcciones `{a, b, w}`.
   - Ejes: y hacia arriba desde el suelo, z hacia adelante, x hacia la izquierda del cuerpo.
-  - Opciones: `loop` (`pingpong`, `cycle` con `smooth`, `hold`), `t`, `tempo`, `dwell` (pausa en cada extremo), `view`, `elev`, `focus` (acercar la cámara), `props` (`db`, `wall`, `door`), `mat` y `loads` (músculos que se pintan).
-- **Apoyos**: cada pose de suelo declara `touch` (`toes`, `knees`, `hands`, `forearms`, `hips`, `back`, `chest`, `head`, o un hueso con su altura, como `'RightFoot:0.05'`). Un ajuste por Levenberg-Marquardt mueve y gira la cadera para que esos apoyos toquen el suelo. De pie, el ajuste mantiene el centro de masa sobre los pies.
+  - Opciones: `loop` (`pingpong`, `cycle` con `smooth`, `hold`), `t`, `tempo`, `dwell` (pausa en cada extremo), `pass` (poses de un `cycle` por las que el cuerpo pasa sin detenerse), `view`, `elev`, `focus` (acercar la cámara), `props`, `mat` y `loads` (músculos que se pintan).
+  - `props`: `db` (`both`, `left`, `right` o `center`), `wall` (`z` = cara de la pared delante o detrás; con `side: 1` va al costado en `x`) y `door` (`x` = media luz del vano, `z` = plano de la pared, `cx` = corrimiento del vano en x). La pared tiene zócalo y el marco es una pared con su vano, jambas y dintel.
+  - Manos: `lHand`/`rHand` en `'flat'` (palma al suelo), `'wall'` (palma contra una pared que está delante), `'wallSide'` (pared al costado) o `[x, y, z]` en grados.
+- **Apoyos**: cada pose de suelo declara `touch` (`toes`, `knees`, `hands`, `forearms`, `hips`, `back`, `chest`, `head`, o un hueso con su altura, como `'RightFoot:0.05'`). Un ajuste por Levenberg-Marquardt mueve y gira la cadera para que esos apoyos toquen el suelo. De pie, el ajuste mantiene el centro de masa sobre los pies. Entre dos poses, un apoyo que solo tiene una de ellas se suelta (o se toma) con peso: cuenta entero en su pose y casi nada a medio tramo.
 - **`exfit.js` se genera**: después de cambiar `exercises.js` o el solver, corre `python3 b3d/preparar.py`, vacía `b3d/t/exfit.js` (`echo "window.KS_FIT={};" > b3d/t/exfit.js`) y luego `node b3d/bake.js`. Si el ajuste de un ejercicio no coincide con su definición, la app lo recalcula al abrirlo (más lento, pero correcto).
 - `edit_ex.py <script.py>` trae `setb(clave, texto)` para reemplazar el bloque entero de un ejercicio.
 

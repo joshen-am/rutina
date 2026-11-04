@@ -32,9 +32,10 @@
     attach(el);
     var ek = el.getAttribute('data-ex') || '';
     if (!(window.KS_EX && window.KS_EX[ek])) ek = '';
-    if (ek !== (S.exKey || '')) setMode(ek);
+    // el tema va antes que el ejercicio: la pared y el marco toman su color al armarse
     var dk = el.getAttribute('data-dark') === '1';
-    if (dk !== S.dark) { S.dark = dk; tintBase(); S.loadsStr = null; }
+    if (dk !== S.dark) { S.dark = dk; tintBase(); tintProps(); S.loadsStr = null; }
+    if (ek !== (S.exKey || '')) setMode(ek);
     var ls = S.exKey ? JSON.stringify(S.ex.def.loads || {}) : (el.getAttribute('data-loads') || '{}');
     if (ls !== S.loadsStr) { S.loadsStr = ls; var L = {}; try { L = JSON.parse(ls); } catch (e) {} paint(L); }
     start();
@@ -410,7 +411,16 @@
         if (e === 'flat') q3 = new T.Quaternion();
         else if (typeof e === 'number') q3 = eul([e, 0, 0], new T.Quaternion());
       } else if (e === 'flat') q3 = eul([0, -90 * side, 0], new T.Quaternion());
+      // 'wall': la palma hacia adelante y los dedos hacia arriba, plana contra una pared o un marco que está delante
+      else if (e === 'wall') q3 = new T.Quaternion().setFromAxisAngle(new T.Vector3(1, 0, 0), -Math.PI / 2).multiply(eul([0, -90 * side, 0], new T.Quaternion()));
+      // 'wallSide': igual, pero contra una pared que está al costado (la palma mira hacia afuera del cuerpo)
+      else if (e === 'wallSide') q3 = new T.Quaternion().setFromAxisAngle(new T.Vector3(0, 1, 0), side * Math.PI / 2)
+        .multiply(new T.Quaternion().setFromAxisAngle(new T.Vector3(1, 0, 0), -Math.PI / 2)).multiply(eul([0, -90 * side, 0], new T.Quaternion()));
+      else if (Array.isArray(e)) q3 = eul([e[0], e[1] * side, e[2] * side], new T.Quaternion());   // giro de la mano en el mundo (p. ej. la palma contra la pared)
       if (q3) end.quaternion.copy(q2.clone().invert().multiply(q3));
+      // pie en punta (número): los dedos se doblan en la base y quedan planos en el suelo, sin hundirse
+      var toe = B[side > 0 ? 'LeftToeBase' : 'RightToeBase'];
+      if (toe) { if (L[0].indexOf('Leg') > 0 && typeof e === 'number' && e > 0 && e < 80 && !spec.a) toe.quaternion.copy(eul([-e, 0, 0], new T.Quaternion())); else toe.quaternion.identity(); }
     });
     S.model.updateMatrixWorld(true);
   }
@@ -418,19 +428,21 @@
   // partes que deben quedar apoyadas en el suelo en una pose (P.touch); altura de la articulación cuando apoya
   var TOUCH = { toes: [['LeftToeBase', 0.02], ['RightToeBase', 0.02]], knees: [['LeftLeg', 0.065], ['RightLeg', 0.065]],
     hands: [['LeftHand', 0.035], ['RightHand', 0.035]], forearms: [['LeftForeArm', 0.05], ['RightForeArm', 0.05], ['LeftHand', 0.035], ['RightHand', 0.035]],
-    hips: [['Hips', 0.11]], back: [['Spine2', 0.13]], chest: [['Spine2', 0.08]], head: [['Head', 0.1]] };
+    hips: [['Hips', 0.11]], back: [['Spine2', 0.115]], chest: [['Spine2', 0.12]], head: [['Head', 0.11]] };   // chest y head: medidos con el cuerpo plano en el suelo   // back: medido boca arriba con la cadera en el suelo
   var ARMB = { LeftForeArm: 'lArm', LeftHand: 'lArm', RightForeArm: 'rArm', RightHand: 'rArm' };
   function touchList(P) {
     if (!P.touch) return [];
     var out = [], seen = {};
     P.touch.forEach(function (t) {
-      var m = String(t).split(':'), L = TOUCH[m[0]];
-      if (!L) { var c0 = CONTACT.filter(function (c) { return c[0] === m[0]; })[0]; L = [[m[0], m[1] != null ? +m[1] : (c0 ? c0[1] : 0.05)]]; }
-      L.forEach(function (c) { if (!seen[c[0]]) { seen[c[0]] = 1; out.push(c); } });
+      // 'Hueso', 'Hueso:altura' o 'Hueso:altura:peso' (el peso lo pone mix() cuando un apoyo aparece o se suelta)
+      var m = String(t).split(':'), L = TOUCH[m[0]], w = m[2] != null ? +m[2] : 1;
+      if (!L) { var c0 = CONTACT.filter(function (c) { return c[0] === m[0]; })[0]; L = [[m[0], m[1] != null && m[1] !== '' ? +m[1] : (c0 ? c0[1] : 0.05)]]; }
+      L.forEach(function (c) { if (!seen[c[0]]) { seen[c[0]] = 1; out.push([c[0], c[1], w]); } });
     });
     return out;
   }
-  function touches(P, n) { return touchList(P).some(function (c) { return c[0] === n; }); }
+  function touches(P, n) { return touchList(P).some(function (c) { return c[0] === n && c[2] > 0.5; }); }
+  function touchW(P, n) { var w = 0; touchList(P).forEach(function (c) { if (c[0] === n) w = Math.max(w, c[2]); }); return w; }
   // un brazo libre (sin IK y sin apoyo declarado) no levanta el cuerpo si roza el suelo: se dobla él
   function freeArm(P, n) { var k = ARMB[n]; return k && P && P[k] && !P[k].ik && !touches(P, n); }
   // la mano o el pie con IK está donde se pidió: si roza el suelo no debe levantar todo el cuerpo
@@ -446,7 +458,8 @@
     var T = S.three, p = new T.Vector3(), out = [], fl = S.floorY + (S.matTop || 0);
     solve(P);
     var base = P.ground ? lowest(P) : 0;
-    touchList(P).forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); out.push((p.y - fl - base - c[1]) * 2); } });
+    // un apoyo que se suelta pesa w³: en la pose clave cuenta entero y a medio tramo casi no tira, así no despega a los que siguen
+    touchList(P).forEach(function (c) { if (S.B[c[0]]) { mPos(S.B[c[0]], p); out.push((p.y - fl - base - c[1]) * 2 * c[2] * c[2] * c[2]); } });
     iks.forEach(function (L) { var t = P[L[0]].ik; mPos(S.B[L[3]], p); out.push(p.x - t[0], (p.y - S.floorY - t[1]) * 1.5, p.z - t[2]); });
     if (!P.ground) CONTACT.forEach(function (c) { if (S.B[c[0]] && !freeArm(P, c[0]) && !ikEnd(P, c[0])) { mPos(S.B[c[0]], p); var h = p.y - fl - c[1]; out.push(h < 0 ? h * 3 : 0); } });
     var pr = (S.ex && S.ex.def.props) || {};
@@ -519,7 +532,7 @@
   var FITF = [0, 0.25, 0.5, 0.75, 1];
   // huella de un ejercicio: si cambia su definición, el ajuste precalculado (exfit.js) deja de valer
   function exHash(def) {
-    var str = JSON.stringify([def.keys, def.loop, def.smooth, def.props || null]), h = 2166136261;
+    var str = JSON.stringify(['v2', def.keys, def.loop, def.smooth, def.props || null]), h = 2166136261;   // v2: apoyos con peso
     for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
     return (h >>> 0).toString(36);
   }
@@ -557,9 +570,10 @@
     LIMBS.forEach(function (L) {
       var sp = P[L[0]]; if (!sp || sp.ik || L[0].indexOf('Arm') < 0) return;
       var sh = mPos(S.B[L[1]], new T.Vector3()), el = mPos(S.B[L[2]], new T.Vector3()), hd = mPos(S.B[L[3]], new T.Vector3());
-      var tH = touches(P, L[3]), pen = Math.max(fl + 0.035 - hd.y, fl + 0.05 - el.y);
-      if (!(pen > 0.004 || (tH && Math.abs(hd.y - fl - 0.035) > 0.008))) return;
-      var ty = tH ? fl + 0.035 : Math.max(hd.y, fl + 0.035);
+      // la mano baja al suelo según el peso de su apoyo (0 a 1), así no salta cuando el apoyo aparece o se suelta
+      var wH = touchW(P, L[3]), pen = Math.max(fl + 0.035 - hd.y, fl + 0.05 - el.y);
+      var ty = Math.max(hd.y, fl + 0.035) * (1 - wH) + (fl + 0.035) * wH;
+      if (!(pen > 0.004 || Math.abs(hd.y - ty) > 0.004)) return;
       var line = hd.clone().sub(sh).normalize(), pole = el.clone().sub(sh); pole.addScaledVector(line, -pole.dot(line));
       if (touches(P, L[2])) pole.y -= 0.3; else if (el.y < fl + 0.046) pole.y += 0.3;
       if (pole.lengthSq() < 1e-6) pole.set(0, 1, 0);
@@ -675,7 +689,18 @@
   function mix(A, Bk, f, dA, dB) {
     var o = { hips: { r: lerpV(A.hips.r, Bk.hips.r, f) }, spine: lerpV(A.spine, Bk.spine, f), head: lerpV(A.head, Bk.head, f), sh: lerpV(A.sh, Bk.sh, f), ground: A.ground || Bk.ground };
     if (A.neck || Bk.neck) o.neck = lerpV(A.neck || [0, 0, 0], Bk.neck || [0, 0, 0], f);
-    if (A.touch && Bk.touch) { var tb = touchList(Bk).map(function (c) { return c[0]; }); o.touch = touchList(A).filter(function (c) { return tb.indexOf(c[0]) >= 0; }).map(function (c) { return c[0] + ':' + c[1]; }); }
+    // apoyos: los que comparten las dos poses siguen; los que solo tiene una se sueltan (o se toman) de a poco, con peso,
+    // así el cuerpo no pierde el suelo durante todo el tramo (antes quedaban solo los comunes y la cadera flotaba)
+    if (A.touch || Bk.touch) {
+      var ta = touchList(A), tb2 = touchList(Bk), ff = Math.min(1, Math.max(0, f)), ot = [], seenT = {};
+      ta.forEach(function (c) {
+        var cb = tb2.filter(function (d) { return d[0] === c[0]; })[0];
+        var w = cb ? c[2] + (cb[2] - c[2]) * ff : c[2] * (1 - ff), h = cb ? c[1] + (cb[1] - c[1]) * ff : c[1];
+        seenT[c[0]] = 1; if (w > 0.002) ot.push(c[0] + ':' + h + ':' + w);
+      });
+      tb2.forEach(function (c) { if (!seenT[c[0]] && c[2] * ff > 0.002) ot.push(c[0] + ':' + c[1] + ':' + c[2] * ff); });
+      o.touch = ot;
+    }
     if (A.hips.p && Bk.hips.p) o.hips.p = lerpV(A.hips.p, Bk.hips.p, f);
     LIMBS.forEach(function (L) {
       var a = A[L[0]], b = Bk[L[0]];
@@ -683,7 +708,8 @@
       else if (a.a && b.a && !!a.w === !!b.w) o[L[0]] = { a: lerpV(a.a, b.a, f), b: lerpV(a.b, b.b, f), w: a.w };
       else { var x = dA[L[0]], y = dB[L[0]]; o[L[0]] = { a: lerpV(x.a, y.a, f), b: lerpV(x.b, y.b, f) }; }
       var ea = A[L[4]], eb = Bk[L[4]];
-      o[L[4]] = (typeof ea === 'number' && typeof eb === 'number') ? ea + (eb - ea) * f : (typeof ea === 'number' && eb === 'flat') ? ea * (1 - f) : (ea === 'flat' && typeof eb === 'number') ? eb * f : (f < 0.5 ? ea : eb);
+      o[L[4]] = (typeof ea === 'number' && typeof eb === 'number') ? ea + (eb - ea) * f : (typeof ea === 'number' && eb === 'flat') ? ea * (1 - f) : (ea === 'flat' && typeof eb === 'number') ? eb * f
+        : (Array.isArray(ea) && Array.isArray(eb)) ? lerpV(ea, eb, f) : (f < 0.5 ? ea : eb);
     });
     return o;
   }
@@ -724,10 +750,13 @@
         var ps = ex.def.pass || [], fe = easeSeg(f, ps.indexOf(i) >= 0, ps.indexOf(j) >= 0);
         var oc = mix(K[i], K[j], fe, ex.dirs[i], ex.dirs[j]); oc._seg = i; oc._f = fe; return oc;
       }
-      if (ex.def.smooth) {   // movimiento continuo (círculos): curva suave entre las cuatro poses vecinas
-        var h = (i + n - 1) % n, k2 = (j + 1) % n;
-        var a = mix(K[h], K[i], 0.5 + 0.5 * f, ex.dirs[h], ex.dirs[i]), b = mix(K[j], K[k2], 0.5 * f, ex.dirs[j], ex.dirs[k2]);
-        return mix(a, b, f * f * (3 - 2 * f), ex.dirs[i], ex.dirs[j]);
+      if (ex.def.smooth) {
+        // movimiento continuo (círculos): curva de Catmull-Rom que pasa por cada pose clave con velocidad pareja.
+        // Pirámide de Barry-Goldman con nodos uniformes; la versión anterior saltaba de pose al cambiar de tramo
+        var h = (i + n - 1) % n, k2 = (j + 1) % n, d = ex.dirs;
+        var A1 = mix(K[h], K[i], f + 1, d[h], d[i]), A2 = mix(K[i], K[j], f, d[i], d[j]), A3 = mix(K[j], K[k2], f - 1, d[j], d[k2]);
+        var B1 = mix(A1, A2, (f + 1) / 2, d[i], d[i]), B2 = mix(A2, A3, f / 2, d[j], d[j]);
+        return mix(B1, B2, f, d[i], d[j]);
       }
       f = ease(f);
     }
@@ -765,31 +794,58 @@
     var P = S.props = {};
     P.dbL = dumbbell(T); P.dbR = dumbbell(T); P.dbC = dumbbell(T);
     S.model.add(P.dbL); S.model.add(P.dbR); S.model.add(P.dbC);
-    P.wallMat = mat3(T, 0xf2f2f4, { roughness: 0.95, emissive: 0x202024 });
-    P.wall = new T.Mesh(new T.BoxGeometry(1.5, 2.15, 0.05), P.wallMat); S.model.add(P.wall);
+    // pared: un paño con zócalo, un tono más oscuro que el fondo para que se lea como pared y no como una línea
+    P.wallMat = mat3(T, 0xdcdce1, { roughness: 0.92 });
+    P.baseMat = mat3(T, 0xc2c2c9, { roughness: 0.8 });
+    P.wall = new T.Group();
+    var wp = new T.Mesh(new T.BoxGeometry(1.7, 2.3, 0.08), P.wallMat); wp.position.y = 1.15; P.wall.add(wp);
+    var wb = new T.Mesh(new T.BoxGeometry(1.7, 0.09, 0.1), P.baseMat); wb.position.y = 0.045; P.wall.add(wb);
+    S.model.add(P.wall);
+    // marco de puerta: una pared con su vano, dos jambas y el dintel, para que se entienda que es una puerta
     P.door = new T.Group();
-    P.doorMat = mat3(T, 0xd9d9de, { roughness: 0.7 });
-    [-1, 1].forEach(function (s) { var post = new T.Mesh(new T.BoxGeometry(0.07, 2.1, 0.12), P.doorMat); post.position.set(s * 0.5, 1.05, 0); post.name = s < 0 ? 'R' : 'L'; P.door.add(post); });
-    var head = new T.Mesh(new T.BoxGeometry(1.07, 0.07, 0.12), P.doorMat); head.position.y = 2.1; P.door.add(head);
+    P.doorMat = mat3(T, 0xf1f1f4, { roughness: 0.6 });
+    [['L', 1], ['R', -1]].forEach(function (a) {
+      var post = new T.Mesh(new T.BoxGeometry(0.07, 2.1, 0.14), P.doorMat); post.position.y = 1.05; post.name = 'J' + a[0]; P.door.add(post);
+      var pan = new T.Mesh(new T.BoxGeometry(0.9, 2.3, 0.1), P.wallMat); pan.position.y = 1.15; pan.name = 'P' + a[0]; P.door.add(pan);
+      var bs = new T.Mesh(new T.BoxGeometry(0.9, 0.09, 0.12), P.baseMat); bs.position.y = 0.045; bs.name = 'B' + a[0]; P.door.add(bs);
+    });
+    var head = new T.Mesh(new T.BoxGeometry(1, 0.07, 0.14), P.doorMat); head.position.y = 2.135; head.name = 'H'; P.door.add(head);
+    var top = new T.Mesh(new T.BoxGeometry(1, 0.13, 0.1), P.wallMat); top.position.y = 2.235; top.name = 'T'; P.door.add(top);
     S.model.add(P.door);
     P.matMat = mat3(T, 0xd5d8dc, { roughness: 0.95 });
     P.mat = new T.Mesh(new T.BoxGeometry(1, 0.008, 1), P.matMat); S.model.add(P.mat);
     hideProps();
     return P;
   }
+  function tintProps() {
+    var P = S.props, dk = S.dark; if (!P) return;
+    P.wallMat.color.set(dk ? '#44444c' : '#dcdce1'); P.baseMat.color.set(dk ? '#2e2e34' : '#c2c2c9'); P.doorMat.color.set(dk ? '#4a4a52' : '#f1f1f4'); P.matMat.color.set(dk ? '#3a3e44' : '#cfd5da');
+  }
   function hideProps() { var P = S.props; if (!P) return; [P.dbL, P.dbR, P.dbC, P.wall, P.door, P.mat].forEach(function (o) { o.visible = false; }); }
   function setupProps(def, foot) {
     var T = S.three, P = ensureProps(); hideProps();
     var pr = def.props || {};
-    var dk = S.dark;
-    P.wallMat.color.set(dk ? '#3a3a40' : '#f0f0f2'); P.wallMat.emissive.set(dk ? '#1c1c20' : '#7c7c82'); P.doorMat.color.set(dk ? '#45454c' : '#d6d6db'); P.matMat.color.set(dk ? '#3a3e44' : '#cfd5da');
+    tintProps();
     S.dbMode = pr.db || null;
     if (pr.db === 'both') { P.dbL.visible = P.dbR.visible = true; }
+    if (pr.db === 'left') P.dbL.visible = true;
+    if (pr.db === 'right') P.dbR.visible = true;
     if (pr.db === 'center') P.dbC.visible = true;
-    if (pr.wall) { P.wall.visible = true; P.wall.position.set(pr.wall.x || 0, S.floorY + 1.075, pr.wall.z + (pr.wall.z > 0 ? 0.025 : -0.025)); }
+    // pared: wall.z = cara de la pared delante (+) o detrás (−) del cuerpo; con wall.side la pared va al costado, en x
+    if (pr.wall) {
+      var wl = pr.wall; P.wall.visible = true;
+      if (wl.side) { P.wall.rotation.y = Math.PI / 2; P.wall.position.set(wl.x + (wl.x > 0 ? 0.04 : -0.04), S.floorY, wl.z || 0); }
+      else { P.wall.rotation.y = 0; P.wall.position.set(wl.x || 0, S.floorY, wl.z + (wl.z > 0 ? 0.04 : -0.04)); }
+    }
+    // puerta: door.x = media luz del vano (de la cara de una jamba a la otra, más media jamba), door.z = plano de la pared
     if (pr.door) {
-      P.door.visible = true; P.door.position.set(0, S.floorY, pr.door.z);
-      P.door.children.forEach(function (c) { if (c.name) c.position.x = (c.name === 'L' ? 1 : -1) * pr.door.x; else c.scale.x = (pr.door.x * 2 + 0.07) / 1.07; });
+      var dx = pr.door.x; P.door.visible = true; P.door.position.set(pr.door.cx || 0, S.floorY, pr.door.z);
+      P.door.children.forEach(function (c) {
+        var sd = c.name.charAt(1) === 'L' ? 1 : -1;
+        if (c.name.charAt(0) === 'J') c.position.x = sd * dx;
+        else if (c.name.charAt(0) === 'P' || c.name.charAt(0) === 'B') c.position.x = sd * (dx + 0.035 + 0.45);
+        else { c.scale.x = dx * 2 + 0.07; c.position.x = 0; }
+      });
     }
     var floorish = def.mat != null ? !!def.mat : S.exHigh < 0.72;
     if (floorish) {
@@ -808,8 +864,8 @@
   function syncProps() {
     var P = S.props; if (!P || !S.dbMode) return;
     var T = S.three, B = S.B, q = new T.Quaternion(), mq = S.model.getWorldQuaternion(new T.Quaternion()).invert();
-    if (S.dbMode === 'both') {
-      [[P.dbL, 1, 'LeftHand'], [P.dbR, -1, 'RightHand']].forEach(function (a) {
+    if (S.dbMode === 'both' || S.dbMode === 'left' || S.dbMode === 'right') {
+      [[P.dbL, 1, 'LeftHand'], [P.dbR, -1, 'RightHand']].filter(function (a) { return S.dbMode === 'both' || (S.dbMode === 'left') === (a[1] > 0); }).forEach(function (a) {
         gripPoint(a[1], a[0].position);
         B[a[2]].getWorldQuaternion(q); a[0].quaternion.copy(q.premultiply(mq));
       });
@@ -898,7 +954,7 @@
       if (g > out.float) { out.float = g; out.at = i; }
       if (g < out.pen) { out.pen = g; out.who = who; }
       var fl = S.floorY + (S.matTop || 0);
-      touchList(P).forEach(function (c) { mPos(S.B[c[0]], p); var gp = p.y - fl - c[1]; if (Math.abs(gp) > Math.abs(out.gap || 0)) { out.gap = gp; out.gapWho = c[0] + '@' + i; } });
+      touchList(P).forEach(function (c) { if (c[2] < 0.99) return; mPos(S.B[c[0]], p); var gp = p.y - fl - c[1]; if (Math.abs(gp) > Math.abs(out.gap || 0)) { out.gap = gp; out.gapWho = c[0] + '@' + i; } });
       LIMBS.forEach(function (L) { var sp = P[L[0]]; if (sp && sp.ik) { mPos(S.B[L[3]], p); var e = p.distanceTo(new T.Vector3(sp.ik[0], S.floorY + sp.ik[1], sp.ik[2])); out.ik = Math.max(out.ik, e); } });
     }
     // recorrido: cuánto se mueve la articulación que más se mueve
