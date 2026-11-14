@@ -1,111 +1,42 @@
-"""Builds one animated 'film strip' SVG per exercise by interpolating the PDF's poses."""
-import sys, os, json, math, copy
+"""Dibuja cada posición clave de cada ejercicio como un SVG fijo para la tarjeta negra de la sesión.
+
+Escribe poses/<clave>-<n>.svg (n = 1, 2… en el orden del PDF) y, si la última posición trae la
+anterior en gris o una flecha, también poses/<clave>-<n>s.svg con esa posición sola. Todas las
+posiciones de un ejercicio comparten encuadre, así que al pasar de un paso a otro el cuerpo no salta.
+"""
+import sys, os, json
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, 'fuente'))
 import figs
 from ejercicios import EX
 import contenido as C
 
-FW, FH = 354, 300  # frame size (aspect 1.18, como el PDF)
-STEPS = 7          # cuadros entre dos posiciones
-
-RECOLOR = {
-    '#1F2D4A': '#1C1C1E', '#9AA8BE': '#AEAEB2', '#E7EBF1': '#E5E5EA', '#B3BDCA': '#C7C7CC',
-    '#CBD3DE': '#D1D1D6', '#4A5568': '#48484A', '#BAC3CF': '#D1D1D6', '#EEF1F5': '#F2F2F7',
-    '#DDE4EE': '#E5E5EA', '#E4572E': '#FF9500', '#9AA6B8': '#8E8E93', '#5E6B7E': '#636366',
-    '#8E99AA': '#8E8E93', '#F2B7A0': '#FFD3A8',
+# La tarjeta es negra en los dos temas: cuerpo claro, lado lejano en gris, objetos en grises oscuros
+DARK = {
+    '#1F2D4A': '#F4F4F5', '#9AA8BE': '#6B6B74', '#E4572E': '#FF9F0A', '#E7EBF1': '#232328', '#B3BDCA': '#8A8A93',
+    '#CBD3DE': '#46464E', '#4A5568': '#A1A1AA', '#BAC3CF': '#3A3A41', '#EEF1F5': '#141416', '#F2B7A0': '#7A5446',
+    '#DDE4EE': '#2C2C32', '#9AA6B8': '#6B6B74', '#5E6B7E': '#A1A1AA', '#8E99AA': '#6B6B74',
 }
 
 
-class Fake:
-    def __init__(self, prims):
-        self._p = prims
-
-    def prims(self):
-        return self._p
-
-
-def same(a, b):
-    if len(a) != len(b):
-        return False
-    for x, y in zip(a, b):
-        if x['k'] != y['k']:
-            return False
-        for f in ('p', 'pts'):
-            if f in x and len(x[f]) != len(y.get(f, [])):
-                return False
-    return True
+def dark(svg):
+    svg = svg.replace('fill="#FFFFFF"', 'fill="#0B0B0C"')  # ojo y centro de las mancuernas
+    svg = svg.replace('<svg xmlns="http://www.w3.org/2000/svg" ', '<svg xmlns="http://www.w3.org/2000/svg" width="354" height="300" ', 1)
+    for a, b in DARK.items():
+        svg = svg.replace(a, b)
+    return svg
 
 
-def lerp(a, b, t):
-    return a + (b - a) * t
-
-
-def lerp_pt(p, q, t):
-    return (lerp(p[0], q[0], t), lerp(p[1], q[1], t))
-
-
-def interp(A, B, t):
-    out = []
-    for x, y in zip(A, B):
-        z = dict(x)
-        if 'p' in x:
-            z['p'] = [lerp_pt(p, q, t) for p, q in zip(x['p'], y['p'])]
-        if 'pts' in x:
-            z['pts'] = [lerp_pt(p, q, t) for p, q in zip(x['pts'], y['pts'])]
-        if x['k'] == 'circle':
-            z['c'] = lerp_pt(x['c'], y['c'], t)
-        if x['k'] == 'rect':
-            for f in ('x0', 'y0', 'x1', 'y1'):
-                z[f] = lerp(x[f], y[f], t)
-        out.append(z)
-    return out
-
-
-def ease(t):
-    return 0.5 - 0.5 * math.cos(math.pi * t)
-
-
-def frames_for(key):
-    ex = EX[key]
-    panels = ex['panels']
-    seq = []  # list of (pose_prims, props, front, guides)
-    if len(panels) == 1 and panels[0].get('ghost') is not None:
-        pn = panels[0]
-        seq = [(pn['ghost'].prims(), pn.get('props', []), pn.get('front', []), pn.get('guides', [])),
-               (pn['pose'].prims(), pn.get('props', []), pn.get('front', []), pn.get('guides', []))]
-    else:
-        seq = [(pn['pose'].prims(), pn.get('props', []), pn.get('front', []), pn.get('guides', [])) for pn in panels]
-    if len(seq) == 1:
-        return [seq[0]], 1
-    frames = []
-    for i in range(len(seq) - 1):
-        a, b = seq[i], seq[i + 1]
-        ok = same(a[0], b[0]) and same(a[1], b[1]) and same(a[2], b[2])
-        for s in range(STEPS):
-            t = ease(s / STEPS)
-            if ok:
-                frames.append((interp(a[0], b[0], t), interp(a[1], b[1], t), interp(a[2], b[2], t), a[3] if t < 0.5 else b[3]))
-            else:
-                frames.append(a if t < 0.5 else b)
-    frames.append(seq[-1])
-    return frames, len(seq)
-
-
-def sprite(key):
-    frames, poses = frames_for(key)
+def poses(key):
     ex = dict(EX[key])
-    ex['panels'] = [dict(pose=Fake(f[0]), props=f[1], front=f[2], guides=f[3]) for f in frames]
+    pans = list(ex['panels'])
+    last = pans[-1]
+    extra = last.get('ghost') is not None or bool(last.get('arrows'))
+    if extra:
+        ex['panels'] = pans + [dict(last, ghost=None, arrows=[])]
     svgs = figs.render(ex)
-    n = len(svgs)
-    parts = [f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {n * FW} {FH}" width="{n * FW}" height="{FH}">']
-    for i, s in enumerate(svgs):
-        parts.append(s.replace('<svg xmlns="http://www.w3.org/2000/svg" ', f'<svg x="{i * FW}" y="0" width="{FW}" height="{FH}" ', 1))
-    parts.append('</svg>')
-    out = ''.join(parts)
-    for a, b in RECOLOR.items():
-        out = out.replace(a, b)
-    return out, n, poses
+    names = [str(i + 1) for i in range(len(pans))] + ([f'{len(pans)}s'] if extra else [])
+    return dict(zip(names, (dark(s) for s in svgs))), len(pans)
 
 
 keys = []
@@ -113,12 +44,15 @@ for lst in (C.WARMUP, C.COOLDOWN, C.LUNES, C.MARTES, C.MIE_INTERVALOS, C.MIE_COR
     for c in lst:
         if c['ex'] not in keys:
             keys.append(c['ex'])
+OUT = os.path.join(HERE, 'poses')
+os.makedirs(OUT, exist_ok=True)
+for f in os.listdir(OUT):
+    os.remove(os.path.join(OUT, f))
 meta = {}
-os.makedirs(os.path.join(HERE, 'sprites'), exist_ok=True)
 for k in keys:
-    svg, n, poses = sprite(k)
-    open(os.path.join(HERE, 'sprites', k + '.svg'), 'w').write(svg)
-    meta[k] = {'frames': n, 'poses': poses}
-json.dump(meta, open(os.path.join(HERE, 'sprites', 'meta.json'), 'w'), indent=1)
-print(len(keys), 'sprites')
-print({k: v['frames'] for k, v in meta.items()})
+    files, n = poses(k)
+    for name, svg in files.items():
+        open(os.path.join(OUT, f'{k}-{name}.svg'), 'w').write(svg)
+    meta[k] = {'panels': n, 'ghost': [pn.get('ghost') is not None for pn in EX[k]['panels']], 'files': sorted(files)}
+json.dump(meta, open(os.path.join(OUT, 'meta.json'), 'w'), indent=1)
+print(len(keys), 'ejercicios,', sum(len(m['files']) for m in meta.values()), 'dibujos')

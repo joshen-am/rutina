@@ -7,7 +7,6 @@ def rep(s, a, b, n=1):
 
 # --- parches a bloques reutilizados
 P['session'] = rep(P['session'], "this.sfx('shield');", "this.sfx('bell');")
-P['session'] = rep(P['session'], "hasImg: !!p.img,", "hasImg: !!p.img, k: p.k || '',")
 P['session'] = rep(P['session'], "setTimeout(() => this.sfx('stats'), 150);", "setTimeout(() => this.sfx('done'), 150);")
 P['datos'] = rep(P['datos'], "Opcional. Si no sales a caminar, no afecta tu racha.", "Opcional. Suma minutos de cardio a tu semana.")
 P['idb'] = rep(P['idb'], "data: this.snapshot() });", "data: this.backupData() });")

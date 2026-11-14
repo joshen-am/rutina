@@ -38,10 +38,8 @@ assert tpl.count(_m) == 2, tpl.count(_m)
 tpl = tpl.replace(_m, '<div id="step-a" class="push scroll" style="position: absolute; inset: 0;', 1)
 tpl = tpl.replace(_m, '<div id="step-b" class="push scroll" style="position: absolute; inset: 0;', 1)
 
-# illustrations ship with the app
-blobmap = json.load(open(os.path.join(HERE, 'blobmap.json')))
-for bid, key in blobmap.items():
-    js = js.replace('/_blob/' + bid, 'img/' + key + '.svg')
+# los dibujos de los ejercicios (poses/, de gen_figs.py) viajan con la app en img/p/
+POSES = sorted(f for f in os.listdir(os.path.join(HERE, 'poses')) if f.endswith('.svg'))
 assert '/_blob/' not in js and '/_blob/' not in tpl
 
 RUNTIME = r'''
@@ -233,7 +231,6 @@ html,body{{margin:0;height:var(--app-h,100%);overflow:hidden;overscroll-behavior
 input{{-webkit-user-select:text;user-select:text}}
 body{{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
 {css}
-body.ex3d-on .ex3d-img{{visibility:hidden}}
 </style>
 </head>
 <body>
@@ -243,8 +240,6 @@ body.ex3d-on .ex3d-img{{visibility:hidden}}
 </template>
 <script type="importmap">{{"imports":{{"three":"./vendor/three/three.module.min.js"}}}}</script>
 <script src="vendor/morphdom-umd.min.js"></script>
-<script src="exercises.js"></script>
-<script src="exfit.js"></script>
 <script src="body3d.js"></script>
 <script>
 {PRELUDE}
@@ -273,8 +268,9 @@ shutil.copy(os.path.join(VEN, 'geist', 'Geist-Variable.woff2'), os.path.join(OUT
 shutil.copy(os.path.join(VEN, 'geist', 'GeistMono-Variable.woff2'), os.path.join(OUT, 'fonts'))
 shutil.copy(os.path.join(VEN, 'geist', 'LICENSE.TXT'), os.path.join(OUT, 'fonts', 'Geist-OFL.txt'))
 open(os.path.join(OUT, 'index.html'), 'w').write(HTML)
-for key in blobmap.values():
-    shutil.copy(os.path.join(HERE, 'sprites', key + '.svg'), os.path.join(OUT, 'img', key + '.svg'))
+os.makedirs(os.path.join(OUT, 'img', 'p'), exist_ok=True)
+for f in POSES:
+    shutil.copy(os.path.join(HERE, 'poses', f), os.path.join(OUT, 'img', 'p', f))
 shutil.copy(os.path.join(VEN, 'morphdom', 'morphdom-umd.min.js'), os.path.join(OUT, 'vendor'))
 shutil.copy(os.path.join(VEN, 'morphdom', 'LICENSE'), os.path.join(OUT, 'vendor', 'morphdom-LICENSE'))
 B3 = os.path.join(HERE, 'b3d')
@@ -287,8 +283,6 @@ open(os.path.join(OUT, 'vendor', 'three', 'GLTFLoader.js'), 'w').write(
     open(os.path.join(B3, 'jsm', 'loaders', 'GLTFLoader.js')).read().replace("'../utils/BufferGeometryUtils.js'", "'./BufferGeometryUtils.js'"))
 shutil.copy(os.path.join(VEN, 'three', 'LICENSE'), os.path.join(OUT, 'vendor', 'three', 'LICENSE'))
 shutil.copy(os.path.join(B3, 'body3d.js'), os.path.join(OUT, 'body3d.js'))
-shutil.copy(os.path.join(B3, 'exercises.js'), os.path.join(OUT, 'exercises.js'))
-shutil.copy(os.path.join(B3, 'exfit.js'), os.path.join(OUT, 'exfit.js'))
 for f in ['body-light.png', 'body-dark.png']:
     shutil.copy(os.path.join(B3, f), os.path.join(OUT, 'img', f))
 ORBS = sorted(os.listdir(os.path.join(HERE, 'orbimg')))
@@ -311,9 +305,9 @@ manifest = {
 json.dump(manifest, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), ensure_ascii=False, indent=1)
 
 files = ['./', 'index.html', 'manifest.webmanifest', 'vendor/morphdom-umd.min.js', 'fonts/Geist-Variable.woff2', 'fonts/GeistMono-Variable.woff2',
-         'body3d.js', 'exercises.js', 'exfit.js', 'vendor/three/three.module.min.js', 'vendor/three/GLTFLoader.js', 'vendor/three/RoomEnvironment.js',
+         'body3d.js', 'vendor/three/three.module.min.js', 'vendor/three/GLTFLoader.js', 'vendor/three/RoomEnvironment.js',
          'vendor/three/BufferGeometryUtils.js', 'vendor/three/body.glb', 'img/body-light.png', 'img/body-dark.png'] + ['img/' + f for f in ORBS] + \
-        ['img/' + k + '.svg' for k in sorted(blobmap.values())] + ['icons/' + f.replace('.png', '-orbe.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
+        ['img/p/' + f for f in POSES] + ['icons/' + f.replace('.png', '-orbe.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
 SW = f'''// Funciona sin conexión: guarda la app en el teléfono y la actualiza cuando hay internet.
 const CACHE = 'rutina-v{VERSION}';
 const FILES = {json.dumps(files)};

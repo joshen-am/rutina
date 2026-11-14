@@ -1,0 +1,479 @@
+{
+ "marcha": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1",
+   "1s"
+  ]
+ },
+ "circulos_brazos": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1",
+   "1s"
+  ]
+ },
+ "gato_vaca": {
+  "panels": 2,
+  "ghost": [
+   false,
+   false
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "circulos_cadera": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1",
+   "1s"
+  ]
+ },
+ "escapular_pared": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sentadilla": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "puente": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "balanceo_pierna": {
+  "panels": 1,
+  "ghost": [
+   true
+  ],
+  "files": [
+   "1",
+   "1s"
+  ]
+ },
+ "chin_tuck": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "angeles": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "pecho_marco": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "flexor_cadera": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1",
+   "1s"
+  ]
+ },
+ "flex_rodillas": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "remo_marco": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "laterales": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "curl": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "triceps": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "ytw": {
+  "panels": 3,
+  "ghost": [
+   false,
+   false,
+   false
+  ],
+  "files": [
+   "1",
+   "2",
+   "3"
+  ]
+ },
+ "deadbug": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "plancha": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "zancada_atras": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "pm_rumano": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "talones_suelo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "plancha_lateral": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "bird_dog": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sentadilla_talones": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "escalador": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "boxeo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "crunch_invertido": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "hollow": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "esfinge": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "flex_suelo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "jalon_suelo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "flex_pica": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "fondo_suelo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "elev_piernas": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "zancada_estatica": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sumo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "puente_isquios": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "puente_una2": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sentadilla_pared": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "curl_martillo": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ }
+}

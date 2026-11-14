@@ -324,20 +324,6 @@ class Component extends DCLogic {
     this.setState(patch);
   }
 
-  frameSeq(n, poses) {
-    this._seq = this._seq || {};
-    const key = n + ':' + poses;
-    if (this._seq[key]) return this._seq[key];
-    const seg = poses > 1 ? Math.round((n - 1) / (poses - 1)) : n;
-    const hold = 6;
-    const out = [];
-    const push = (f) => { out.push(f); if (f % seg === 0) for (let h = 1; h < hold; h++) out.push(f); };
-    for (let f = 0; f < n; f++) push(f);
-    for (let f = n - 2; f > 0; f--) push(f);
-    this._seq[key] = out;
-    return out;
-  }
-
   startSession() {
     const si = this.selIdx();
     const r = this.routineAt(si);
@@ -357,7 +343,7 @@ class Component extends DCLogic {
     const next = Object.assign({}, s, { i: i, restEnd: null, restTotal: 0 });
     if (p && p.auto) { next.restEnd = Date.now() + p.auto * 1000; next.restTotal = p.auto; }
     this.beeped = {};
-    this.setState({ sess: next, tick: 0 }, () => this.persist());
+    this.setState({ sess: next, tick: 0, pg: 0 }, () => this.persist());
   }
 
   sesNext() {
@@ -365,6 +351,16 @@ class Component extends DCLogic {
     if (!s) return;
     const n = this.stepsFor(s.rid).length;
     if (s.i < n - 1) { this.sfx('tap'); this.enterStep(s.i + 1); } else this.finishSession();
+  }
+
+  pgGo(k) {
+    const s = this.state.sess;
+    if (!s) return;
+    const p = this.stepsFor(s.rid)[s.i];
+    const n = (p && p.pages ? p.pages.length : 0);
+    if (n < 2 || k < 0) return;
+    this.sfx('tap');
+    this.setState({ pg: k % n });
   }
 
   sesPrev() {
@@ -443,10 +439,13 @@ class Component extends DCLogic {
     const steps = this.stepsFor(s.rid);
     const R = this.routinesById()[s.rid] || { name: '' };
     const i = Math.max(0, Math.min(s.i, steps.length - 1));
-    const p = steps[i] || { k: 'rest', how: [], n: 0, poses: 0, sets: 0, phase: '', name: '', dose: '' };
+    const p = steps[i] || { k: 'rest', how: [], pages: [], sets: 0, phase: '', name: '', dose: '' };
     const now = Date.now();
-    let f = 0;
-    if (p.n > 1) f = fx ? this.frameSeq(p.n, p.poses)[this.state.tick % this.frameSeq(p.n, p.poses).length] : p.n - 1;
+    // Dibujo paso a paso: cada página es una posición fija con su indicación
+    const pages = p.pages || [];
+    const pg = Math.max(0, Math.min(this.state.pg || 0, pages.length - 1));
+    const cur = pages[pg] || { lines: [] };
+    const big = pages.every((x) => x.lines.join(' ').length <= 110);
     const done = s.sets[i] || 0;
     const left = s.restEnd ? Math.max(0, Math.ceil((s.restEnd - now) / 1000)) : 0;
     const phaseColor = { 'Calentamiento': c.heatText, 'Ejercicios': c.fuerzaText, 'Cierre de postura': c.tecnicaText, 'Postura': c.tecnicaText, 'Cardio': c.resistenciaText, 'Core': c.constanciaText }[p.phase] || th.sub;
@@ -458,9 +457,16 @@ class Component extends DCLogic {
       elapsed: this.fmtClock((now - s.start) / 1000),
       even: i % 2 === 0, odd: i % 2 === 1,
       phase: p.phase, phaseColor: phaseColor, round: p.round || '',
-      hasImg: !!p.img, k: p.k || '', img: p.img || '', imgW: Math.max(1, p.n) * 100, shift: p.n ? Math.round((f / p.n) * 100000) / 1000 : 0,
-      imgBg: dark ? th.card : '#FFFFFF', imgFilter: dark ? 'invert(0.9) hue-rotate(180deg)' : 'none',
-      imgAlt: 'Animación de ' + p.name.toLowerCase(),
+      hasPages: pages.length > 0, multiPg: pages.length > 1, pgN: pg + 1, pgCount: pages.length,
+      pages: pages.map((x, k) => ({ op: k === pg ? 1 : 0, figs: x.figs.map((src) => ({ src: src })) })),
+      pgAlt: (pages.length > 1 ? 'Dibujo del paso ' + (pg + 1) + ': ' : 'Dibujo: ') + cur.lines.join(' '),
+      pgLines: cur.lines.map((t) => ({ text: t })), pgSize: big ? 22 : 18, pgLh: big ? 28 : 26,
+      pgDots: pages.map((x, k) => ({ w: k === pg ? 18 : 6, bg: k === pg ? '#FAFAFA' : 'rgba(250, 250, 250, 0.28)' })),
+      pgFade: fx ? 'opacity 0.3s ease' : 'none', pgDotFx: fx ? 'width 0.25s ease, background 0.25s ease' : 'none',
+      pgPrev: () => this.pgGo(pg - 1), pgNext: () => this.pgGo(pg + 1), pgTap: () => this.pgGo(pg + 1),
+      pgFirst: pg === 0, prevOp: pg === 0 ? 0.38 : 1, pgCursor: pages.length > 1 ? 'pointer' : 'default',
+      pgNextLabel: pg === pages.length - 1 ? 'Volver al primer dibujo' : 'Dibujo siguiente',
+      hasView: !!p.view, view: p.view || '',
       isRestStep: isRest,
       name: p.name, dose: p.dose, hasRest: !!p.rest && !isRest, restLabel: p.rest ? (p.rest >= 60 && p.rest % 60 === 0 ? (p.rest / 60) + ' min' : p.rest + ' s') : '',
       hasWorks: !!p.works, works: p.works || '',
@@ -475,7 +481,7 @@ class Component extends DCLogic {
       restPct: s.restEnd && s.restTotal ? Math.round((left / s.restTotal) * 1000) / 10 : 0,
       hasSetHint: p.sets > 0 && (done === 0 || done >= p.sets),
       setHint: done >= p.sets ? 'Series completas. Toca Siguiente para continuar.' : 'Toca cada serie al terminarla y empieza el descanso.',
-      hasHow: p.how && p.how.length > 0,
+      hasHow: p.how && p.how.length > 0 && !pages.length,
       how: (p.how || []).map((h, j) => ({ n: j + 1, text: h, line: j ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })),
       hasNotes: notes.length > 0, notes: notes,
       hasPrev: i > 0, nextLabel: i >= steps.length - 1 ? 'Terminar sesión' : 'Siguiente'
