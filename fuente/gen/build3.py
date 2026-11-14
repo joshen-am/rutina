@@ -29,7 +29,9 @@ def brand_footer():
     from orbtpl import orb_tpl
     return ('<div aria-label="keystone" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px">'
             + orb_tpl(44) + '<span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em; margin-top: 8px">keystone</span>'
-            '<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Hecha para {{ prefs.nombre }}</span></div>')
+            '<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Hecha para {{ prefs.nombre }}</span>'
+            # build_pwa3.py cambia __VERSION__ por el número que se publica
+            '<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Versión __VERSION__</span></div>')
 
 
 tpl = open(os.path.join(HERE, 'Main3.tpl.html')).read()

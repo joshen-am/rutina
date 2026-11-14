@@ -23,6 +23,9 @@ def rep(s, a, b, n):
     return s.replace(a, b)
 
 
+# el número de la versión que se publica, al pie de Ajustes
+tpl = rep(tpl, '__VERSION__', VERSION, 1)
+
 # fluid, full-screen layout with the iPhone safe areas
 tpl = rep(tpl, 'width: 390px; height: 844px;', 'width: 100%; max-width: 640px; margin: 0 auto; height: 100%;', 1)
 tpl = rep(tpl, 'padding: 60px 16px', 'padding: calc(env(safe-area-inset-top) + 44px) 16px', None)
@@ -123,10 +126,6 @@ RUNTIME = r'''
     morphdom(appEl, '<div id="app">' + html + '</div>', {
       onBeforeElUpdated: function (from, to) {
         if (from.isEqualNode(to)) return false;
-        if (from.classList && from.classList.contains('body3d') && from.getAttribute('data-key') === to.getAttribute('data-key')) {
-          for (var ai = 0; ai < to.attributes.length; ai++) { var at = to.attributes[ai]; if (at.name.indexOf('data-') === 0 && from.getAttribute(at.name) !== at.value) from.setAttribute(at.name, at.value); }
-          return false;
-        }
         if (from === document.activeElement && (from.tagName === 'INPUT' || from.tagName === 'TEXTAREA')) { to.value = from.value; if (from.tagName === 'TEXTAREA') to.textContent = from.value; }
         return true;
       }
@@ -238,9 +237,7 @@ body{{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}}
 <template id="tpl">
 {tpl}
 </template>
-<script type="importmap">{{"imports":{{"three":"./vendor/three/three.module.min.js"}}}}</script>
 <script src="vendor/morphdom-umd.min.js"></script>
-<script src="body3d.js"></script>
 <script>
 {PRELUDE}
 </script>
@@ -273,18 +270,6 @@ for f in POSES:
     shutil.copy(os.path.join(HERE, 'poses', f), os.path.join(OUT, 'img', 'p', f))
 shutil.copy(os.path.join(VEN, 'morphdom', 'morphdom-umd.min.js'), os.path.join(OUT, 'vendor'))
 shutil.copy(os.path.join(VEN, 'morphdom', 'LICENSE'), os.path.join(OUT, 'vendor', 'morphdom-LICENSE'))
-B3 = os.path.join(HERE, 'b3d')
-os.makedirs(os.path.join(OUT, 'vendor', 'three'), exist_ok=True)
-for f in ['three.module.min.js', 'body.glb']:
-    shutil.copy(os.path.join(B3, f), os.path.join(OUT, 'vendor', 'three', f))
-shutil.copy(os.path.join(B3, 'jsm', 'environments', 'RoomEnvironment.js'), os.path.join(OUT, 'vendor', 'three'))
-shutil.copy(os.path.join(B3, 'jsm', 'utils', 'BufferGeometryUtils.js'), os.path.join(OUT, 'vendor', 'three'))
-open(os.path.join(OUT, 'vendor', 'three', 'GLTFLoader.js'), 'w').write(
-    open(os.path.join(B3, 'jsm', 'loaders', 'GLTFLoader.js')).read().replace("'../utils/BufferGeometryUtils.js'", "'./BufferGeometryUtils.js'"))
-shutil.copy(os.path.join(VEN, 'three', 'LICENSE'), os.path.join(OUT, 'vendor', 'three', 'LICENSE'))
-shutil.copy(os.path.join(B3, 'body3d.js'), os.path.join(OUT, 'body3d.js'))
-for f in ['body-light.png', 'body-dark.png']:
-    shutil.copy(os.path.join(B3, f), os.path.join(OUT, 'img', f))
 ORBS = sorted(os.listdir(os.path.join(HERE, 'orbimg')))
 for f in ORBS:
     shutil.copy(os.path.join(HERE, 'orbimg', f), os.path.join(OUT, 'img', f))
@@ -305,8 +290,7 @@ manifest = {
 json.dump(manifest, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), ensure_ascii=False, indent=1)
 
 files = ['./', 'index.html', 'manifest.webmanifest', 'vendor/morphdom-umd.min.js', 'fonts/Geist-Variable.woff2', 'fonts/GeistMono-Variable.woff2',
-         'body3d.js', 'vendor/three/three.module.min.js', 'vendor/three/GLTFLoader.js', 'vendor/three/RoomEnvironment.js',
-         'vendor/three/BufferGeometryUtils.js', 'vendor/three/body.glb', 'img/body-light.png', 'img/body-dark.png'] + ['img/' + f for f in ORBS] + \
+         ] + ['img/' + f for f in ORBS] + \
         ['img/p/' + f for f in POSES] + ['icons/' + f.replace('.png', '-orbe.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
 SW = f'''// Funciona sin conexión: guarda la app en el teléfono y la actualiza cuando hay internet.
 const CACHE = 'rutina-v{VERSION}';
@@ -396,10 +380,9 @@ shutil.copy(os.path.join(HERE, 'push_src', 'send.mjs'), os.path.join(OUT, 'push'
 shutil.copy(os.path.join(HERE, 'push_src', 'package.json'), os.path.join(OUT, 'push', 'package.json'))
 shutil.copy(os.path.join(HERE, 'push_src', 'recordatorios.yml'), os.path.join(OUT, '.github', 'workflows', 'recordatorios.yml'))
 open(os.path.join(OUT, 'README.md'), 'w').write(
-    '# keystone\n\nApp web instalable para entrenamiento, comida, hábitos y salud: sesiones guiadas con ejercicios animados, '
+    '# keystone\n\nApp web instalable para entrenamiento, comida, hábitos y salud: sesiones guiadas con dibujos paso a paso, '
     'registro de comidas con análisis de fotos por IA, hábitos diarios, agua, recordatorios y un perfil de salud con nota por área.\n\n'
     'Tus datos se guardan solo en tu teléfono (almacenamiento local del navegador).\n\n'
     '**Instalar en iPhone:** abre la página en Safari, toca Compartir y luego "Añadir a pantalla de inicio".\n\n'
-    'Usa [morphdom](https://github.com/patrick-steele-idem/morphdom) (MIT), la tipografía [Geist](https://github.com/vercel/geist-font) (OFL) y [three.js](https://threejs.org) (MIT). '
-    'El cuerpo 3D es el modelo Xbot de Mixamo incluido en los ejemplos de three.js.\n')
+    'Usa [morphdom](https://github.com/patrick-steele-idem/morphdom) (MIT) y la tipografía [Geist](https://github.com/vercel/geist-font) (OFL).\n')
 print('ok', os.path.getsize(os.path.join(OUT, 'index.html')), len(files), 'files cached')

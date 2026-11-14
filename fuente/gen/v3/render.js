@@ -107,23 +107,15 @@
       }
     }
     const hist = {
-      weeks: HW, items: items,
+      weeks: HW, items: items, days: ['', 'L', '', 'M', '', 'V', ''].map((t) => ({ t: t })),
       scale: [0, 0.25, 0.5, 0.75, 1].map((k) => ({ bg: dayCol(k) })),
       summary: hFull + (hFull === 1 ? ' día completo' : ' días completos'),
       aria: 'Historial de las últimas ' + HW + ' semanas'
     };
 
-    /* cuerpo 3D: carga por región (0..1) */
-    const R3 = {};
-    Object.keys(regionLoad).forEach((k) => { if (regionLoad[k] >= 0.05) R3[k] = Math.round(regionLoad[k] * 100) / 100; });
-    const b3 = { rec: JSON.stringify(R3), dark: dark ? '1' : '0', fallback: dark ? 'img/body-dark.png' : 'img/body-light.png', sum: '{}' };
-
     /* resumen de sesión */
     const summary = st.last || Object.assign(this.buildSummary(rc, { minutes: rc.minutes, intensity: 'dura', series: 0.8, setsDone: 22, setsTotal: 26 }, sd), { weekDone: weekDone, meta: meta });
     const vv = this.summaryVals(summary, st.t, th, c, dark);
-    const S3 = {};
-    summary.muscles.forEach((mu) => { this.regionsOf(mu.name).forEach((k) => { S3[k] = Math.max(S3[k] || 0, Math.round(Math.min(1, mu.w) * 100) / 100); }); });
-    b3.sum = JSON.stringify(S3);
 
     /* orden de inicio */
     const edit = !!st.editHome;
@@ -205,7 +197,7 @@
 
     return {
       th: th, c: c, tint: tint, primary: primary, onPrimary: onPrimary, primaryText: th.text,
-      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135), b3: b3,
+      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135),
       prefs: st.prefs, initial: (st.prefs.nombre || '?').trim().charAt(0).toUpperCase() || '?',
       greeting: greet, menuSub: hv.has ? 'Salud ' + hv.overall + ' · ' + hv.gLabel.toLowerCase() : 'Sin evaluación de salud',
 

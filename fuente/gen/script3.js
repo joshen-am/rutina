@@ -2449,7 +2449,7 @@ class Component extends DCLogic {
       inv: '#FAFAFA', onInv: '#09090B', line: 'rgba(255, 255, 255, 0.06)', input: '#232327'
     } : {
       bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
-      fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
+      fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#C2C2C8', barOff: '#D4D4D8',
       bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
     };
@@ -2634,23 +2634,15 @@ class Component extends DCLogic {
       }
     }
     const hist = {
-      weeks: HW, items: items,
+      weeks: HW, items: items, days: ['', 'L', '', 'M', '', 'V', ''].map((t) => ({ t: t })),
       scale: [0, 0.25, 0.5, 0.75, 1].map((k) => ({ bg: dayCol(k) })),
       summary: hFull + (hFull === 1 ? ' día completo' : ' días completos'),
       aria: 'Historial de las últimas ' + HW + ' semanas'
     };
 
-    /* cuerpo 3D: carga por región (0..1) */
-    const R3 = {};
-    Object.keys(regionLoad).forEach((k) => { if (regionLoad[k] >= 0.05) R3[k] = Math.round(regionLoad[k] * 100) / 100; });
-    const b3 = { rec: JSON.stringify(R3), dark: dark ? '1' : '0', fallback: dark ? 'img/body-dark.png' : 'img/body-light.png', sum: '{}' };
-
     /* resumen de sesión */
     const summary = st.last || Object.assign(this.buildSummary(rc, { minutes: rc.minutes, intensity: 'dura', series: 0.8, setsDone: 22, setsTotal: 26 }, sd), { weekDone: weekDone, meta: meta });
     const vv = this.summaryVals(summary, st.t, th, c, dark);
-    const S3 = {};
-    summary.muscles.forEach((mu) => { this.regionsOf(mu.name).forEach((k) => { S3[k] = Math.max(S3[k] || 0, Math.round(Math.min(1, mu.w) * 100) / 100); }); });
-    b3.sum = JSON.stringify(S3);
 
     /* orden de inicio */
     const edit = !!st.editHome;
@@ -2732,7 +2724,7 @@ class Component extends DCLogic {
 
     return {
       th: th, c: c, tint: tint, primary: primary, onPrimary: onPrimary, primaryText: th.text,
-      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135), b3: b3,
+      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135),
       prefs: st.prefs, initial: (st.prefs.nombre || '?').trim().charAt(0).toUpperCase() || '?',
       greeting: greet, menuSub: hv.has ? 'Salud ' + hv.overall + ' · ' + hv.gLabel.toLowerCase() : 'Sin evaluación de salud',
 

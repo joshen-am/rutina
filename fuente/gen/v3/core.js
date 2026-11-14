@@ -299,7 +299,7 @@ class Component extends DCLogic {
       inv: '#FAFAFA', onInv: '#09090B', line: 'rgba(255, 255, 255, 0.06)', input: '#232327'
     } : {
       bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
-      fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
+      fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#C2C2C8', barOff: '#D4D4D8',
       bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
     };

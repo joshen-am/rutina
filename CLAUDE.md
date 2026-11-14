@@ -4,12 +4,13 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 
 ## Estructura
 
-- **Raíz del repo**: la app ya construida (`index.html`, `sw.js`, `body3d.js`, `img/` con los dibujos de los ejercicios en `img/p/`, `icons/`, `vendor/`, `fonts/`, `push/`, `manifest.webmanifest`, `README.md`). Es **salida del build**: no se edita a mano, se regenera.
+- **Raíz del repo**: la app ya construida (`index.html`, `sw.js`, `img/` con los dibujos de los ejercicios en `img/p/`, `icons/`, `vendor/` (solo morphdom), `fonts/`, `push/`, `manifest.webmanifest`, `README.md`). Es **salida del build**: no se edita a mano, se regenera.
 - **`fuente/`**: todo el código fuente.
   - `gen/build3.py`: arma la plantilla. Corre `v3/tpl3.py` (HTML de cada pantalla) y `v3/assemble.py` (une `v3/core.js`, `render.js`, `food.js`, `health.js`, `native.js` y `parts.json` en `script3.js`), y escribe `fuente/canvas/Main.dc.html`.
   - `gen/build_pwa3.py <versión>`: convierte `Main.dc.html` en la PWA de la raíz, copia recursos y escribe `sw.js` con la caché `rutina-v<versión>`. Borra la salida anterior de la raíz, pero conserva lo que está en `KEEP` (`.git`, `.github`, `fuente`, `CLAUDE.md`, `brand`, `nativo`). Si agregas archivos a la raíz que no salen del build, súmalos a `KEEP`.
   - `gen/fuente/` (`contenido.py`, `ejercicios.py`, `figs.py`): textos, rutinas y figuras de los ejercicios. `gen_figs.py` dibuja cada posición en `poses/` y `gen_session.py` produce `session.json` (ver «Tarjeta paso a paso»).
-  - `gen/b3d/`: el cuerpo 3D de los mapas de músculos (ver abajo).
+  - `gen/v3/mapa2d.py`: el mapa de músculos en 2D (ver «Mapa de músculos»).
+  - `gen/b3d/`: el cuerpo 3D de antes (three.js). Desde la versión 25 no entra en la app; queda solo como archivo.
   - `gen/push_src/`: envío de recordatorios con GitHub Actions (`.github/workflows/recordatorios.yml`, secreto `RUTINA_PUSH`).
   - `vendor/`: copias de Geist (OFL), morphdom (MIT) y la licencia de three.js.
   - `herramientas/masc.mjs`: el script que generó `body.glb` (modelo Xbot masculinizado). No hace falta para construir.
@@ -21,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 25        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 24
+python3 build_pwa3.py 26        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 25
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -49,10 +50,17 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - **Revisa siempre las imágenes**: arma una hoja con cada página (dibujo y texto) y mírala entera antes de publicar.
 - Los dibujos se enlazan como `img/p/…`, que existe solo en la app construida: en el lienzo de claude.ai (`Main.dc.html`) no se ven.
 
-## Cuerpo 3D (`fuente/gen/b3d`)
+## Mapa de músculos (`fuente/gen/v3/mapa2d.py`)
 
-- `body3d.js` (three.js r170, `body.glb` y RoomEnvironment) pinta los mapas de músculos: `.body3d` con `data-key="rec"` (recuperación) y `"sum"` (resumen de la sesión), con `data-loads`.
-- `exercises.js`, `exfit.js` y las pruebas de la animación quedaron en `b3d/` pero ya no entran en la app. Si Joshen pide volver a la animación, vuelve a cargarlos en `build_pwa3.py` y pon un `.body3d` con `data-ex` en la pantalla del ejercicio. Lo que sigue describe ese motor:
+- Desde la versión 25, Joshen pidió quitar el cuerpo 3D y reemplazarlo por una alternativa 2D. Ahora es un cuerpo de frente y otro de espalda hechos de puntos, en la línea de los dibujos «Escaneo», con los rótulos «Frente» y «Espalda». Está en dos lugares: la tarjeta Recuperación de Inicio (128 px, `body_map("hb", 3.6, "128px")`) y «Músculos trabajados» del resumen (`body_map("vb", 2.2)`).
+- Se genera al construir. Cada punto cae en una de las 14 regiones de `regionKeys()` o en la base, y cada región es un `<path>` cuyo color se enlaza a `{{ hb.<región> }}` o `{{ vb.<región> }}`. Esos colores los calcula `heatColor`. La base usa `th.muscleOff`, el mismo color de un músculo sin carga.
+- Entre músculos vecinos queda una fila de puntos de base, y pecho, abdomen, trapecio, lumbar y glúteos dejan libre el eje del cuerpo: así se lee la anatomía aunque nada tenga carga. Las formas se ajustan en `FRONT`, `BACK` y `BASE`.
+- Ya no se publican three.js, `body3d.js` ni el modelo `body.glb` (unos 700 KB menos).
+
+## Cuerpo 3D de antes (`fuente/gen/b3d`, fuera de la app desde la 25)
+
+- `body3d.js` (three.js r170, `body.glb` y RoomEnvironment) pintaba los mapas de músculos: `.body3d` con `data-key="rec"` y `"sum"`, con `data-loads`. Para volver a usarlo habría que recuperar en `build_pwa3.py` lo que sacó la versión 25: copia de three.js y del modelo, importmap, `<script src="body3d.js">`, el caso `.body3d` en morphdom y los archivos del service worker.
+- `exercises.js`, `exfit.js` y las pruebas de la animación de los ejercicios también quedaron aquí. Lo que sigue describe ese motor:
 - `exercises.js` define `window.KS_EX`: cada ejercicio tiene poses clave `P({...})` con `p` y `r` de la cadera, `spine`, `head`, `neck`, `sh` y extremidades, sea como `{ik, pole}` o como direcciones `{a, b, w}`.
   - Ejes: y hacia arriba desde el suelo, z hacia adelante, x hacia la izquierda del cuerpo.
   - Opciones: `loop` (`pingpong`, `cycle` con `smooth`, `hold`), `t`, `tempo`, `dwell` (pausa en cada extremo), `pass` (poses de un `cycle` por las que el cuerpo pasa sin detenerse), `view`, `elev`, `focus` (acercar la cámara), `props`, `mat` y `loads` (músculos que se pintan).
@@ -69,6 +77,8 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - La app nativa (Capacitor/Xcode, carpeta `nativo/`, workflow `app-ios.yml`) quedó abandonada a pedido de Joshen. No la retomes si él no lo pide.
 - La marca es keystone, con la esfera cromada plateada (`img/orb-plata.png`). Los íconos salen de la esfera de `brand/icon-1024.png` y se publican con el sufijo `-orbe` (pestaña: `favicon-32`/`favicon-192`, esfera sola; inicio: esfera sobre blanco). Si cambian, cambia el sufijo para que el navegador no muestre los viejos. El color de la esfera cambia según la salud (`orb-s1`…`s5`).
 - `fuente/canvas/Main.dc.html` es la misma página que el lienzo de diseño en claude.ai.
+- **Versión al pie de la página** (pedido de Joshen, desde la 25): al final de Ajustes, bajo «Hecha para…», va «Versión N». `build3.py` deja `__VERSION__` en la plantilla y `build_pwa3.py <N>` lo cambia por el número que se publica, el mismo de la caché `rutina-vN`. En el lienzo de claude.ai se ve el marcador `__VERSION__`.
+- El Historial (tipo GitHub) tiene días cuadrados: los rótulos L, M y V van en la misma grilla y cada día lleva `aspect-ratio: 1 / 1`.
 - UX/UI (versión 24, con /afinar y /unslop, sin tocar la vibra):
   - El foco con teclado se ve en todo (`:focus-visible` con `!important`, porque los campos traen `outline: none` en línea).
   - El texto pintado con el color de salud sobre fondos claros usa `healthText` (mismo tono, más oscuro, ≥ 4,5:1). Los anillos y puntos siguen con `healthColor`.

@@ -2,6 +2,7 @@
 import sys as _s, os as _o
 _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), ".."))
 from orbtpl import orb_tpl
+from mapa2d import body_map
 import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -188,16 +189,12 @@ HIST = f'''<section aria-labelledby="hist" style="{CARD}; padding: 20px; display
 <h2 id="hist" style="margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.02em">Historial</h2>
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ hist.summary }}}}</span>
 </div>
-<div style="display: flex; gap: 8px">
-<div aria-hidden="true" style="display: grid; grid-template-rows: 16px repeat(7, 16px); row-gap: 4px; {MONO} font-size: 12px; line-height: 16px; color: {{{{ th.tertiary }}}}">
-<span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
-</div>
-<div role="img" aria-label="{{{{ hist.aria }}}}" style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat({{{{ hist.weeks }}}}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, 16px); grid-auto-flow: column; gap: 4px">
+<div role="img" aria-label="{{{{ hist.aria }}}}" style="display: grid; grid-template-columns: 12px repeat({{{{ hist.weeks }}}}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, auto); grid-auto-flow: column; column-gap: 4px; row-gap: 4px">
+<span aria-hidden="true"></span><sc-for list="{{{{ hist.days }}}}" as="hd" hint-placeholder-count="7"><span aria-hidden="true" style="{MONO} font-size: 12px; line-height: 16px; align-self: center; color: {{{{ th.tertiary }}}}">{{{{ hd.t }}}}</span></sc-for>
 <sc-for list="{{{{ hist.items }}}}" as="hc" hint-placeholder-count="136">
 <sc-if value="{{{{ hc.isLabel }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 12px; line-height: 16px; color: {{{{ th.tertiary }}}}; white-space: nowrap; overflow: visible">{{{{ hc.text }}}}</span></sc-if>
-<sc-if value="{{{{ hc.isCell }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="border-radius: 4px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></span></sc-if>
+<sc-if value="{{{{ hc.isCell }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="aspect-ratio: 1 / 1; border-radius: 3px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></span></sc-if>
 </sc-for>
-</div>
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: {{{{ th.sub }}}}">
 <span>Hábitos y entrenos de cada día</span>
@@ -248,7 +245,7 @@ RECUP = f'''<section aria-labelledby="recup" style="{CARD}; padding: 20px; displ
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}">{{{{ rec.summary }}}}</span>
 </div>
 <div style="display: flex; align-items: center; gap: 12px">
-<div id="b3-rec" class="body3d" role="img" aria-label="Cuerpo con la carga de cada músculo" data-loads="{{{{ b3.rec }}}}" data-dark="{{{{ b3.dark }}}}" data-key="rec" style="width: 128px; height: 210px; flex: none; background: url({{{{ b3.fallback }}}}) center / contain no-repeat"></div>
+{body_map("hb", 3.6, "128px")}
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column">
 <sc-if value="{{{{ rec.has }}}}" hint-placeholder-val="{{{{ true }}}}">
 <sc-for list="{{{{ rec.top }}}}" as="rt" hint-placeholder-count="3">
@@ -1011,8 +1008,7 @@ VICTORY = f'''<sc-if value="{{{{ isVictory }}}}" hint-placeholder-val="{{{{ fals
 <section style="{CARD}; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 16px">Sesiones esta semana</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ v.week }}}}</span></section>
 {sec_title("Músculos trabajados")}
 <section style="{CARD}; padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px">
-<div id="b3-sum" class="body3d" role="img" aria-label="Cuerpo con los músculos trabajados" data-loads="{{{{ b3.sum }}}}" data-dark="{{{{ b3.dark }}}}" data-key="sum" style="width: 100%; height: 320px; background: url({{{{ b3.fallback }}}}) center / contain no-repeat"></div>
-<p style="margin: -4px 0 0; text-align: center; {MONO} font-size: 12px; color: {{{{ th.tertiary }}}}">Desliza para girar</p>
+{body_map("vb", 2.2)}
 <ul style="list-style: none; margin: 0 -20px 0 0; padding: 0">
 <sc-for list="{{{{ v.muscles }}}}" as="m" hint-placeholder-count="4">
 <li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 20px; border-top: 0.5px solid {{{{ th.sep }}}}">
