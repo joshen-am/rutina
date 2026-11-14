@@ -22,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 26        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 25
+python3 build_pwa3.py 27        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 26
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -77,6 +77,17 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - La app nativa (Capacitor/Xcode, carpeta `nativo/`, workflow `app-ios.yml`) quedó abandonada a pedido de Joshen. No la retomes si él no lo pide.
 - La marca es keystone, con la esfera cromada plateada (`img/orb-plata.png`). Los íconos salen de la esfera de `brand/icon-1024.png` y se publican con el sufijo `-orbe` (pestaña: `favicon-32`/`favicon-192`, esfera sola; inicio: esfera sobre blanco). Si cambian, cambia el sufijo para que el navegador no muestre los viejos. El color de la esfera cambia según la salud (`orb-s1`…`s5`).
 - `fuente/canvas/Main.dc.html` es la misma página que el lienzo de diseño en claude.ai.
+- **Dirección visual (versión 26, pedido de Joshen: «basa tu diseño en Superpower», cara, de alta gama, misteriosa, colores vibrantes)**. Se toman las cualidades de la app de Superpower, no su marca:
+  - **Superficies**: la estructura va en neutros zinc. En claro, el lienzo es `#F4F4F5` y las tarjetas blancas con sombra suave (`th.cardShadow`). Lo que va dentro de hojas o tarjetas usa `th.well`, nunca `th.card`, para no quedar blanco sobre blanco. Las tarjetas negras con halo siguen siendo la firma.
+  - **Color vibrante solo en los datos**: verde neón, amarillo ácido, bermellón y rosa. `healthColor` es una rampa rosa (0) → bermellón (45) → amarillo (70) → verde (85+), a plena intensidad sobre negro y un paso más profunda sobre claro. El texto de color va con `healthText`. Las notas A–D, los macros, el calor de los músculos y el historial usan la misma familia.
+  - **Barra segmentada** en la tarjeta del perfil de salud: cuántas áreas hay en cada nota (Óptimo, Bien, Mejorable, Requiere atención), como la barra de biomarcadores de Superpower.
+  - Los títulos grandes van en peso 400.
+- **Movimiento** (versión 26). Todo se escribe en la hoja de estilos de `tpl3.py`, entra una sola vez al aparecer y nada queda en bucle:
+  - Las curvas son `--ease-out` (`cubic-bezier(0.23,1,0.32,1)`) y la de hojas de iOS. Solo se anima `transform`, `opacity`, `clip-path` y el trazo de los anillos.
+  - Las pantallas suben 10 px con 40 ms de desfase (`.scr`). Los halos florecen (`.halo`), los anillos se llenan (`.ring-in`, con `--full`) y las barras crecen (`.bar-in`, `.seg-in`).
+  - El dibujo del ejercicio se revela con un barrido de escáner al cambiar de página (`.pg[data-on="1"]`) y el mapa del resumen se escanea de abajo hacia arriba (`reveal=True` en `body_map`).
+  - El puntaje de salud y el de cada área cuentan desde 0 (`data-count` y `data-count-id`, en el runtime de `build_pwa3.py`), una vez por apertura de la app y otra solo si cambia.
+  - Todo depende de `data-motion` (el interruptor «Animaciones» de Ajustes). Con «reducir movimiento» del sistema queda un fundido corto, sin desplazamientos.
 - **Versión al pie de la página** (pedido de Joshen, desde la 25): al final de Ajustes, bajo «Hecha para…», va «Versión N». `build3.py` deja `__VERSION__` en la plantilla y `build_pwa3.py <N>` lo cambia por el número que se publica, el mismo de la caché `rutina-vN`. En el lienzo de claude.ai se ve el marcador `__VERSION__`.
 - El Historial (tipo GitHub) tiene días cuadrados: los rótulos L, M y V van en la misma grilla y cada día lleva `aspect-ratio: 1 / 1`.
 - UX/UI (versión 24, con /afinar y /unslop, sin tocar la vibra):

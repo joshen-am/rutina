@@ -458,7 +458,7 @@ class Component extends DCLogic {
       even: i % 2 === 0, odd: i % 2 === 1,
       phase: p.phase, phaseColor: phaseColor, round: p.round || '',
       hasPages: pages.length > 0, multiPg: pages.length > 1, pgN: pg + 1, pgCount: pages.length,
-      pages: pages.map((x, k) => ({ op: k === pg ? 1 : 0, figs: x.figs.map((src) => ({ src: src })) })),
+      pages: pages.map((x, k) => ({ op: k === pg ? 1 : 0, on: k === pg ? '1' : '0', figs: x.figs.map((src) => ({ src: src })) })),
       pgAlt: (pages.length > 1 ? 'Dibujo del paso ' + (pg + 1) + ': ' : 'Dibujo: ') + cur.lines.join(' '),
       pgLines: cur.lines.map((t) => ({ text: t })), pgSize: big ? 22 : 18, pgLh: big ? 28 : 26,
       pgDots: pages.map((x, k) => ({ w: k === pg ? 18 : 6, bg: k === pg ? '#FAFAFA' : 'rgba(250, 250, 250, 0.28)' })),
@@ -698,39 +698,42 @@ class Component extends DCLogic {
     ];
   }
 
-  /* Paleta: neutros zinc, un acento cálido y colores de datos sobrios */
+  /* Paleta: neutros zinc en todo lo que es estructura y color vibrante solo en los datos
+     (verde neón, amarillo ácido, bermellón y rosa, en la línea de Superpower). Sobre negro van
+     a plena intensidad; sobre claro, un paso más profundo para que se vean. */
   colors(dark) {
     return dark ? {
-      fuerza: '#F2555A', resistencia: '#5AB0F0', constancia: '#3CC77F', tecnica: '#A196FF', heat: '#F2555A',
-      fuerzaText: '#FF7B80', resistenciaText: '#7DC1F5', constanciaText: '#5AD394', tecnicaText: '#B4ABFF', heatText: '#FF7B80',
+      fuerza: '#FC5F2B', resistencia: '#4DA3FF', constancia: '#00FCA1', tecnica: '#B39DFF', heat: '#FC5F2B',
+      fuerzaText: '#FF8A5C', resistenciaText: '#7DBBFF', constanciaText: '#4DF5B5', tecnicaText: '#C4B3FF', heatText: '#FF8A5C',
       accent: '#FAFAFA', accentText: '#A1A1AA',
-      gA: '#3CC77F', gB: '#E2C043', gC: '#FF9F4D', gD: '#F2638E',
-      prot: '#5AB0F0', carb: '#E2C043', fat: '#F2638E', fib: '#3CC77F'
+      gA: '#00FCA1', gB: '#E8FC00', gC: '#FC5F2B', gD: '#FF68DE',
+      prot: '#4DA3FF', carb: '#E8FC00', fat: '#FF68DE', fib: '#00FCA1'
     } : {
-      fuerza: '#DC3B41', resistencia: '#2A86CF', constancia: '#1F9D62', tecnica: '#6F5FEA', heat: '#DC3B41',
-      fuerzaText: '#B42A30', resistenciaText: '#1D6AA8', constanciaText: '#157A4B', tecnicaText: '#5544D6', heatText: '#B42A30',
+      fuerza: '#F2541F', resistencia: '#2A7FE0', constancia: '#11C182', tecnica: '#6F5FEA', heat: '#F2541F',
+      fuerzaText: '#C2410C', resistenciaText: '#1D63B0', constanciaText: '#0B7A53', tecnicaText: '#5544D6', heatText: '#C2410C',
       accent: '#18181B', accentText: '#71717A',
-      gA: '#1F9D62', gB: '#C9A100', gC: '#E8711A', gD: '#DB2E6A',
-      prot: '#2A86CF', carb: '#D9A400', fat: '#DB2E6A', fib: '#1F9D62'
+      gA: '#11C182', gB: '#C8C400', gC: '#F2541F', gD: '#E0368C',
+      prot: '#2A7FE0', carb: '#C8C400', fat: '#E0368C', fib: '#11C182'
     };
   }
 
-  /* Color de salud continuo: 0 rojo → 50 ámbar → 100 verde profundo (interpolación de tono en HSL) */
+  /* Color de salud: rosa (0) → bermellón (45) → amarillo ácido (70) → verde neón (85 y más) */
   healthColor(s, dark) {
     if (s == null || !isFinite(s)) return dark ? '#A1A1AA' : '#71717A';
-    const x = Math.max(0, Math.min(100, s)) / 100;
-    const h = 2 + 140 * Math.pow(x, 1.05);
-    const sat = dark ? 68 : 70;
-    let l = dark ? 56 : 46;
-    if (x > 0.8) l -= (x - 0.8) / 0.2 * (dark ? 8 : 12);
-    return this.hsl(h, sat, l);
+    const x = Math.max(0, Math.min(100, s));
+    const A = dark
+      ? [[0, '#FF68DE'], [45, '#FC5F2B'], [70, '#E8FC00'], [85, '#00FCA1'], [100, '#00E59A']]
+      : [[0, '#E0368C'], [45, '#F2541F'], [70, '#C8C400'], [85, '#11C182'], [100, '#0E9F6E']];
+    for (let i = 1; i < A.length; i++) {
+      if (x <= A[i][0]) return this.mix(A[i - 1][1], A[i][1], (x - A[i - 1][0]) / (A[i][0] - A[i - 1][0]));
+    }
+    return A[A.length - 1][1];
   }
 
   /* El mismo tono, más oscuro, para escribir sobre fondos claros (≥ 4,5:1); en oscuro es el mismo color */
   healthText(s, dark) {
     if (dark || s == null || !isFinite(s)) return this.healthColor(s, dark);
-    const x = Math.max(0, Math.min(100, s)) / 100;
-    return this.hsl(2 + 140 * Math.pow(x, 1.05), 72, 26);
+    return this.mix(this.healthColor(s, false), '#000000', 0.45);
   }
 
   hsl(h, s, l) {
@@ -2336,6 +2339,12 @@ class Component extends DCLogic {
     const overall = has ? this.healthOverall(areas) : null;
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
+    /* barra segmentada (como la de biomarcadores de Superpower): cuántas áreas hay en cada nota */
+    const GR = ['A', 'B', 'C', 'D'];
+    const REP = { A: 92, B: 77, C: 60, D: 30 };
+    const segs = GR.map((x, i) => ({ g: x, n: areas.filter((a) => a.score != null && a.grade === x).length, i: i }))
+      .filter((x) => x.n > 0)
+      .map((x, k) => ({ n: x.n, flex: x.n, color: this.healthColor(REP[x.g], true), label: this.gradeLabel(x.g), delay: 280 + k * 90 }));
     const list = areas.map((x, i) => ({
       id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), gText: this.healthText(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
@@ -2379,6 +2388,7 @@ class Component extends DCLogic {
     const lastM = (st.meas || []).slice(-1)[0];
     const fc = this.latest('fc'), pas = this.latest('pas'), pad = this.latest('pad'), cin = this.latest('cintura');
     return {
+      segs: segs, hasSegs: segs.length > 0,
       has: has, none: !has, overall: overall == null ? '—' : overall, overallN: overall, grade: g, gColor: this.healthColor(overall, true), gLabel: this.gradeLabel(g),
       ringOff: (439.8 * (1 - (overall || 0) / 100)).toFixed(1), areas: list, focus: focus, hasFocus: focus.length > 0,
       evalAgo: has ? this.agoText(st.hp.at).toLowerCase() : '', evalOld: has && Date.now() - st.hp.at > 60 * 864e5,
@@ -2429,7 +2439,7 @@ class Component extends DCLogic {
   }
 
   heatColor(th, c, dark, t) {
-    const soft = dark ? '#C9650C' : '#FFC27A';
+    const soft = dark ? '#F7861E' : '#FDBA74';
     if (t <= 0.5) return this.mix(th.muscleOff, soft, t * 2);
     return this.mix(soft, c.heat, (t - 0.5) * 2);
   }
@@ -2443,12 +2453,12 @@ class Component extends DCLogic {
 
   theme(dark) {
     return dark ? {
-      bg: '#09090B', card: '#161619', raised: '#1E1E22', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#8A8A93', sep: '#27272A',
+      bg: '#09090B', card: '#161619', raised: '#1E1E22', well: '#232327', cardShadow: 'inset 0 0 0 1px rgba(255, 255, 255, 0.04)', menu: '#18181B', text: '#FAFAFA', sub: '#A1A1AA', tertiary: '#8A8A93', sep: '#27272A',
       fill: '#232327', btn2: '#232327', segBg: '#232327', segSel: '#3F3F46', bodyBase: '#26262B', muscleOff: '#3F3F46', barOff: '#3F3F46',
       bar: 'rgba(9, 9, 11, 0.82)', scrim: 'rgba(0, 0, 0, 0.6)', shadow: '0 24px 60px rgba(0, 0, 0, 0.6)', danger: '#F87171',
       inv: '#FAFAFA', onInv: '#09090B', line: 'rgba(255, 255, 255, 0.06)', input: '#232327'
     } : {
-      bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
+      bg: '#F4F4F5', card: '#FFFFFF', raised: '#F4F4F5', well: '#F4F4F5', cardShadow: '0 1px 2px rgba(9, 9, 11, 0.04), 0 10px 30px -18px rgba(9, 9, 11, 0.2)', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#C2C2C8', barOff: '#D4D4D8',
       bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
@@ -2724,7 +2734,7 @@ class Component extends DCLogic {
 
     return {
       th: th, c: c, tint: tint, primary: primary, onPrimary: onPrimary, primaryText: th.text,
-      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135),
+      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135), motion: fx ? 'on' : 'off',
       prefs: st.prefs, initial: (st.prefs.nombre || '?').trim().charAt(0).toUpperCase() || '?',
       greeting: greet, menuSub: hv.has ? 'Salud ' + hv.overall + ' · ' + hv.gLabel.toLowerCase() : 'Sin evaluación de salud',
 

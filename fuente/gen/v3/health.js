@@ -477,6 +477,12 @@
     const overall = has ? this.healthOverall(areas) : null;
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
+    /* barra segmentada (como la de biomarcadores de Superpower): cuántas áreas hay en cada nota */
+    const GR = ['A', 'B', 'C', 'D'];
+    const REP = { A: 92, B: 77, C: 60, D: 30 };
+    const segs = GR.map((x, i) => ({ g: x, n: areas.filter((a) => a.score != null && a.grade === x).length, i: i }))
+      .filter((x) => x.n > 0)
+      .map((x, k) => ({ n: x.n, flex: x.n, color: this.healthColor(REP[x.g], true), label: this.gradeLabel(x.g), delay: 280 + k * 90 }));
     const list = areas.map((x, i) => ({
       id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), gText: this.healthText(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
@@ -520,6 +526,7 @@
     const lastM = (st.meas || []).slice(-1)[0];
     const fc = this.latest('fc'), pas = this.latest('pas'), pad = this.latest('pad'), cin = this.latest('cintura');
     return {
+      segs: segs, hasSegs: segs.length > 0,
       has: has, none: !has, overall: overall == null ? '—' : overall, overallN: overall, grade: g, gColor: this.healthColor(overall, true), gLabel: this.gradeLabel(g),
       ringOff: (439.8 * (1 - (overall || 0) / 100)).toFixed(1), areas: list, focus: focus, hasFocus: focus.length > 0,
       evalAgo: has ? this.agoText(st.hp.at).toLowerCase() : '', evalOld: has && Date.now() - st.hp.at > 60 * 864e5,

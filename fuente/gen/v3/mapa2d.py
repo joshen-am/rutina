@@ -136,13 +136,13 @@ def dots(pitch):
 
 
 def body_map(prefix, pitch, width='100%', label='Cuerpo de frente y de espalda con la carga de cada músculo',
-             base='{{ th.muscleOff }}', caption='{{ th.tertiary }}', mono='{{ mono }}'):
+             base='{{ th.muscleOff }}', caption='{{ th.tertiary }}', mono='{{ mono }}', reveal=False):
     """Mapa con un <path> de puntos por región (su color enlazado a la plantilla) y los rótulos Frente y Espalda."""
     groups = dots(pitch)
     r = pitch * 0.62
     x0, y0, w, h = BOX
     parts = [f'<div role="img" aria-label="{label}" style="width: {width}; flex: none; display: flex; flex-direction: column; gap: 4px">'
-             f'<svg viewBox="{x0} {y0} {w} {h}" aria-hidden="true" style="display: block; width: 100%; height: auto">'
+             f'<svg viewBox="{x0} {y0} {w} {h}" aria-hidden="true"{' class="bm-reveal"' if reveal else ''} style="display: block; width: 100%; height: auto">'
              f'<g fill="none" stroke-linecap="round" stroke-width="{r:.2f}">']
     for key in ['base'] + REGIONS:
         pts = groups[key]

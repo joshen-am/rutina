@@ -197,7 +197,7 @@
 
     return {
       th: th, c: c, tint: tint, primary: primary, onPrimary: onPrimary, primaryText: th.text,
-      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135),
+      font: F.sans, mono: F.mono, orb: orb, halo: halo, haloEval: this.haloCss(null, 135), motion: fx ? 'on' : 'off',
       prefs: st.prefs, initial: (st.prefs.nombre || '?').trim().charAt(0).toUpperCase() || '?',
       greeting: greet, menuSub: hv.has ? 'Salud ' + hv.overall + ' · ' + hv.gLabel.toLowerCase() : 'Sin evaluación de salud',
 

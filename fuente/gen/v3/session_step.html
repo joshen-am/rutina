@@ -9,7 +9,7 @@
 <span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}"></span>
 <div role="img" aria-label="{{ ss.pgAlt }}" onClick="{{ ss.pgTap }}" style="position: relative; width: 100%; aspect-ratio: 354 / 300; cursor: {{ ss.pgCursor }}">
 <sc-for list="{{ ss.pages }}" as="pg" hint-placeholder-count="1">
-<div aria-hidden="true" style="position: absolute; inset: 0; display: flex; opacity: {{ pg.op }}; transition: {{ ss.pgFade }}">
+<div aria-hidden="true" class="pg" data-on="{{ pg.on }}" style="position: absolute; inset: 0; display: flex; overflow: hidden; opacity: {{ pg.op }}; transition: {{ ss.pgFade }}">
 <sc-for list="{{ pg.figs }}" as="fg" hint-placeholder-count="1"><img src="{{ fg.src }}" alt="" style="flex: 1 1 0; min-width: 0; height: 100%; object-fit: contain"></sc-for>
 </div>
 </sc-for>

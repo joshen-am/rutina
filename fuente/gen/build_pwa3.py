@@ -118,6 +118,33 @@ RUNTIME = r'''
     return out;
   }
 
+  // Cifras que cuentan desde 0 cuando aparecen (puntaje de salud y de cada área). Cada cifra cuenta
+  // una sola vez por apertura de la app (data-count-id) y otra vez solo si su valor cambia; el valor
+  // final siempre es el de data-count, aunque cambie a mitad de camino.
+  var counted = new WeakSet();
+  var lastCount = {};
+  function countUp(root) {
+    var host = root.querySelector('[data-motion]');
+    var off = (host && host.getAttribute('data-motion') !== 'on') || (window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches);
+    root.querySelectorAll('[data-count]').forEach(function (el) {
+      if (counted.has(el)) return;
+      counted.add(el);
+      var id = el.getAttribute('data-count-id') || '', val = el.getAttribute('data-count');
+      if (off || !/^\d+$/.test(val) || (id && lastCount[id] === val)) return;
+      if (id) lastCount[id] = val;
+      var t0 = performance.now() + 120, dur = 1000;
+      function step(now) {
+        var to = el.getAttribute('data-count');
+        if (!/^\d+$/.test(to)) return;
+        var k = Math.min(1, Math.max(0, (now - t0) / dur));
+        el.textContent = String(Math.round(+to * (1 - Math.pow(1 - k, 4))));
+        if (k < 1) requestAnimationFrame(step); else el.textContent = to;
+      }
+      el.textContent = '0';
+      requestAnimationFrame(step);
+    });
+  }
+
   function render() {
     pending = false;
     handlers = [];
@@ -130,6 +157,7 @@ RUNTIME = r'''
         return true;
       }
     });
+    countUp(appEl);
     if (vals.th) {
       document.documentElement.style.background = vals.th.bg;
       document.body.style.background = vals.th.bg;

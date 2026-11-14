@@ -10,9 +10,9 @@ B = 'appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: 
 MONO = 'font-family: {{ mono }};'
 EYE = 'font-size: 13px; line-height: 20px; color: {{ th.sub }}'
 NUM = 'font-variant-numeric: tabular-nums;'
-CARD = 'background: {{ th.card }}; border-radius: 22px'
+CARD = 'background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 22px'
 HALO_BG = 'background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}'
-HALO = ('<span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; '
+HALO = ('<span aria-hidden="true" class="halo" style="position: absolute; inset: 0; pointer-events: none; '
         'background: {{ halo }}; transition: background 0.6s"></span>')
 
 
@@ -63,13 +63,13 @@ def header(eye, title):
     return ('<header style="display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; padding: 0 4px 4px">\n'
             '<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">\n'
             f'{eyebrow(eye)}\n'
-            f'<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{title}</h1>\n'
+            f'<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{title}</h1>\n'
             f'</div>\n{AVATAR}\n</header>')
 
 
 def screen(cond, inner, bottom=120, gap=16):
     return (f'<sc-if value="{{{{ {cond} }}}}" hint-placeholder-val="{{{{ false }}}}">\n'
-            f'<div id="sc-{cond}" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px {bottom}px; display: flex; flex-direction: column; gap: {gap}px">\n'
+            f'<div id="sc-{cond}" class="scroll scr" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px {bottom}px; display: flex; flex-direction: column; gap: {gap}px">\n'
             f'{inner}\n</div>\n</sc-if>')
 
 
@@ -135,12 +135,22 @@ def health_hero(prefix, on_has, on_none):
 {HALO}
 <span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px">{eyebrow("Perfil de salud", "rgba(250, 250, 250, 0.62)")}<span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.62)">8 áreas</span></span>
 <span style="position: relative; display: flex; align-items: flex-end; gap: 12px">
-<span style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; {NUM}">{{{{ {prefix}.overall }}}}</span>
+<span data-count="{{{{ {prefix}.overall }}}}" data-count-id="perfil" style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; {NUM}">{{{{ {prefix}.overall }}}}</span>
 <span style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px">
 <span style="display: flex; align-items: center; gap: 8px">{grade_badge("{{ " + prefix + ".grade }}", "{{ " + prefix + ".gColor }}", 26, 12)}<span style="font-size: 16px; font-weight: 500">{{{{ {prefix}.gLabel }}}}</span></span>
 <span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.6)">de 100 · evaluación {{{{ {prefix}.evalAgo }}}}</span>
 </span>
 </span>
+<sc-if value="{{{{ {prefix}.hasSegs }}}}" hint-placeholder-val="{{{{ true }}}}">
+<span style="position: relative; display: flex; flex-direction: column; gap: 10px">
+<span aria-hidden="true" style="display: flex; gap: 3px; height: 4px">
+<sc-for list="{{{{ {prefix}.segs }}}}" as="sg" hint-placeholder-count="3"><span class="seg-in" style="flex: {{{{ sg.flex }}}} 1 0; border-radius: 2px; background: {{{{ sg.color }}}}; animation-delay: {{{{ sg.delay }}}}ms"></span></sc-for>
+</span>
+<span style="display: flex; flex-wrap: wrap; gap: 4px 16px">
+<sc-for list="{{{{ {prefix}.segs }}}}" as="sg" hint-placeholder-count="3"><span style="display: flex; align-items: center; gap: 8px"><span aria-hidden="true" style="width: 6px; height: 6px; border-radius: 50%; background: {{{{ sg.color }}}}; flex: none"></span><span style="font-size: 16px; {NUM}">{{{{ sg.n }}}}</span><span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.62)">{{{{ sg.label }}}}</span></span></sc-for>
+</span>
+</span>
+</sc-if>
 <sc-if value="{{{{ {prefix}.hasFocus }}}}" hint-placeholder-val="{{{{ true }}}}">
 <span style="position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
 <span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.6)">Enfócate en</span>
@@ -210,7 +220,7 @@ def ring(size, r, sw, off_hole, color, dash, track='{{ th.fill }}'):
     return (f'<svg width="{size}" height="{size}" viewBox="0 0 {size} {size}" aria-hidden="true">'
             f'<circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{track}" stroke-width="{sw}"></circle>'
             f'<circle cx="{c}" cy="{c}" r="{r}" fill="none" stroke="{color}" stroke-width="{sw}" stroke-linecap="round" stroke-dasharray="{dash}" '
-            f'stroke-dashoffset="{off_hole}" transform="rotate(-90 {c} {c})" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>')
+            f'stroke-dashoffset="{off_hole}" transform="rotate(-90 {c} {c})" class="ring-in" style="--full: {dash}; transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>')
 
 
 HABITS_HOME = f'''<button type="button" onClick="{{{{ goHabitos }}}}" style="{B} color: inherit; text-align: left; width: 100%; {CARD}; padding: 16px 20px; display: flex; align-items: center; gap: 16px">
@@ -232,7 +242,7 @@ FOOD_HOME = f'''<div style="{CARD}; padding: 16px 20px; display: flex; flex-dire
 <sc-for list="{{{{ fh.macros }}}}" as="mc" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
 <span style="font-size: 13px; color: {{{{ th.sub }}}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ mc.label }}}}</span>
-<div style="height: 4px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div style="height: 100%; width: {{{{ mc.pct }}}}%; background: {{{{ mc.color }}}}; border-radius: 2px"></div></div>
+<div style="height: 4px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div class="bar-in" style="height: 100%; width: {{{{ mc.pct }}}}%; background: {{{{ mc.color }}}}; border-radius: 2px"></div></div>
 <span style="{MONO} font-size: 13px; {NUM}">{{{{ mc.val }}}}<span style="color: {{{{ th.tertiary }}}}">/{{{{ mc.goal }}}}</span></span>
 </div>
 </sc-for>
@@ -327,7 +337,7 @@ def inicio():
     }
     body = (f'<header style="display: flex; flex-direction: column; gap: 24px; padding: 0 4px 4px">'
             f'<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span aria-label="keystone" style="display: flex; align-items: center; gap: 8px">{orb_tpl(24)}<span style="font-size: 22px; font-weight: 500; letter-spacing: -0.055em">keystone</span></span>{AVATAR}</div>'
-            f'<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{{{{ dateLabel }}}}</h1></header>')
+            f'<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ dateLabel }}}}</h1></header>')
     body += '\n' + BACKUP_NUDGE + '\n'
     body += '\n'.join(home_section(k, v) for k, v in secs.items())
     body += f'''
@@ -397,7 +407,7 @@ def habitos():
 </sc-if>
 </div>
 <sc-if value="{{{{ h.hasBar }}}}" hint-placeholder-val="{{{{ false }}}}">
-<div style="margin-left: 52px; height: 3px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{{{ h.pct }}}}%; background: {{{{ h.barColor }}}}; transition: width 0.3s"></div></div>
+<div style="margin-left: 52px; height: 3px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div class="bar-in" style="height: 100%; border-radius: 2px; width: {{{{ h.pct }}}}%; background: {{{{ h.barColor }}}}; transition: width 0.3s"></div></div>
 </sc-if>
 <span style="margin-left: 52px; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ h.cue }}}}</span>
 <sc-if value="{{{{ h.atRisk }}}}" hint-placeholder-val="{{{{ false }}}}">
@@ -483,7 +493,7 @@ def comida():
 <sc-for list="{{{{ fd.macros }}}}" as="mc" hint-placeholder-count="4">
 <div style="display: flex; flex-direction: column; gap: 8px">
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 16px">{{{{ mc.label }}}}</span><span style="{MONO} font-size: 13px; {NUM}">{{{{ mc.val }}}}<span style="color: {{{{ th.tertiary }}}}"> / {{{{ mc.goal }}}} {{{{ mc.unit }}}}</span></span></div>
-<div style="height: 5px; border-radius: 3px; background: {{{{ th.fill }}}}; overflow: hidden"><div style="height: 100%; border-radius: 3px; width: {{{{ mc.pct }}}}%; background: {{{{ mc.color }}}}; transition: width 0.5s cubic-bezier(.32,.72,0,1)"></div></div>
+<div style="height: 5px; border-radius: 3px; background: {{{{ th.fill }}}}; overflow: hidden"><div class="bar-in" style="height: 100%; border-radius: 3px; width: {{{{ mc.pct }}}}%; background: {{{{ mc.color }}}}; transition: width 0.5s cubic-bezier(.32,.72,0,1)"></div></div>
 </div>
 </sc-for>
 </div>
@@ -564,7 +574,7 @@ def comida():
 <input type="file" accept="image/*" aria-label="Tomar o elegir foto" onChange="{{{{ fd.onPhoto }}}}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer">
 </label>
 <div style="display: flex; align-items: center; gap: 12px; color: {{{{ th.tertiary }}}}"><span style="flex: 1; height: 0.5px; background: {{{{ th.sep }}}}"></span><span style="{MONO} font-size: 13px">O descríbelo</span><span style="flex: 1; height: 0.5px; background: {{{{ th.sep }}}}"></span></div>
-<textarea aria-label="Describe lo que comiste" placeholder="Ej: dos huevos revueltos, una marraqueta con palta y un café con leche" onChange="{{{{ fd.onText }}}}" style="appearance: none; border: 0; outline: none; resize: none; height: 96px; border-radius: 18px; padding: 16px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font: inherit; font-size: 16px; line-height: 24px">{{{{ fd.ftext }}}}</textarea>
+<textarea aria-label="Describe lo que comiste" placeholder="Ej: dos huevos revueltos, una marraqueta con palta y un café con leche" onChange="{{{{ fd.onText }}}}" style="appearance: none; border: 0; outline: none; resize: none; height: 96px; border-radius: 18px; padding: 16px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font: inherit; font-size: 16px; line-height: 24px">{{{{ fd.ftext }}}}</textarea>
 {pill("Analizar descripción", "fd.analyzeText", "secondary", "opacity: {{ fd.textOp }}")}
 <sc-if value="{{{{ fd.noAi }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; text-align: center; font-size: 13px; color: {{{{ c.heatText }}}}">Primero conecta la IA en Ajustes.</p></sc-if>''', 'fd.closeSheet', 'Registrar comida')
     # hoja: borrador
@@ -580,14 +590,14 @@ def comida():
 <sc-if value="{{{{ fd.dReady }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("Resultado")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.dTitle }}}}</h2></div>
-<sc-if value="{{{{ fd.dHasQ }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.card }}}}">Calidad {{{{ fd.dQ }}}}/10</span></sc-if>
+<sc-if value="{{{{ fd.dHasQ }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.well }}}}">Calidad {{{{ fd.dQ }}}}/10</span></sc-if>
 </div>
 <div style="display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: 8px">
 <div style="background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; opacity: 0.7">kcal</span><span style="font-size: 20px; letter-spacing: -0.04em; {NUM}">{{{{ fd.dTot.kcal }}}}</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Proteína</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.p }}}}</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Carbos</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.c }}}}</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Grasa</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.f }}}}</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Fibra</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.fib }}}}</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Proteína</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.p }}}}</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Carbos</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.c }}}}</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Grasa</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.f }}}}</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 8px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Fibra</span><span style="font-size: 16px; {NUM}">{{{{ fd.dTot.fib }}}}</span></div>
 </div>
 <section aria-label="Alimentos" style="{CARD}; padding: 0 0 0 16px">
 <sc-for list="{{{{ fd.dItems }}}}" as="it" hint-placeholder-count="3">
@@ -615,12 +625,12 @@ def comida():
 <sc-if value="{{{{ fd.fe.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ fd.fe.photo }}}}" alt="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
 <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("{{ fd.fe.meal }} · {{ fd.fe.time }}")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.fe.title }}}}</h2></div>
-<sc-if value="{{{{ fd.fe.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.card }}}}">Calidad {{{{ fd.fe.q }}}}/10</span></sc-if>
+<sc-if value="{{{{ fd.fe.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.well }}}}">Calidad {{{{ fd.fe.q }}}}/10</span></sc-if>
 </div>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <div style="background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; opacity: 0.7">kcal</span><span style="font-size: 20px; letter-spacing: -0.04em; {NUM}">{{{{ fd.fe.tot.kcal }}}}</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Proteína</span><span style="font-size: 20px; {NUM}">{{{{ fd.fe.tot.p }}}} g</span></div>
-<div style="background: {{{{ th.card }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Fibra</span><span style="font-size: 20px; {NUM}">{{{{ fd.fe.tot.fib }}}} g</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Proteína</span><span style="font-size: 20px; {NUM}">{{{{ fd.fe.tot.p }}}} g</span></div>
+<div style="background: {{{{ th.well }}}}; border-radius: 16px; padding: 12px 12px; display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">Fibra</span><span style="font-size: 20px; {NUM}">{{{{ fd.fe.tot.fib }}}} g</span></div>
 </div>
 <p style="margin: 0; padding: 0 4px; {MONO} font-size: 13px; color: {{{{ th.sub }}}}">Carbohidratos {{{{ fd.fe.tot.c }}}} g · Grasa {{{{ fd.fe.tot.f }}}} g · Azúcar {{{{ fd.fe.tot.sug }}}} g · Sodio {{{{ fd.fe.tot.na }}}} mg</p>
 <section aria-label="Alimentos" style="{CARD}; padding: 0 0 0 16px">
@@ -678,13 +688,13 @@ def area():
 <button type="button" class="hit" onClick="{{{{ closeArea }}}}" style="{B} height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 16px; display: flex; align-items: center; gap: 4px">{ico(BACK, 17, "currentColor", 2)}Salud</button>
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 12px">
-<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Área")}<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{{{{ hv.detail.name }}}}</h1></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Área")}<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ hv.detail.name }}}}</h1></div>
 <section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; align-items: center; gap: 20px">
 {HALO.replace('{{ halo }}', '{{ hv.detail.halo }}')}
 <div style="position: relative; width: 104px; height: 104px; flex: none">{ring(104, 44, 6, "{{ hv.detail.ringOff }}", "{{ hv.detail.gColor }}", 276.5, "rgba(255, 255, 255, 0.12)")}
 <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; {MONO} font-size: 28px; color: {{{{ hv.detail.gColor }}}}">{{{{ hv.detail.grade }}}}</div></div>
 <div style="position: relative; display: flex; flex-direction: column; gap: 4px">
-<span style="font-size: 44px; line-height: 44px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ hv.detail.score }}}}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> / 100</span></span>
+<span style="font-size: 44px; line-height: 44px; font-weight: 400; letter-spacing: -0.05em; {NUM}"><span data-count="{{{{ hv.detail.score }}}}" data-count-id="area-{{{{ hv.detail.name }}}}">{{{{ hv.detail.score }}}}</span><span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> / 100</span></span>
 <span style="font-size: 16px; font-weight: 500">{{{{ hv.detail.gLabel }}}}</span>
 <span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.6)">{{{{ hv.detail.source }}}}</span>
 </div>
@@ -744,7 +754,7 @@ def evaluation():
 {HALO.replace('{{ halo }}', '{{ haloEval }}')}
 <div style="position: relative; padding: 56px 16px 0; display: flex; align-items: center; gap: 12px">
 <button type="button" onClick="{{{{ ev.close }}}}" aria-label="Cerrar evaluación" style="{B} width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center">{ico(CLOSE, 16, "currentColor", 2)}</button>
-<div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: {{{{ ev.pct }}}}%; background: #FAFAFA; border-radius: 2px; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
+<div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: 100%; transform-origin: left center; transform: scaleX(calc({{{{ ev.pct }}}} / 100)); background: #FAFAFA; border-radius: 2px; transition: transform 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
 <span style="{MONO} font-size: 13px; color: {w}; {NUM}">{{{{ ev.step }}}}/{{{{ ev.total }}}}</span>
 </div>
 <div class="push scroll" style="position: relative; flex: 1; overflow-y: auto; padding: 40px 20px 20px; display: flex; flex-direction: column; gap: 12px">
@@ -871,7 +881,7 @@ def ajustes():
 </sc-if>
 <sc-if value="{{{{ rm.dirty }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ c.heatText }}}}">Cambiaste los horarios: copia el código otra vez y actualiza el secreto RUTINA_PUSH en GitHub.</p></sc-if>
 <sc-if value="{{{{ rm.hasMsg }}}}" hint-placeholder-val="{{{{ false }}}}"><p role="status" style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ c.constanciaText }}}}">{{{{ rm.msg }}}}</p></sc-if>
-<sc-if value="{{{{ rm.showCode }}}}" hint-placeholder-val="{{{{ false }}}}"><textarea readonly aria-label="Código para GitHub" style="height: 96px; border: 0; border-radius: 14px; padding: 12px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 13px; {MONO} -webkit-user-select: text; user-select: text">{{{{ rm.code }}}}</textarea></sc-if>'''
+<sc-if value="{{{{ rm.showCode }}}}" hint-placeholder-val="{{{{ false }}}}"><textarea readonly aria-label="Código para GitHub" style="height: 96px; border: 0; border-radius: 14px; padding: 12px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font-size: 13px; {MONO} -webkit-user-select: text; user-select: text">{{{{ rm.code }}}}</textarea></sc-if>'''
     apar = f'''<div style="padding: 12px 16px 12px 0">
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
 <sc-for list="{{{{ temaOpts }}}}" as="o" hint-placeholder-count="3">
@@ -932,7 +942,7 @@ SESION = f'''<sc-if value="{{{{ isSesion }}}}" hint-placeholder-val="{{{{ false 
 </div>
 <span aria-label="Tiempo de sesión" style="justify-self: end; padding-right: 8px; {MONO} font-size: 16px; {NUM}">{{{{ ss.elapsed }}}}</span>
 </div>
-<div aria-hidden="true" style="margin: 12px 16px 0; height: 3px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{{{ ss.pct }}}}%; background: {{{{ c.accent }}}}; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
+<div aria-hidden="true" style="margin: 12px 16px 0; height: 3px; border-radius: 2px; background: {{{{ th.fill }}}}; overflow: hidden"><div style="height: 100%; width: 100%; transform-origin: left center; transform: scaleX(calc({{{{ ss.pct }}}} / 100)); border-radius: 2px; background: {{{{ c.accent }}}}; transition: transform 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
 <div style="position: relative; flex: 1; min-height: 0">
 %%SESSION_STEPS%%
 </div>
@@ -1008,12 +1018,12 @@ VICTORY = f'''<sc-if value="{{{{ isVictory }}}}" hint-placeholder-val="{{{{ fals
 <section style="{CARD}; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 16px">Sesiones esta semana</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ v.week }}}}</span></section>
 {sec_title("Músculos trabajados")}
 <section style="{CARD}; padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px">
-{body_map("vb", 2.2)}
+{body_map("vb", 2.2, reveal=True)}
 <ul style="list-style: none; margin: 0 -20px 0 0; padding: 0">
 <sc-for list="{{{{ v.muscles }}}}" as="m" hint-placeholder-count="4">
 <li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 20px; border-top: 0.5px solid {{{{ th.sep }}}}">
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 12px"><span style="font-size: 16px">{{{{ m.name }}}} <span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ m.role }}}}</span></span><span style="{MONO} font-size: 13px; color: {{{{ c.heatText }}}}; {NUM}">{{{{ m.pct }}}}%</span></div>
-<div style="height: 4px; background: {{{{ th.fill }}}}; border-radius: 2px; overflow: hidden"><div style="height: 100%; border-radius: 2px; background: {{{{ c.heat }}}}; width: {{{{ m.w }}}}%"></div></div>
+<div style="height: 4px; background: {{{{ th.fill }}}}; border-radius: 2px; overflow: hidden"><div style="height: 100%; border-radius: 2px; background: {{{{ c.heat }}}}; width: {{{{ m.w }}}}%" class="bar-in"></div></div>
 <span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ m.ready }}}}</span>
 </li>
 </sc-for>
@@ -1056,8 +1066,8 @@ def build():
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@300..700&amp;family=Geist+Mono:wght@400..600&amp;display=swap">
 <style>
 body{margin:0}
-button{-webkit-tap-highlight-color:transparent;transition:opacity .12s, transform .12s}
-button:active{opacity:.7;transform:scale(.985)}
+button{-webkit-tap-highlight-color:transparent;transition:opacity .16s var(--ease-out), transform .16s var(--ease-out)}
+button:active{opacity:.88;transform:scale(.98)}
 input::placeholder,textarea::placeholder{color:#6B6B74}
 input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #71717A!important;outline-offset:2px}
 .hit{position:relative}
@@ -1066,16 +1076,46 @@ input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-vis
 @keyframes present{from{transform:translateY(100%)}to{transform:none}}
 @keyframes sheet{from{transform:translateY(105%)}to{transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-@keyframes menu{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:none}}
+@keyframes menu{from{opacity:0;transform:scale(.96)}to{opacity:1;transform:none}}
 @keyframes push{from{opacity:0;transform:translateX(28px)}to{opacity:1;transform:none}}
 .scroll>*{flex-shrink:0}
 .scroll{scrollbar-width:none}
 .scroll::-webkit-scrollbar{display:none}
 .push{animation:push .38s cubic-bezier(.32,.72,0,1) both}
-@media (prefers-reduced-motion: reduce){.push{animation:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+/* Movimiento (versión 26): todo entra una vez, al aparecer, y nada queda en bucle.
+   Todo lo que entra usa ease-out: arranca rápido y llega suave, también el barrido del escáner. */
+:root{--ease-out:cubic-bezier(0.23,1,0.32,1)}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+@keyframes bloom{from{opacity:0;transform:translateY(14%) scale(.94)}}
+@keyframes ringIn{from{stroke-dashoffset:var(--full)}}
+@keyframes grow{from{transform:scaleX(0)}}
+@keyframes scanIn{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
+@keyframes scanLine{from{transform:translateY(-100%);opacity:1}85%{opacity:1}to{transform:translateY(0);opacity:0}}
+@keyframes scanUp{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
+[data-motion="on"] .scr>*{animation:rise .42s var(--ease-out) both}
+[data-motion="on"] .scr>:nth-child(2){animation-delay:40ms}
+[data-motion="on"] .scr>:nth-child(3){animation-delay:80ms}
+[data-motion="on"] .scr>:nth-child(4){animation-delay:120ms}
+[data-motion="on"] .scr>:nth-child(5){animation-delay:160ms}
+[data-motion="on"] .scr>:nth-child(6){animation-delay:200ms}
+[data-motion="on"] .scr>:nth-child(n+7){animation-delay:240ms}
+[data-motion="on"] .halo{animation:bloom 1.1s var(--ease-out) both}
+[data-motion="on"] .ring-in{animation:ringIn 1s var(--ease-out) .12s both}
+[data-motion="on"] .bar-in{transform-origin:left center;animation:grow .8s var(--ease-out) .16s both}
+[data-motion="on"] .seg-in{transform-origin:left center;animation:grow .7s var(--ease-out) both}
+.pg::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(to bottom,rgba(250,250,250,0) 70%,rgba(250,250,250,.08) 99.2%,rgba(250,250,250,.9) 99.6%)}
+[data-motion="on"] .pg[data-on="1"]>img{animation:scanIn .6s var(--ease-out) both}
+[data-motion="on"] .pg[data-on="1"]::after{animation:scanLine .6s var(--ease-out) both}
+[data-motion="on"] .bm-reveal{animation:scanUp 1.1s var(--ease-out) .35s both}
+@media (prefers-reduced-motion: reduce){
+[data-motion="on"] .scr>*,[data-motion="on"] .halo{animation-name:fade}
+[data-motion="on"] .ring-in,[data-motion="on"] .bar-in,[data-motion="on"] .seg-in,[data-motion="on"] .pg[data-on="1"]>img,[data-motion="on"] .pg[data-on="1"]::after,[data-motion="on"] .bm-reveal{animation:none}
+.push,[style*="animation: sheet"],[style*="animation: present"],[style*="animation: push"]{animation-name:fade!important}
+button{transition:opacity .16s ease}button:active{transform:none}
+}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; line-height: 1.35; -webkit-font-smoothing: antialiased">
+<div data-motion="{{ motion }}" style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; line-height: 1.35; -webkit-font-smoothing: antialiased">
 '''
     parts = [inicio(), habitos(), comida(), salud(), ajustes(),
              f'<sc-if value="{{{{ showTabs }}}}" hint-placeholder-val="{{{{ true }}}}">\n{tabbar()}\n</sc-if>',
