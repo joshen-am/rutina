@@ -8,7 +8,7 @@
     const hv = this.healthVals(th, c, dark);
     hv.noop = () => {};
     const hcol = hv.has ? this.healthColor(hv.overallN, true) : null;
-    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = c.accent; }
+    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = this.healthText(hv.overallN, dark); }
     const halo = this.haloCss(hcol);
     /* el orbe de la marca toma el color de tu nota */
     const orb = (() => {

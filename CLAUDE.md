@@ -21,11 +21,11 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 24        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 23
+python3 build_pwa3.py 25        # sube el número en cada versión publicada (cambia la caché del service worker); la última fue 24
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
-Necesita Python 3 con `uharfbuzz` y `fontTools` (`pip install uharfbuzz fonttools`). Las pruebas usan Node con `playwright` y Chromium.
+`build3.py` y `build_pwa3.py` corren con Python 3 solo. `uharfbuzz` y `fontTools` los pide únicamente `wordmark.py` (la función `mark()` del logo, que el build no llama). Las pruebas usan Node con `playwright`; si Playwright no tiene su navegador descargado, pon en `CHROMIUM` la ruta de Google Chrome.
 
 ## Probar
 
@@ -41,7 +41,8 @@ Necesita Python 3 con `uharfbuzz` y `fontTools` (`pip install uharfbuzz fonttool
 ## Tarjeta paso a paso (pantalla del ejercicio)
 
 - Desde la versión 23 el ejercicio se explica con dibujos fijos en una tarjeta negra con halo, como la del inicio: una página por indicación, con su dibujo, «Paso 1 de 3», puntos y flechas (tocar el dibujo también avanza). La animación 3D de los ejercicios salió de la app.
-- `gen_figs.py` dibuja cada posición del PDF (`ejercicios.py`) en `poses/<clave>-<n>.svg`, con colores para fondo negro. Si la última posición trae la anterior en gris o una flecha, también deja `<clave>-<n>s.svg` con esa posición sola. Todas las posiciones de un ejercicio comparten encuadre.
+- `gen_figs.py` dibuja cada posición del PDF (`ejercicios.py`) en `poses/<clave>-<n>.svg`. Si la última posición trae la anterior en gris o una flecha, también deja `<clave>-<n>s.svg` con esa posición sola. Todas las posiciones de un ejercicio comparten encuadre.
+- **Estilo «Escaneo»** (desde la versión 24, elegido por Joshen para mantener la vibra premium, misteriosa y de laboratorio; las figuras sólidas con flechas naranjas la rompían): `fuente/escaneo.py` pinta las poses de `figs.py`. El cuerpo es una trama de puntos blancos que mide lo mismo en pantalla en todos los dibujos (`SCREEN_PITCH`, 4 px), el lado lejano va más tenue y la posición anterior al 30 %. Las mancuernas van en trazo fino, los objetos en filete casi transparente, las flechas punteadas y el suelo es una fila de puntos. No lleva color: el color lo pone el halo de la tarjeta. `figs.py` sigue definiendo las poses y el encuadre.
 - `gen_session.py` arma `pages` para cada paso de la sesión. Regla: con una indicación, la última posición; con varias, las primeras van con la posición 1 y la última con la final. Si todas usan el mismo dibujo queda una sola página con todas las indicaciones.
 - Cuando la regla no calza, se elige en `FIGS` de `gen_session.py`, por día y ejercicio: una lista de posiciones (`['2s', 1, 2]`) o pares `(posición, texto)` para repartir en varias páginas una indicación que junta varias posiciones (gato-vaca, Y-T-W). Un ejercicio con una indicación y varias posiciones sin fantasma tiene que estar en `FIGS`; si no, el generador avisa.
 - La nota «(el dibujo es visto desde arriba / de frente)» de una indicación se muestra como «Vista desde arriba» o «Vista de frente» en la esquina del dibujo.
@@ -68,3 +69,9 @@ Necesita Python 3 con `uharfbuzz` y `fontTools` (`pip install uharfbuzz fonttool
 - La app nativa (Capacitor/Xcode, carpeta `nativo/`, workflow `app-ios.yml`) quedó abandonada a pedido de Joshen. No la retomes si él no lo pide.
 - La marca es keystone, con la esfera cromada plateada (`img/orb-plata.png`). Los íconos salen de la esfera de `brand/icon-1024.png` y se publican con el sufijo `-orbe` (pestaña: `favicon-32`/`favicon-192`, esfera sola; inicio: esfera sobre blanco). Si cambian, cambia el sufijo para que el navegador no muestre los viejos. El color de la esfera cambia según la salud (`orb-s1`…`s5`).
 - `fuente/canvas/Main.dc.html` es la misma página que el lienzo de diseño en claude.ai.
+- UX/UI (versión 24, con /afinar y /unslop, sin tocar la vibra):
+  - El foco con teclado se ve en todo (`:focus-visible` con `!important`, porque los campos traen `outline: none` en línea).
+  - El texto pintado con el color de salud sobre fondos claros usa `healthText` (mismo tono, más oscuro, ≥ 4,5:1). Los anillos y puntos siguen con `healthColor`.
+  - Los botones de menos de 44 px llevan `class="hit"`, un área de toque invisible de 44.
+  - El interlineado base es 1,35. Nada va bajo 12 px, salvo las tarjetas de macros de cinco columnas (11).
+  - En la sesión, «Siguiente» es el único botón lleno. Las flechas de la tarjeta son translúcidas y el contador de arriba dice «Ejercicio n de N» (el «Paso n de N» es de los dibujos).

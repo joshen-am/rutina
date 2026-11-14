@@ -478,7 +478,7 @@
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
     const list = areas.map((x, i) => ({
-      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
+      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), gText: this.healthText(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
       open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); }
     }));

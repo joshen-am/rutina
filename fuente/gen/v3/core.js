@@ -142,6 +142,13 @@ class Component extends DCLogic {
     return this.hsl(h, sat, l);
   }
 
+  /* El mismo tono, más oscuro, para escribir sobre fondos claros (≥ 4,5:1); en oscuro es el mismo color */
+  healthText(s, dark) {
+    if (dark || s == null || !isFinite(s)) return this.healthColor(s, dark);
+    const x = Math.max(0, Math.min(100, s)) / 100;
+    return this.hsl(2 + 140 * Math.pow(x, 1.05), 72, 26);
+  }
+
   hsl(h, s, l) {
     s /= 100; l /= 100;
     const k = (n) => (n + h / 30) % 12;
@@ -293,7 +300,7 @@ class Component extends DCLogic {
     } : {
       bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
-      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#DC2626',
+      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
     };
   }

@@ -79,7 +79,7 @@ def sec_title(title, right=''):
 
 
 def switch(on, track, knob, fn, label_attr):
-    return (f'<button type="button" role="switch" aria-checked="{{{{ {on} }}}}" {label_attr} onClick="{{{{ {fn} }}}}" style="{B} padding: 2px; width: 51px; height: 31px; flex: none; '
+    return (f'<button type="button" class="hit hit-sw" role="switch" aria-checked="{{{{ {on} }}}}" {label_attr} onClick="{{{{ {fn} }}}}" style="{B} padding: 2px; width: 51px; height: 31px; flex: none; '
             f'border-radius: 16px; background: {{{{ {track} }}}}; display: flex; align-items: center; transition: background 0.25s">'
             f'<span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{{{ {knob} }}}}px); '
             'transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>')
@@ -91,8 +91,8 @@ def stepper(minus, plus, value, aria_m, aria_p):
             f'{round_btn(minus, MINUS, aria_m, 36)}{round_btn(plus, PLUS, aria_p, 36)}</div>')
 
 
-def grade_badge(letter, color, size=30, fs=13):
-    return (f'<span style="width: {size}px; height: {size}px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {color}; color: {color}; '
+def grade_badge(letter, color, size=30, fs=13, text=None):
+    return (f'<span style="width: {size}px; height: {size}px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {color}; color: {text or color}; '
             f'display: flex; align-items: center; justify-content: center; {MONO} font-size: {fs}px; font-weight: 500">{letter}</span>')
 
 
@@ -117,7 +117,7 @@ def home_section(key, inner):
 <div style="display: flex; align-items: center; gap: 8px">
 {round_btn(f"ho.{key}.up", "M6 15l6-6 6 6", "Subir", 40).replace('style="', 'style="opacity: {{ ho.' + key + '.upOp }}; ', 1)}
 {round_btn(f"ho.{key}.down", "M6 9l6 6 6-6", "Bajar", 40).replace('style="', 'style="opacity: {{ ho.' + key + '.downOp }}; ', 1)}
-<button type="button" onClick="{{{{ ho.{key}.toggle }}}}" aria-pressed="{{{{ ho.{key}.hidden }}}}" style="{B} height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500">{{{{ ho.{key}.toggleLabel }}}}</button>
+<button type="button" class="hit" onClick="{{{{ ho.{key}.toggle }}}}" aria-pressed="{{{{ ho.{key}.hidden }}}}" style="{B} height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500">{{{{ ho.{key}.toggleLabel }}}}</button>
 </div>
 </div>
 </sc-if>
@@ -189,17 +189,17 @@ HIST = f'''<section aria-labelledby="hist" style="{CARD}; padding: 20px; display
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ hist.summary }}}}</span>
 </div>
 <div style="display: flex; gap: 8px">
-<div aria-hidden="true" style="display: grid; grid-template-rows: 16px repeat(7, 16px); row-gap: 4px; {MONO} font-size: 11px; line-height: 16px; color: {{{{ th.tertiary }}}}">
+<div aria-hidden="true" style="display: grid; grid-template-rows: 16px repeat(7, 16px); row-gap: 4px; {MONO} font-size: 12px; line-height: 16px; color: {{{{ th.tertiary }}}}">
 <span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
 </div>
 <div role="img" aria-label="{{{{ hist.aria }}}}" style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat({{{{ hist.weeks }}}}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, 16px); grid-auto-flow: column; gap: 4px">
 <sc-for list="{{{{ hist.items }}}}" as="hc" hint-placeholder-count="136">
-<sc-if value="{{{{ hc.isLabel }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 11px; line-height: 16px; color: {{{{ th.tertiary }}}}; white-space: nowrap; overflow: visible">{{{{ hc.text }}}}</span></sc-if>
+<sc-if value="{{{{ hc.isLabel }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 12px; line-height: 16px; color: {{{{ th.tertiary }}}}; white-space: nowrap; overflow: visible">{{{{ hc.text }}}}</span></sc-if>
 <sc-if value="{{{{ hc.isCell }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="border-radius: 4px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></span></sc-if>
 </sc-for>
 </div>
 </div>
-<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; line-height: 16px; color: {{{{ th.sub }}}}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: {{{{ th.sub }}}}">
 <span>Hábitos y entrenos de cada día</span>
 <span style="display: flex; align-items: center; gap: 4px">Nada
 <sc-for list="{{{{ hist.scale }}}}" as="hs" hint-placeholder-count="5"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{{{ hs.bg }}}}"></span></sc-for>
@@ -335,7 +335,7 @@ def inicio():
     body += '\n'.join(home_section(k, v) for k, v in secs.items())
     body += f'''
 <div style="order: 100; display: flex; justify-content: center; padding-top: 4px">
-<button type="button" onClick="{{{{ toggleEdit }}}}" style="{B} height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px; display: flex; align-items: center; gap: 8px">{ico("M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3", 15, "currentColor", 1.8)}{{{{ editLabel }}}}</button>
+<button type="button" class="hit" onClick="{{{{ toggleEdit }}}}" style="{B} height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px; display: flex; align-items: center; gap: 8px">{ico("M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3", 15, "currentColor", 1.8)}{{{{ editLabel }}}}</button>
 </div>'''
     out = screen('showInicio', body, 210)
     out += f'''
@@ -351,8 +351,8 @@ def inicio():
 <sc-if value="{{{{ canFinish }}}}" hint-placeholder-val="{{{{ true }}}}">
 {pill(ico("M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z", 13, "none", 0, "currentColor") + "{{ startLabel }}", "startSession")}
 <div style="display: flex; justify-content: center; gap: 4px">
-<button type="button" onClick="{{{{ openConfirm }}}}" style="{B} height: 40px; padding: 0 12px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px">Ya la hice, solo registrarla</button>
-<sc-if value="{{{{ hasSess }}}}" hint-placeholder-val="{{{{ false }}}}"><button type="button" onClick="{{{{ discardSession }}}}" style="{B} height: 40px; padding: 0 12px; background: transparent; color: {{{{ th.danger }}}}; font-size: 16px">Descartar</button></sc-if>
+<button type="button" class="hit" onClick="{{{{ openConfirm }}}}" style="{B} height: 40px; padding: 0 12px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px">Ya la hice, solo registrarla</button>
+<sc-if value="{{{{ hasSess }}}}" hint-placeholder-val="{{{{ false }}}}"><button type="button" class="hit" onClick="{{{{ discardSession }}}}" style="{B} height: 40px; padding: 0 12px; background: transparent; color: {{{{ th.danger }}}}; font-size: 16px">Descartar</button></sc-if>
 </div>
 </sc-if>
 <sc-if value="{{{{ isDone }}}}" hint-placeholder-val="{{{{ false }}}}">{pill("Ver resumen", "showSummary", "secondary")}<span style="height: 40px"></span></sc-if>
@@ -406,7 +406,7 @@ def habitos():
 <sc-if value="{{{{ h.atRisk }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="margin-left: 52px; display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 14px; background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}">
 <span style="flex: 1; font-size: 13px; line-height: 20px"><b style="font-weight: 500">Nunca falles dos veces.</b> Ayer no se cumplió: hoy basta con la versión mínima, {{{{ h.mini }}}}.</span>
-<button type="button" onClick="{{{{ h.doMini }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; flex: none; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 13px; font-weight: 500">La hice</button>
+<button type="button" class="hit" onClick="{{{{ h.doMini }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; flex: none; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 13px; font-weight: 500">La hice</button>
 </div>
 </sc-if>
 </div>
@@ -421,7 +421,7 @@ def habitos():
 <div style="padding: 56px 8px 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; align-items: center">
 <span></span>
 <span style="text-align: center; font-size: 16px; font-weight: 500">Tus hábitos</span>
-<button type="button" onClick="{{{{ closeHabEditor }}}}" style="{B} justify-self: end; height: 40px; padding: 0 16px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 16px; font-weight: 500">Listo</button>
+<button type="button" class="hit" onClick="{{{{ closeHabEditor }}}}" style="{B} justify-self: end; height: 40px; padding: 0 16px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 16px; font-weight: 500">Listo</button>
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 12px">
 <p style="margin: 0; padding: 0 4px; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">Empieza con pocos. Escribe la señal como «Después de [algo que ya haces], voy a [hábito]» y una versión mínima para los días sin ganas.</p>
@@ -476,7 +476,7 @@ def comida():
 <section aria-label="Energía del día" style="{CARD}; padding: 20px 20px; display: flex; flex-direction: column; gap: 20px">
 <div style="display: flex; align-items: center; gap: 20px">
 <div style="position: relative; width: 128px; height: 128px; flex: none">{ring(128, 56, 9, "{{ fd.ringOff }}", "{{ fd.ringColor }}", 351.9)}
-<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.kcal }}}}</span><span style="{MONO} font-size: 11px; color: {{{{ th.sub }}}}">kcal</span></div></div>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.kcal }}}}</span><span style="{MONO} font-size: 12px; color: {{{{ th.sub }}}}">kcal</span></div></div>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("{{ fd.leftLabel }}")}<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.left }}}}</span></div>
 <div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("Meta diaria")}<span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.goal }}}} kcal</span></div>
@@ -507,7 +507,7 @@ def comida():
 <sc-if value="{{{{ en.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ en.photo }}}}" alt="" style="width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex: none"></sc-if>
 <sc-if value="{{{{ en.noPhoto }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="width: 52px; height: 52px; border-radius: 14px; flex: none; background: {{{{ th.fill }}}}; display: flex; align-items: center; justify-content: center; color: {{{{ th.tertiary }}}}">{ico("M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4", 20)}</span></sc-if>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ en.title }}}}</span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ en.sub }}}}</span></span>
-<sc-if value="{{{{ en.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 13px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{{{ en.qColor }}}}; color: {{{{ en.qColor }}}}; flex: none">{{{{ en.q }}}}/10</span></sc-if>
+<sc-if value="{{{{ en.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 13px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{{{ en.qColor }}}}; color: {{{{ en.qText }}}}; flex: none">{{{{ en.q }}}}/10</span></sc-if>
 </button>
 </sc-for>
 </section>
@@ -525,7 +525,7 @@ def comida():
 <sc-for list="{{{{ fd.week.bars }}}}" as="wb" hint-placeholder-count="7"><div style="height: {{{{ wb.h }}}}px; min-height: 3px; border-radius: 6px; background: {{{{ wb.bg }}}}"></div></sc-for>
 </div>
 <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin-top: -8px">
-<sc-for list="{{{{ fd.week.bars }}}}" as="wb" hint-placeholder-count="7"><span style="{MONO} font-size: 11px; text-align: center; color: {{{{ wb.lc }}}}">{{{{ wb.label }}}}</span></sc-for>
+<sc-for list="{{{{ fd.week.bars }}}}" as="wb" hint-placeholder-count="7"><span style="{MONO} font-size: 12px; text-align: center; color: {{{{ wb.lc }}}}">{{{{ wb.label }}}}</span></sc-for>
 </div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Energía promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgK }}}} kcal</span></div>
@@ -559,7 +559,7 @@ def comida():
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Registrar")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.04em">¿Qué comiste?</h2></div>
 <div role="group" aria-label="Comida" style="display: flex; flex-wrap: wrap; gap: 8px">
 <sc-for list="{{{{ fd.mealOpts }}}}" as="mo" hint-placeholder-count="5">
-<button type="button" onClick="{{{{ mo.pick }}}}" aria-pressed="{{{{ mo.selected }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: {{{{ mo.bg }}}}; color: {{{{ mo.fg }}}}; font-size: 16px; font-weight: 500">{{{{ mo.label }}}}</button>
+<button type="button" class="hit" onClick="{{{{ mo.pick }}}}" aria-pressed="{{{{ mo.selected }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: {{{{ mo.bg }}}}; color: {{{{ mo.fg }}}}; font-size: 16px; font-weight: 500">{{{{ mo.label }}}}</button>
 </sc-for>
 </div>
 <label style="position: relative; height: 56px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 16px; font-weight: 500; cursor: pointer">
@@ -648,7 +648,7 @@ def salud():
 <section aria-label="Áreas" style="{CARD}; padding: 0 0 0 16px">
 <sc-for list="{{{{ hv.areas }}}}" as="ar" hint-placeholder-count="8">
 <button type="button" onClick="{{{{ ar.open }}}}" style="{B} color: inherit; text-align: left; width: 100%; padding: 16px 16px 16px 0; background: transparent; display: flex; align-items: center; gap: 12px; box-shadow: {{{{ ar.line }}}}">
-{grade_badge("{{ ar.grade }}", "{{ ar.gColor }}", 34, 14)}
+{grade_badge("{{ ar.grade }}", "{{ ar.gColor }}", 34, 14, "{{ ar.gText }}")}
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 500">{{{{ ar.name }}}}</span><span style="font-size: 13px; color: {{{{ th.sub }}}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ ar.status }}}}</span></span>
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ ar.score }}}}</span>
 {CHEV}
@@ -676,9 +676,9 @@ def salud():
 
 def area():
     return f'''<sc-if value="{{{{ isArea }}}}" hint-placeholder-val="{{{{ false }}}}">
-<div style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div role="dialog" aria-modal="true" aria-label="{{{{ hv.detail.name }}}}" style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 8px; display: flex; align-items: center">
-<button type="button" onClick="{{{{ closeArea }}}}" style="{B} height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 16px; display: flex; align-items: center; gap: 4px">{ico(BACK, 17, "currentColor", 2)}Salud</button>
+<button type="button" class="hit" onClick="{{{{ closeArea }}}}" style="{B} height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 16px; display: flex; align-items: center; gap: 4px">{ico(BACK, 17, "currentColor", 2)}Salud</button>
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Área")}<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{{{{ hv.detail.name }}}}</h1></div>
@@ -696,7 +696,7 @@ def area():
 <section aria-label="Tus datos" style="{CARD}; padding: 0 0 0 20px">
 <sc-for list="{{{{ hv.detail.metrics }}}}" as="me" hint-placeholder-count="3">
 <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 16px 0; box-shadow: {{{{ me.line }}}}">
-<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px">{{{{ me.label }}}}</span><sc-if value="{{{{ me.hasIdeal }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="{MONO} font-size: 13px; color: {{{{ th.tertiary }}}}">ÓPTIMO: {{{{ me.ideal }}}}</span></sc-if></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px">{{{{ me.label }}}}</span><sc-if value="{{{{ me.hasIdeal }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="{MONO} font-size: 13px; color: {{{{ th.tertiary }}}}">Óptimo: {{{{ me.ideal }}}}</span></sc-if></span>
 <span style="{MONO} font-size: 16px; text-align: right; {NUM}">{{{{ me.value }}}}</span>
 <span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: {{{{ me.dot }}}}"></span>
 </div>
@@ -710,7 +710,7 @@ def area():
 <div style="display: flex; flex-direction: column; gap: 8px">
 <span style="display: flex; justify-content: space-between; font-size: 16px"><span>{{{{ mo.label }}}}</span><span style="{MONO} font-size: 13px; color: {{{{ th.tertiary }}}}">{{{{ mo.lo }}}} → {{{{ mo.hi }}}}</span></span>
 <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
-<sc-for list="{{{{ mo.opts }}}}" as="mv" hint-placeholder-count="5"><button type="button" onClick="{{{{ mv.pick }}}}" aria-pressed="{{{{ mv.sel }}}}" style="{B} height: 40px; border-radius: 12px; background: {{{{ mv.bg }}}}; color: {{{{ mv.fg }}}}; {MONO} font-size: 16px">{{{{ mv.v }}}}</button></sc-for>
+<sc-for list="{{{{ mo.opts }}}}" as="mv" hint-placeholder-count="5"><button type="button" class="hit" onClick="{{{{ mv.pick }}}}" aria-pressed="{{{{ mv.sel }}}}" style="{B} height: 40px; border-radius: 12px; background: {{{{ mv.bg }}}}; color: {{{{ mv.fg }}}}; {MONO} font-size: 16px">{{{{ mv.v }}}}</button></sc-for>
 </div>
 </div>
 </sc-for>
@@ -746,7 +746,7 @@ def evaluation():
 <div style="position: absolute; inset: 0; {HALO_BG}; color: #FAFAFA; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 25; overflow: hidden">
 {HALO.replace('{{ halo }}', '{{ haloEval }}')}
 <div style="position: relative; padding: 56px 16px 0; display: flex; align-items: center; gap: 12px">
-<button type="button" onClick="{{{{ ev.close }}}}" aria-label="Cerrar evaluación" style="{B} width: 40px; height: 40px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center">{ico(CLOSE, 16, "currentColor", 2)}</button>
+<button type="button" onClick="{{{{ ev.close }}}}" aria-label="Cerrar evaluación" style="{B} width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center">{ico(CLOSE, 16, "currentColor", 2)}</button>
 <div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: {{{{ ev.pct }}}}%; background: #FAFAFA; border-radius: 2px; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
 <span style="{MONO} font-size: 13px; color: {w}; {NUM}">{{{{ ev.step }}}}/{{{{ ev.total }}}}</span>
 </div>
@@ -777,8 +777,8 @@ def evaluation():
 <button type="button" onClick="{{{{ ev.plus }}}}" aria-label="Más" style="{B} width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center">{ico(PLUS, 20, "currentColor", 2)}</button>
 </div>
 <div style="display: flex; justify-content: center; gap: 8px">
-<button type="button" onClick="{{{{ ev.minus5 }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; {MONO} font-size: 13px">−5</button>
-<button type="button" onClick="{{{{ ev.plus5 }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; {MONO} font-size: 13px">+5</button>
+<button type="button" class="hit" onClick="{{{{ ev.minus5 }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; {MONO} font-size: 13px">−5</button>
+<button type="button" class="hit" onClick="{{{{ ev.plus5 }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; {MONO} font-size: 13px">+5</button>
 </div>
 </sc-if>
 </div>
@@ -837,7 +837,7 @@ def ajustes():
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-size: 16px">Estado</span><span style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: {{{{ ai.stColor }}}}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{{{ ai.stColor }}}}"></span>{{{{ ai.status }}}}</span></div>
 <div role="group" aria-label="Proveedor" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
 <sc-for list="{{{{ ai.provs }}}}" as="pv" hint-placeholder-count="2">
-<button type="button" onClick="{{{{ pv.pick }}}}" aria-pressed="{{{{ pv.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ pv.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ pv.shadow }}}}; font-size: 13px; font-weight: {{{{ pv.weight }}}}">{{{{ pv.label }}}}</button>
+<button type="button" class="hit" onClick="{{{{ pv.pick }}}}" aria-pressed="{{{{ pv.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ pv.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ pv.shadow }}}}; font-size: 13px; font-weight: {{{{ pv.weight }}}}">{{{{ pv.label }}}}</button>
 </sc-for>
 </div>
 <label for="aikey" style="{EYE}">Clave de API</label>
@@ -861,7 +861,7 @@ def ajustes():
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{{{ th.sep }}}}"><span style="font-size: 16px; color: {{{{ th.sub }}}}">{{{{ tm.label }}}}</span>{stepper("tm.minus", "tm.plus", "{{ tm.value }}", "Quince minutos antes", "Quince minutos después")}</div>
 </sc-for>
 <sc-if value="{{{{ ri.hasCycle }}}}" hint-placeholder-val="{{{{ false }}}}">
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{{{ th.sep }}}}"><span style="font-size: 16px; color: {{{{ th.sub }}}}">Frecuencia</span><button type="button" onClick="{{{{ ri.cycle.pick }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; {MONO} font-size: 13px">{{{{ ri.cycle.label }}}}</button></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{{{ th.sep }}}}"><span style="font-size: 16px; color: {{{{ th.sub }}}}">Frecuencia</span><button type="button" class="hit" onClick="{{{{ ri.cycle.pick }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; {MONO} font-size: 13px">{{{{ ri.cycle.label }}}}</button></div>
 </sc-if>
 </div>
 </sc-for>'''
@@ -878,7 +878,7 @@ def ajustes():
     apar = f'''<div style="padding: 12px 16px 12px 0">
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
 <sc-for list="{{{{ temaOpts }}}}" as="o" hint-placeholder-count="3">
-<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ o.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ o.shadow }}}}; font-size: 13px; font-weight: {{{{ o.weight }}}}">{{{{ o.label }}}}</button>
+<button type="button" class="hit" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ o.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ o.shadow }}}}; font-size: 13px; font-weight: {{{{ o.weight }}}}">{{{{ o.label }}}}</button>
 </sc-for>
 </div>
 </div>
@@ -914,7 +914,7 @@ MENU = f'''<sc-if value="{{{{ menuOpen }}}}" hint-placeholder-val="{{{{ false }}
 </div>
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
 <sc-for list="{{{{ temaOpts }}}}" as="o" hint-placeholder-count="3">
-<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ o.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ o.shadow }}}}; font-size: 13px; font-weight: {{{{ o.weight }}}}">{{{{ o.label }}}}</button>
+<button type="button" class="hit" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 34px; border-radius: 999px; background: {{{{ o.bg }}}}; color: {{{{ th.text }}}}; box-shadow: {{{{ o.shadow }}}}; font-size: 13px; font-weight: {{{{ o.weight }}}}">{{{{ o.label }}}}</button>
 </sc-for>
 </div>
 <div style="display: flex; flex-direction: column; margin: 0 -8px -8px; border-top: 0.5px solid {{{{ th.sep }}}}; padding-top: 8px">
@@ -928,10 +928,10 @@ MENU = f'''<sc-if value="{{{{ menuOpen }}}}" hint-placeholder-val="{{{{ false }}
 SESION = f'''<sc-if value="{{{{ isSesion }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 0; display: grid; grid-template-columns: 96px minmax(0, 1fr) 96px; align-items: center">
-<button type="button" onClick="{{{{ sesClose }}}}" style="{B} justify-self: start; height: 38px; padding: 0 16px 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 16px">{ico("M5 9l7 7 7-7", 16, "currentColor", 2)}Salir</button>
+<button type="button" class="hit" onClick="{{{{ sesClose }}}}" style="{B} justify-self: start; height: 38px; padding: 0 16px 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; font-size: 16px">{ico("M5 9l7 7 7-7", 16, "currentColor", 2)}Salir</button>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center">
 <span style="max-width: 100%; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ ss.title }}}}</span>
-<span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">PASO {{{{ ss.num }}}}/{{{{ ss.total }}}}</span>
+<span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">Ejercicio {{{{ ss.num }}}} de {{{{ ss.total }}}}</span>
 </div>
 <span aria-label="Tiempo de sesión" style="justify-self: end; padding-right: 8px; {MONO} font-size: 16px; {NUM}">{{{{ ss.elapsed }}}}</span>
 </div>
@@ -961,7 +961,7 @@ def quiz_block(cond):
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ q.opts }}}}" as="o" hint-placeholder-count="6">
 <button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{{{ o.bg }}}}; color: {{{{ o.fg }}}}; transition: background 0.15s">
-<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ o.label }}}}</span><span style="{MONO} font-size: 11px; color: {{{{ o.subFg }}}}">min</span></button>
+<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ o.label }}}}</span><span style="{MONO} font-size: 12px; color: {{{{ o.subFg }}}}">min</span></button>
 </sc-for>
 </div>
 </sc-if>
@@ -980,9 +980,9 @@ def quiz_block(cond):
 TEST = f'''<sc-if value="{{{{ isTest }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 0; display: flex; justify-content: space-between; align-items: center">
-<button type="button" onClick="{{{{ quizBack }}}}" aria-label="Atrás" style="{B} width: 40px; height: 40px; border-radius: 50%; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; display: flex; align-items: center; justify-content: center">{ico(BACK, 17, "currentColor", 2)}</button>
+<button type="button" onClick="{{{{ quizBack }}}}" aria-label="Atrás" style="{B} width: 44px; height: 44px; border-radius: 50%; background: {{{{ th.card }}}}; color: {{{{ th.text }}}}; display: flex; align-items: center; justify-content: center">{ico(BACK, 17, "currentColor", 2)}</button>
 <div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 8px" aria-hidden="true"><sc-for list="{{{{ q.bars }}}}" as="pb" hint-placeholder-count="3"><div style="height: 3px; border-radius: 2px; background: {{{{ pb.bg }}}}; transition: background 0.3s"></div></sc-for></div>
-<button type="button" onClick="{{{{ quizSkip }}}}" style="{B} height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px">Omitir</button>
+<button type="button" class="hit" onClick="{{{{ quizSkip }}}}" style="{B} height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{{{ th.sub }}}}; font-size: 16px">Omitir</button>
 </div>
 {quiz_block("q.s0")}
 {quiz_block("q.s1")}
@@ -1000,19 +1000,19 @@ VICTORY = f'''<sc-if value="{{{{ isVictory }}}}" hint-placeholder-val="{{{{ fals
 <section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: 250px">
 {HALO}
 <span style="position: relative">{eyebrow("Sesión completada · {{ v.dateLine }}", "rgba(250, 250, 250, 0.62)")}</span>
-<span style="position: relative; display: flex; flex-direction: column; gap: 8px"><span style="font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ v.name }}}}</span><span style="font-size: 16px; color: rgba(250, 250, 250, 0.7)">{{{{ v.title }}}}</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px"><h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ v.name }}}}</h1><span style="font-size: 16px; color: rgba(250, 250, 250, 0.7)">{{{{ v.title }}}}</span></span>
 <span style="position: relative; margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: rgba(250, 250, 250, 0.6)">Duración</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; {NUM}">{{{{ v.minutes }}}}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> min</span></span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: rgba(250, 250, 250, 0.6)">Energía</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; {NUM}">{{{{ v.kcalNow }}}}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> kcal</span></span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: rgba(250, 250, 250, 0.6)">Intensidad</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{{{ v.intensity }}}}</span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 11px; color: rgba(250, 250, 250, 0.6)">Series</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; {NUM}">{{{{ v.sets }}}}</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">Duración</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; {NUM}">{{{{ v.minutes }}}}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> min</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">Energía</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; {NUM}">{{{{ v.kcalNow }}}}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> kcal</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">Intensidad</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{{{ v.intensity }}}}</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">Series</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; {NUM}">{{{{ v.sets }}}}</span></span>
 </span>
 </section>
 <section style="{CARD}; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 16px">Sesiones esta semana</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ v.week }}}}</span></section>
 {sec_title("Músculos trabajados")}
 <section style="{CARD}; padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px">
 <div id="b3-sum" class="body3d" role="img" aria-label="Cuerpo con los músculos trabajados" data-loads="{{{{ b3.sum }}}}" data-dark="{{{{ b3.dark }}}}" data-key="sum" style="width: 100%; height: 320px; background: url({{{{ b3.fallback }}}}) center / contain no-repeat"></div>
-<p style="margin: -4px 0 0; text-align: center; {MONO} font-size: 11px; color: {{{{ th.tertiary }}}}">Desliza para girar</p>
+<p style="margin: -4px 0 0; text-align: center; {MONO} font-size: 12px; color: {{{{ th.tertiary }}}}">Desliza para girar</p>
 <ul style="list-style: none; margin: 0 -20px 0 0; padding: 0">
 <sc-for list="{{{{ v.muscles }}}}" as="m" hint-placeholder-count="4">
 <li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 20px; border-top: 0.5px solid {{{{ th.sep }}}}">
@@ -1040,7 +1040,7 @@ TAB_ICONS = {
 def tabbar():
     out = ['<nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 83px; box-sizing: border-box; padding: 8px 8px 0; background: {{ th.bar }}; backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); box-shadow: inset 0 0.5px 0 {{ th.sep }}; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); z-index: 10">']
     for k, (label, d) in TAB_ICONS.items():
-        out.append(f'<button type="button" onClick="{{{{ tabGo.{k} }}}}" aria-current="{{{{ tabCur.{k} }}}}" style="{B} padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{{{ tabC.{k} }}}}; font-size: 11px; font-weight: 500; letter-spacing: 0">'
+        out.append(f'<button type="button" onClick="{{{{ tabGo.{k} }}}}" aria-current="{{{{ tabCur.{k} }}}}" style="{B} padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{{{ tabC.{k} }}}}; font-size: 12px; font-weight: 500; letter-spacing: 0">'
                    f'<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{{{ tabW.{k} }}}}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{d}"></path></svg><span>{label}</span></button>')
     out.append('</nav>')
     return '\n'.join(out)
@@ -1063,7 +1063,10 @@ body{margin:0}
 button{-webkit-tap-highlight-color:transparent;transition:opacity .12s, transform .12s}
 button:active{opacity:.7;transform:scale(.985)}
 input::placeholder,textarea::placeholder{color:#6B6B74}
-input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #71717A;outline-offset:2px}
+input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #71717A!important;outline-offset:2px}
+.hit{position:relative}
+.hit::after{content:"";position:absolute;inset:-4px 0}
+.hit-sw::after{inset:-7px -4px}
 @keyframes present{from{transform:translateY(100%)}to{transform:none}}
 @keyframes sheet{from{transform:translateY(105%)}to{transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -1076,7 +1079,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 @media (prefers-reduced-motion: reduce){.push{animation:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; -webkit-font-smoothing: antialiased">
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; line-height: 1.35; -webkit-font-smoothing: antialiased">
 '''
     parts = [inicio(), habitos(), comida(), salud(), ajustes(),
              f'<sc-if value="{{{{ showTabs }}}}" hint-placeholder-val="{{{{ true }}}}">\n{tabbar()}\n</sc-if>',

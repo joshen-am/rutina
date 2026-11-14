@@ -383,7 +383,7 @@
           return {
             title: e.t || m.name, sub: r0(et.kcal) + ' kcal · ' + r0(et.p) + ' g proteína',
             hasPhoto: !!ph, photo: ph || '', noPhoto: !ph,
-            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark),
+            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark), qText: this.healthText(e.q * 10, dark),
             open: () => { this.sfx('open'); this.setState({ fentry: { key: key, id: e.id }, fdelArmed: null }); }
           };
         })

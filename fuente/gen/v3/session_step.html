@@ -25,8 +25,8 @@
 <sc-for list="{{ ss.pgDots }}" as="dt" hint-placeholder-count="3"><span style="width: {{ dt.w }}px; height: 6px; border-radius: 3px; background: {{ dt.bg }}; transition: {{ ss.pgDotFx }}"></span></sc-for>
 </div>
 <div style="display: flex; gap: 8px">
-<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
-<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: #FAFAFA; color: #09090B; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
 </div>
 </div>
 </sc-if>
@@ -75,7 +75,7 @@
 <div style="height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: {{ c.accent }}"></div></div>
 </div>
 <span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
-<button type="button" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
+<button type="button" class="hit" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
 </div>
 </sc-if>
 <sc-if value="{{ ss.hasSetHint }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ ss.setHint }}</p></sc-if>

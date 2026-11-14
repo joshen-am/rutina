@@ -14,7 +14,10 @@ body{margin:0}
 button{-webkit-tap-highlight-color:transparent;transition:opacity .12s, transform .12s}
 button:active{opacity:.7;transform:scale(.985)}
 input::placeholder,textarea::placeholder{color:#6B6B74}
-input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px solid #71717A;outline-offset:2px}
+input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid #71717A!important;outline-offset:2px}
+.hit{position:relative}
+.hit::after{content:"";position:absolute;inset:-4px 0}
+.hit-sw::after{inset:-7px -4px}
 @keyframes present{from{transform:translateY(100%)}to{transform:none}}
 @keyframes sheet{from{transform:translateY(105%)}to{transform:none}}
 @keyframes fade{from{opacity:0}to{opacity:1}}
@@ -27,7 +30,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 @media (prefers-reduced-motion: reduce){.push{animation:none}*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 </style>
 </helmet>
-<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; -webkit-font-smoothing: antialiased">
+<div style="width: 390px; height: 844px; position: relative; overflow: hidden; background: {{ th.bg }}; color: {{ th.text }}; font-family: {{ font }}; line-height: 1.35; -webkit-font-smoothing: antialiased">
 <sc-if value="{{ showInicio }}" hint-placeholder-val="{{ false }}">
 <div id="sc-showInicio" class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 210px; display: flex; flex-direction: column; gap: 16px">
 <header style="display: flex; flex-direction: column; gap: 24px; padding: 0 4px 4px"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span aria-label="keystone" style="display: flex; align-items: center; gap: 8px"><img src="img/orb-{{ orb.k }}.png" alt="" aria-hidden="true" style="width: 24px; height: 24px; flex: none; border-radius: 50%; box-shadow: 0 0.7px 1.9px rgba(0, 0, 0, 0.22)"><span style="font-size: 22px; font-weight: 500; letter-spacing: -0.055em">keystone</span></span><button type="button" onClick="{{ openMenu }}" aria-label="Perfil y apariencia" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center; font-size: 16px; font-weight: 500">{{ initial }}</button></div><h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{{ dateLabel }}</h1></header>
@@ -44,7 +47,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.salud.up }}" aria-label="Subir" style="opacity: {{ ho.salud.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.salud.down }}" aria-label="Bajar" style="opacity: {{ ho.salud.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.salud.toggle }}" aria-pressed="{{ ho.salud.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.salud.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.salud.toggle }}" aria-pressed="{{ ho.salud.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.salud.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -88,7 +91,7 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.hist.up }}" aria-label="Subir" style="opacity: {{ ho.hist.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.hist.down }}" aria-label="Bajar" style="opacity: {{ ho.hist.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.hist.toggle }}" aria-pressed="{{ ho.hist.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.hist.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.hist.toggle }}" aria-pressed="{{ ho.hist.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.hist.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -99,17 +102,17 @@ input:focus-visible,button:focus-visible,textarea:focus-visible{outline:2px soli
 <span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ hist.summary }}</span>
 </div>
 <div style="display: flex; gap: 8px">
-<div aria-hidden="true" style="display: grid; grid-template-rows: 16px repeat(7, 16px); row-gap: 4px; font-family: {{ mono }}; font-size: 11px; line-height: 16px; color: {{ th.tertiary }}">
+<div aria-hidden="true" style="display: grid; grid-template-rows: 16px repeat(7, 16px); row-gap: 4px; font-family: {{ mono }}; font-size: 12px; line-height: 16px; color: {{ th.tertiary }}">
 <span></span><span>L</span><span></span><span>M</span><span></span><span>V</span><span></span><span></span>
 </div>
 <div role="img" aria-label="{{ hist.aria }}" style="flex: 1; min-width: 0; display: grid; grid-template-columns: repeat({{ hist.weeks }}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, 16px); grid-auto-flow: column; gap: 4px">
 <sc-for list="{{ hist.items }}" as="hc" hint-placeholder-count="136">
-<sc-if value="{{ hc.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 11px; line-height: 16px; color: {{ th.tertiary }}; white-space: nowrap; overflow: visible">{{ hc.text }}</span></sc-if>
+<sc-if value="{{ hc.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 12px; line-height: 16px; color: {{ th.tertiary }}; white-space: nowrap; overflow: visible">{{ hc.text }}</span></sc-if>
 <sc-if value="{{ hc.isCell }}" hint-placeholder-val="{{ true }}"><span style="border-radius: 4px; background: {{ hc.bg }}; box-shadow: {{ hc.ring }}"></span></sc-if>
 </sc-for>
 </div>
 </div>
-<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 11px; line-height: 16px; color: {{ th.sub }}">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: {{ th.sub }}">
 <span>Hábitos y entrenos de cada día</span>
 <span style="display: flex; align-items: center; gap: 4px">Nada
 <sc-for list="{{ hist.scale }}" as="hs" hint-placeholder-count="5"><span style="width: 10px; height: 10px; border-radius: 3px; background: {{ hs.bg }}"></span></sc-for>
@@ -125,7 +128,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.habitos.up }}" aria-label="Subir" style="opacity: {{ ho.habitos.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.habitos.down }}" aria-label="Bajar" style="opacity: {{ ho.habitos.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.habitos.toggle }}" aria-pressed="{{ ho.habitos.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.habitos.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.habitos.toggle }}" aria-pressed="{{ ho.habitos.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.habitos.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -145,7 +148,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.comida.up }}" aria-label="Subir" style="opacity: {{ ho.comida.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.comida.down }}" aria-label="Bajar" style="opacity: {{ ho.comida.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.comida.toggle }}" aria-pressed="{{ ho.comida.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.comida.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.comida.toggle }}" aria-pressed="{{ ho.comida.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.comida.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -177,7 +180,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.agua.up }}" aria-label="Subir" style="opacity: {{ ho.agua.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.agua.down }}" aria-label="Bajar" style="opacity: {{ ho.agua.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.agua.toggle }}" aria-pressed="{{ ho.agua.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.agua.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.agua.toggle }}" aria-pressed="{{ ho.agua.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.agua.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -210,7 +213,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.recup.up }}" aria-label="Subir" style="opacity: {{ ho.recup.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.recup.down }}" aria-label="Bajar" style="opacity: {{ ho.recup.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.recup.toggle }}" aria-pressed="{{ ho.recup.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.recup.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.recup.toggle }}" aria-pressed="{{ ho.recup.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.recup.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -246,7 +249,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.semana.up }}" aria-label="Subir" style="opacity: {{ ho.semana.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.semana.down }}" aria-label="Bajar" style="opacity: {{ ho.semana.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.semana.toggle }}" aria-pressed="{{ ho.semana.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.semana.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.semana.toggle }}" aria-pressed="{{ ho.semana.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.semana.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -273,7 +276,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 8px">
 <button type="button" onClick="{{ ho.rutina.up }}" aria-label="Subir" style="opacity: {{ ho.rutina.upOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"></path></svg></button>
 <button type="button" onClick="{{ ho.rutina.down }}" aria-label="Bajar" style="opacity: {{ ho.rutina.downOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"></path></svg></button>
-<button type="button" onClick="{{ ho.rutina.toggle }}" aria-pressed="{{ ho.rutina.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.rutina.toggleLabel }}</button>
+<button type="button" class="hit" onClick="{{ ho.rutina.toggle }}" aria-pressed="{{ ho.rutina.hidden }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">{{ ho.rutina.toggleLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -310,7 +313,7 @@ Todo</span>
 </div>
 </div>
 <div style="order: 100; display: flex; justify-content: center; padding-top: 4px">
-<button type="button" onClick="{{ toggleEdit }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 16px; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"></path></svg>{{ editLabel }}</button>
+<button type="button" class="hit" onClick="{{ toggleEdit }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 16px; display: flex; align-items: center; gap: 8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16M4 7l3-3 3 3M17 20V4M14 17l3 3 3-3"></path></svg>{{ editLabel }}</button>
 </div>
 </div>
 </sc-if>
@@ -326,8 +329,8 @@ Todo</span>
 <sc-if value="{{ canFinish }}" hint-placeholder-val="{{ true }}">
 <button type="button" onClick="{{ startSession }}"  style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 24px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; "><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v15a1 1 0 0 0 1.5.86l12.5-7.5a1 1 0 0 0 0-1.72L8.5 3.64A1 1 0 0 0 7 4.5z"></path></svg>{{ startLabel }}</button>
 <div style="display: flex; justify-content: center; gap: 4px">
-<button type="button" onClick="{{ openConfirm }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 12px; background: transparent; color: {{ th.sub }}; font-size: 16px">Ya la hice, solo registrarla</button>
-<sc-if value="{{ hasSess }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ discardSession }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 12px; background: transparent; color: {{ th.danger }}; font-size: 16px">Descartar</button></sc-if>
+<button type="button" class="hit" onClick="{{ openConfirm }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 12px; background: transparent; color: {{ th.sub }}; font-size: 16px">Ya la hice, solo registrarla</button>
+<sc-if value="{{ hasSess }}" hint-placeholder-val="{{ false }}"><button type="button" class="hit" onClick="{{ discardSession }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 12px; background: transparent; color: {{ th.danger }}; font-size: 16px">Descartar</button></sc-if>
 </div>
 </sc-if>
 <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ showSummary }}"  style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 52px; padding: 0 24px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; display: flex; align-items: center; justify-content: center; gap: 8px; ">Ver resumen</button><span style="height: 40px"></span></sc-if>
@@ -402,7 +405,7 @@ Todo</span>
 <sc-if value="{{ h.atRisk }}" hint-placeholder-val="{{ false }}">
 <div style="margin-left: 52px; display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 14px; background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}">
 <span style="flex: 1; font-size: 13px; line-height: 20px"><b style="font-weight: 500">Nunca falles dos veces.</b> Ayer no se cumplió: hoy basta con la versión mínima, {{ h.mini }}.</span>
-<button type="button" onClick="{{ h.doMini }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; flex: none; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 13px; font-weight: 500">La hice</button>
+<button type="button" class="hit" onClick="{{ h.doMini }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; flex: none; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 13px; font-weight: 500">La hice</button>
 </div>
 </sc-if>
 </div>
@@ -417,7 +420,7 @@ Todo</span>
 <div style="padding: 56px 8px 8px; display: grid; grid-template-columns: 80px minmax(0, 1fr) 80px; align-items: center">
 <span></span>
 <span style="text-align: center; font-size: 16px; font-weight: 500">Tus hábitos</span>
-<button type="button" onClick="{{ closeHabEditor }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; justify-self: end; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500">Listo</button>
+<button type="button" class="hit" onClick="{{ closeHabEditor }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; justify-self: end; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500">Listo</button>
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 8px 16px 40px; display: flex; flex-direction: column; gap: 12px">
 <p style="margin: 0; padding: 0 4px; font-size: 16px; line-height: 24px; color: {{ th.sub }}">Empieza con pocos. Escribe la señal como «Después de [algo que ya haces], voy a [hábito]» y una versión mínima para los días sin ganas.</p>
@@ -426,7 +429,7 @@ Todo</span>
 <div style="display: flex; align-items: center; gap: 12px">
 <span style="width: 40px; height: 40px; border-radius: 12px; flex: none; background: {{ th.fill }}; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="{{ th.sub }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="{{ e.icon }}"></path></svg></span>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px; font-weight: 500">{{ e.name }}</span><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ e.desc }}</span></div>
-<button type="button" role="switch" aria-checked="{{ e.on }}" aria-label="{{ e.name }}" onClick="{{ e.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ e.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ e.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
+<button type="button" class="hit hit-sw" role="switch" aria-checked="{{ e.on }}" aria-label="{{ e.name }}" onClick="{{ e.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ e.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ e.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
 </div>
 <sc-if value="{{ e.hasGoal }}" hint-placeholder-val="{{ false }}">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 0.5px solid {{ th.sep }}; padding-top: 12px">
@@ -474,7 +477,7 @@ Todo</span>
 <section aria-label="Energía del día" style="background: {{ th.card }}; border-radius: 22px; padding: 20px 20px; display: flex; flex-direction: column; gap: 20px">
 <div style="display: flex; align-items: center; gap: 20px">
 <div style="position: relative; width: 128px; height: 128px; flex: none"><svg width="128" height="128" viewBox="0 0 128 128" aria-hidden="true"><circle cx="64.0" cy="64.0" r="56" fill="none" stroke="{{ th.fill }}" stroke-width="9"></circle><circle cx="64.0" cy="64.0" r="56" fill="none" stroke="{{ fd.ringColor }}" stroke-width="9" stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="{{ fd.ringOff }}" transform="rotate(-90 64.0 64.0)" style="transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
-<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ fd.kcal }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ th.sub }}">kcal</span></div></div>
+<div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ fd.kcal }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ th.sub }}">kcal</span></div></div>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">{{ fd.leftLabel }}</span><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ fd.left }}</span></div>
 <div style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">Meta diaria</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.goal }} kcal</span></div>
@@ -505,7 +508,7 @@ Todo</span>
 <sc-if value="{{ en.hasPhoto }}" hint-placeholder-val="{{ false }}"><img src="{{ en.photo }}" alt="" style="width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex: none"></sc-if>
 <sc-if value="{{ en.noPhoto }}" hint-placeholder-val="{{ true }}"><span style="width: 52px; height: 52px; border-radius: 14px; flex: none; background: {{ th.fill }}; display: flex; align-items: center; justify-content: center; color: {{ th.tertiary }}"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4"></path></svg></span></sc-if>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ en.title }}</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ en.sub }}</span></span>
-<sc-if value="{{ en.hasQ }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 13px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{ en.qColor }}; color: {{ en.qColor }}; flex: none">{{ en.q }}/10</span></sc-if>
+<sc-if value="{{ en.hasQ }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 13px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{ en.qColor }}; color: {{ en.qText }}; flex: none">{{ en.q }}/10</span></sc-if>
 </button>
 </sc-for>
 </section>
@@ -523,7 +526,7 @@ Todo</span>
 <sc-for list="{{ fd.week.bars }}" as="wb" hint-placeholder-count="7"><div style="height: {{ wb.h }}px; min-height: 3px; border-radius: 6px; background: {{ wb.bg }}"></div></sc-for>
 </div>
 <div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 12px; margin-top: -8px">
-<sc-for list="{{ fd.week.bars }}" as="wb" hint-placeholder-count="7"><span style="font-family: {{ mono }}; font-size: 11px; text-align: center; color: {{ wb.lc }}">{{ wb.label }}</span></sc-for>
+<sc-for list="{{ fd.week.bars }}" as="wb" hint-placeholder-count="7"><span style="font-family: {{ mono }}; font-size: 12px; text-align: center; color: {{ wb.lc }}">{{ wb.label }}</span></sc-for>
 </div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <div style="background: {{ th.raised }}; box-shadow: inset 0 0 0 1px {{ th.line }}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{ th.sub }}">Energía promedio</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ fd.week.avgK }} kcal</span></div>
@@ -561,7 +564,7 @@ Todo</span>
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">Registrar</span><h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.04em">¿Qué comiste?</h2></div>
 <div role="group" aria-label="Comida" style="display: flex; flex-wrap: wrap; gap: 8px">
 <sc-for list="{{ fd.mealOpts }}" as="mo" hint-placeholder-count="5">
-<button type="button" onClick="{{ mo.pick }}" aria-pressed="{{ mo.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: {{ mo.bg }}; color: {{ mo.fg }}; font-size: 16px; font-weight: 500">{{ mo.label }}</button>
+<button type="button" class="hit" onClick="{{ mo.pick }}" aria-pressed="{{ mo.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: {{ mo.bg }}; color: {{ mo.fg }}; font-size: 16px; font-weight: 500">{{ mo.label }}</button>
 </sc-for>
 </div>
 <label style="position: relative; height: 56px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 16px; font-weight: 500; cursor: pointer">
@@ -700,7 +703,7 @@ Todo</span>
 <section aria-label="Áreas" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px">
 <sc-for list="{{ hv.areas }}" as="ar" hint-placeholder-count="8">
 <button type="button" onClick="{{ ar.open }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; width: 100%; padding: 16px 16px 16px 0; background: transparent; display: flex; align-items: center; gap: 12px; box-shadow: {{ ar.line }}">
-<span style="width: 34px; height: 34px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {{ ar.gColor }}; color: {{ ar.gColor }}; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 14px; font-weight: 500">{{ ar.grade }}</span>
+<span style="width: 34px; height: 34px; flex: none; border-radius: 50%; box-shadow: inset 0 0 0 1.5px {{ ar.gColor }}; color: {{ ar.gText }}; display: flex; align-items: center; justify-content: center; font-family: {{ mono }}; font-size: 14px; font-weight: 500">{{ ar.grade }}</span>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 500">{{ ar.name }}</span><span style="font-size: 13px; color: {{ th.sub }}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ ar.status }}</span></span>
 <span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ ar.score }}</span>
 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
@@ -751,7 +754,7 @@ Todo</span>
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-size: 16px">Estado</span><span style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: {{ ai.stColor }}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ ai.stColor }}"></span>{{ ai.status }}</span></div>
 <div role="group" aria-label="Proveedor" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{ th.segBg }}">
 <sc-for list="{{ ai.provs }}" as="pv" hint-placeholder-count="2">
-<button type="button" onClick="{{ pv.pick }}" aria-pressed="{{ pv.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ pv.bg }}; color: {{ th.text }}; box-shadow: {{ pv.shadow }}; font-size: 13px; font-weight: {{ pv.weight }}">{{ pv.label }}</button>
+<button type="button" class="hit" onClick="{{ pv.pick }}" aria-pressed="{{ pv.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ pv.bg }}; color: {{ th.text }}; box-shadow: {{ pv.shadow }}; font-size: 13px; font-weight: {{ pv.weight }}">{{ pv.label }}</button>
 </sc-for>
 </div>
 <label for="aikey" style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">Clave de API</label>
@@ -769,13 +772,13 @@ Todo</span>
 <div style="padding-right: 16px; box-shadow: {{ ri.line }}">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px">
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="font-size: 16px">{{ ri.label }}</span><span style="font-size: 13px; color: {{ th.sub }}">{{ ri.desc }}</span></span>
-<button type="button" role="switch" aria-checked="{{ ri.on }}" aria-label="{{ ri.label }}" onClick="{{ ri.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ ri.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ ri.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
+<button type="button" class="hit hit-sw" role="switch" aria-checked="{{ ri.on }}" aria-label="{{ ri.label }}" onClick="{{ ri.toggle }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ ri.track }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ ri.knob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button>
 </div>
 <sc-for list="{{ ri.times }}" as="tm" hint-placeholder-count="1">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 16px; color: {{ th.sub }}">{{ tm.label }}</span><div style="display: flex; align-items: center; gap: 12px"><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums; white-space: nowrap">{{ tm.value }}</span><button type="button" onClick="{{ tm.minus }}" aria-label="Quince minutos antes" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button><button type="button" onClick="{{ tm.plus }}" aria-label="Quince minutos después" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button></div></div>
 </sc-for>
 <sc-if value="{{ ri.hasCycle }}" hint-placeholder-val="{{ false }}">
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 16px; color: {{ th.sub }}">Frecuencia</span><button type="button" onClick="{{ ri.cycle.pick }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-family: {{ mono }}; font-size: 13px">{{ ri.cycle.label }}</button></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; border-top: 0.5px solid {{ th.sep }}"><span style="font-size: 16px; color: {{ th.sub }}">Frecuencia</span><button type="button" class="hit" onClick="{{ ri.cycle.pick }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-family: {{ mono }}; font-size: 13px">{{ ri.cycle.label }}</button></div>
 </sc-if>
 </div>
 </sc-for></div></section>
@@ -793,12 +796,12 @@ Todo</span>
 <section style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; padding: 0 4px">Apariencia</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="padding: 12px 16px 12px 0">
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{ th.segBg }}">
 <sc-for list="{{ temaOpts }}" as="o" hint-placeholder-count="3">
-<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
+<button type="button" class="hit" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
 </sc-for>
 </div>
 </div>
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-snd" style="font-size: 16px">Sonidos</span><button type="button" role="switch" aria-checked="{{ prefs.sonido }}" aria-labelledby="lbl-snd" onClick="{{ toggleSnd }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ sndTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ sndKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
-<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-fx" style="font-size: 16px">Animaciones</span><button type="button" role="switch" aria-checked="{{ prefs.efectos }}" aria-labelledby="lbl-fx" onClick="{{ toggleFx }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ fxTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ fxKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-snd" style="font-size: 16px">Sonidos</span><button type="button" class="hit hit-sw" role="switch" aria-checked="{{ prefs.sonido }}" aria-labelledby="lbl-snd" onClick="{{ toggleSnd }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ sndTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ sndKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
+<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px; border-top: 0.5px solid {{ th.sep }}"><span id="lbl-fx" style="font-size: 16px">Animaciones</span><button type="button" class="hit hit-sw" role="switch" aria-checked="{{ prefs.efectos }}" aria-labelledby="lbl-fx" onClick="{{ toggleFx }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 2px; width: 51px; height: 31px; flex: none; border-radius: 16px; background: {{ fxTrack }}; display: flex; align-items: center; transition: background 0.25s"><span style="width: 27px; height: 27px; border-radius: 50%; background: #FFFFFF; box-shadow: 0 2px 6px rgba(0,0,0,0.18); transform: translateX({{ fxKnob }}px); transition: transform 0.25s cubic-bezier(.32,.72,0,1)"></span></button></div>
 <button type="button" onClick="{{ editFromSettings }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; color: {{ th.text }}; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; text-align: left; border-top: 0.5px solid {{ th.sep }};"><span>Ordenar inicio</span><span style="display: flex; align-items: center; gap: 8px; color: {{ th.sub }}; font-size: 16px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></span></button></div></section>
 <section style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; padding: 0 4px">Tus datos</span><div style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 16px; overflow: hidden"><div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding-right: 16px"><span style="font-size: 16px">Guardado en este teléfono</span><span style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: {{ c.constanciaText }}"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.0" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"></path></svg>{{ persistLabel }}</span></div>
 <button type="button" onClick="{{ exportBackup }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; border-top: 0.5px solid {{ th.sep }}"><span>Exportar respaldo</span><span style="font-size: 16px; color: {{ th.sub }}">Último: {{ backupLabel }}</span></button>
@@ -811,11 +814,11 @@ Todo</span>
 
 <sc-if value="{{ showTabs }}" hint-placeholder-val="{{ true }}">
 <nav aria-label="Secciones" style="position: absolute; left: 0; right: 0; bottom: 0; height: 83px; box-sizing: border-box; padding: 8px 8px 0; background: {{ th.bar }}; backdrop-filter: blur(24px) saturate(1.4); -webkit-backdrop-filter: blur(24px) saturate(1.4); box-shadow: inset 0 0.5px 0 {{ th.sep }}; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); z-index: 10">
-<button type="button" onClick="{{ tabGo.inicio }}" aria-current="{{ tabCur.inicio }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.inicio }}; font-size: 11px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.inicio }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg><span>Inicio</span></button>
-<button type="button" onClick="{{ tabGo.habitos }}" aria-current="{{ tabCur.habitos }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.habitos }}; font-size: 11px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.habitos }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l3.5 3.5L14 9.5M4 5h16M15 12h5M4 19h16"></path></svg><span>Hábitos</span></button>
-<button type="button" onClick="{{ tabGo.comida }}" aria-current="{{ tabCur.comida }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.comida }}; font-size: 11px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.comida }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4"></path></svg><span>Comida</span></button>
-<button type="button" onClick="{{ tabGo.salud }}" aria-current="{{ tabCur.salud }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.salud }}; font-size: 11px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.salud }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"></path></svg><span>Salud</span></button>
-<button type="button" onClick="{{ tabGo.ajustes }}" aria-current="{{ tabCur.ajustes }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.ajustes }}; font-size: 11px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.ajustes }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM9 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span>Ajustes</span></button>
+<button type="button" onClick="{{ tabGo.inicio }}" aria-current="{{ tabCur.inicio }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.inicio }}; font-size: 12px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.inicio }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11.5L12 5l8 6.5V20a1 1 0 0 1-1 1h-4.5v-6h-5v6H5a1 1 0 0 1-1-1z"></path></svg><span>Inicio</span></button>
+<button type="button" onClick="{{ tabGo.habitos }}" aria-current="{{ tabCur.habitos }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.habitos }}; font-size: 12px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.habitos }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l3.5 3.5L14 9.5M4 5h16M15 12h5M4 19h16"></path></svg><span>Hábitos</span></button>
+<button type="button" onClick="{{ tabGo.comida }}" aria-current="{{ tabCur.comida }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.comida }}; font-size: 12px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.comida }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4"></path></svg><span>Comida</span></button>
+<button type="button" onClick="{{ tabGo.salud }}" aria-current="{{ tabCur.salud }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.salud }}; font-size: 12px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.salud }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"></path></svg><span>Salud</span></button>
+<button type="button" onClick="{{ tabGo.ajustes }}" aria-current="{{ tabCur.ajustes }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 49px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: transparent; color: {{ tabC.ajustes }}; font-size: 12px; font-weight: 500; letter-spacing: 0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="{{ tabW.ajustes }}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h9M17 7h3M4 17h3M11 17h9M15 5a2 2 0 1 0 0 4 2 2 0 0 0 0-4zM9 15a2 2 0 1 0 0 4 2 2 0 0 0 0-4z"></path></svg><span>Ajustes</span></button>
 </nav>
 </sc-if>
 
@@ -829,7 +832,7 @@ Todo</span>
 </div>
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{ th.segBg }}">
 <sc-for list="{{ temaOpts }}" as="o" hint-placeholder-count="3">
-<button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
+<button type="button" class="hit" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 34px; border-radius: 999px; background: {{ o.bg }}; color: {{ th.text }}; box-shadow: {{ o.shadow }}; font-size: 13px; font-weight: {{ o.weight }}">{{ o.label }}</button>
 </sc-for>
 </div>
 <div style="display: flex; flex-direction: column; margin: 0 -8px -8px; border-top: 0.5px solid {{ th.sep }}; padding-top: 8px">
@@ -841,9 +844,9 @@ Todo</span>
 </sc-if>
 
 <sc-if value="{{ isArea }}" hint-placeholder-val="{{ false }}">
-<div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div role="dialog" aria-modal="true" aria-label="{{ hv.detail.name }}" style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 8px; display: flex; align-items: center">
-<button type="button" onClick="{{ closeArea }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{ th.card }}; color: {{ th.text }}; font-size: 16px; display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Salud</button>
+<button type="button" class="hit" onClick="{{ closeArea }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{ th.card }}; color: {{ th.text }}; font-size: 16px; display: flex; align-items: center; gap: 4px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg>Salud</button>
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">Área</span><h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 500; letter-spacing: -0.04em">{{ hv.detail.name }}</h1></div>
@@ -861,7 +864,7 @@ Todo</span>
 <section aria-label="Tus datos" style="background: {{ th.card }}; border-radius: 22px; padding: 0 0 0 20px">
 <sc-for list="{{ hv.detail.metrics }}" as="me" hint-placeholder-count="3">
 <div style="display: flex; align-items: center; gap: 12px; padding: 16px 20px 16px 0; box-shadow: {{ me.line }}">
-<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px">{{ me.label }}</span><sc-if value="{{ me.hasIdeal }}" hint-placeholder-val="{{ true }}"><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">ÓPTIMO: {{ me.ideal }}</span></sc-if></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px">{{ me.label }}</span><sc-if value="{{ me.hasIdeal }}" hint-placeholder-val="{{ true }}"><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Óptimo: {{ me.ideal }}</span></sc-if></span>
 <span style="font-family: {{ mono }}; font-size: 16px; text-align: right; font-variant-numeric: tabular-nums;">{{ me.value }}</span>
 <span style="width: 8px; height: 8px; border-radius: 50%; flex: none; background: {{ me.dot }}"></span>
 </div>
@@ -875,7 +878,7 @@ Todo</span>
 <div style="display: flex; flex-direction: column; gap: 8px">
 <span style="display: flex; justify-content: space-between; font-size: 16px"><span>{{ mo.label }}</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">{{ mo.lo }} → {{ mo.hi }}</span></span>
 <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
-<sc-for list="{{ mo.opts }}" as="mv" hint-placeholder-count="5"><button type="button" onClick="{{ mv.pick }}" aria-pressed="{{ mv.sel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; border-radius: 12px; background: {{ mv.bg }}; color: {{ mv.fg }}; font-family: {{ mono }}; font-size: 16px">{{ mv.v }}</button></sc-for>
+<sc-for list="{{ mo.opts }}" as="mv" hint-placeholder-count="5"><button type="button" class="hit" onClick="{{ mv.pick }}" aria-pressed="{{ mv.sel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; border-radius: 12px; background: {{ mv.bg }}; color: {{ mv.fg }}; font-family: {{ mono }}; font-size: 16px">{{ mv.v }}</button></sc-for>
 </div>
 </div>
 </sc-for>
@@ -929,7 +932,7 @@ Todo</span>
 <div style="position: absolute; inset: 0; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 25; overflow: hidden">
 <span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ haloEval }}; transition: background 0.6s"></span>
 <div style="position: relative; padding: 56px 16px 0; display: flex; align-items: center; gap: 12px">
-<button type="button" onClick="{{ ev.close }}" aria-label="Cerrar evaluación" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 40px; height: 40px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
+<button type="button" onClick="{{ ev.close }}" aria-label="Cerrar evaluación" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; flex: none; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"></path></svg></button>
 <div style="flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.14); overflow: hidden"><div style="height: 100%; width: {{ ev.pct }}%; background: #FAFAFA; border-radius: 2px; transition: width 0.4s cubic-bezier(.32,.72,0,1)"></div></div>
 <span style="font-family: {{ mono }}; font-size: 13px; color: rgba(250, 250, 250, 0.62); font-variant-numeric: tabular-nums;">{{ ev.step }}/{{ ev.total }}</span>
 </div>
@@ -960,8 +963,8 @@ Todo</span>
 <button type="button" onClick="{{ ev.plus }}" aria-label="Más" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 56px; height: 56px; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 5v14M5 12h14"></path></svg></button>
 </div>
 <div style="display: flex; justify-content: center; gap: 8px">
-<button type="button" onClick="{{ ev.minus5 }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 13px">−5</button>
-<button type="button" onClick="{{ ev.plus5 }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 13px">+5</button>
+<button type="button" class="hit" onClick="{{ ev.minus5 }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 13px">−5</button>
+<button type="button" class="hit" onClick="{{ ev.plus5 }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 36px; padding: 0 16px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; font-family: {{ mono }}; font-size: 13px">+5</button>
 </div>
 </sc-if>
 </div>
@@ -976,10 +979,10 @@ Todo</span>
 <sc-if value="{{ isSesion }}" hint-placeholder-val="{{ false }}">
 <div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 0; display: grid; grid-template-columns: 96px minmax(0, 1fr) 96px; align-items: center">
-<button type="button" onClick="{{ sesClose }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; justify-self: start; height: 38px; padding: 0 16px 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: {{ th.card }}; color: {{ th.text }}; font-size: 16px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg>Salir</button>
+<button type="button" class="hit" onClick="{{ sesClose }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; justify-self: start; height: 38px; padding: 0 16px 0 12px; border-radius: 999px; display: flex; align-items: center; gap: 4px; background: {{ th.card }}; color: {{ th.text }}; font-size: 16px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 9l7 7 7-7"></path></svg>Salir</button>
 <div style="display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; text-align: center">
 <span style="max-width: 100%; font-size: 16px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{ ss.title }}</span>
-<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">PASO {{ ss.num }}/{{ ss.total }}</span>
+<span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">Ejercicio {{ ss.num }} de {{ ss.total }}</span>
 </div>
 <span aria-label="Tiempo de sesión" style="justify-self: end; padding-right: 8px; font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ ss.elapsed }}</span>
 </div>
@@ -1013,8 +1016,8 @@ Todo</span>
 <sc-for list="{{ ss.pgDots }}" as="dt" hint-placeholder-count="3"><span style="width: {{ dt.w }}px; height: 6px; border-radius: 3px; background: {{ dt.bg }}; transition: {{ ss.pgDotFx }}"></span></sc-for>
 </div>
 <div style="display: flex; gap: 8px">
-<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
-<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: #FAFAFA; color: #09090B; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
 </div>
 </div>
 </sc-if>
@@ -1063,7 +1066,7 @@ Todo</span>
 <div style="height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: {{ c.accent }}"></div></div>
 </div>
 <span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
-<button type="button" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
+<button type="button" class="hit" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
 </div>
 </sc-if>
 <sc-if value="{{ ss.hasSetHint }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ ss.setHint }}</p></sc-if>
@@ -1123,8 +1126,8 @@ Todo</span>
 <sc-for list="{{ ss.pgDots }}" as="dt" hint-placeholder-count="3"><span style="width: {{ dt.w }}px; height: 6px; border-radius: 3px; background: {{ dt.bg }}; transition: {{ ss.pgDotFx }}"></span></sc-for>
 </div>
 <div style="display: flex; gap: 8px">
-<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
-<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: #FAFAFA; color: #09090B; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgPrev }}" aria-label="Dibujo anterior" aria-disabled="{{ ss.pgFirst }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); color: #FAFAFA; opacity: {{ ss.prevOp }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"></path></svg></button>
+<button type="button" onClick="{{ ss.pgNext }}" aria-label="{{ ss.pgNextLabel }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 48px; height: 48px; border-radius: 999px; background: rgba(255, 255, 255, 0.2); color: #FAFAFA; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button>
 </div>
 </div>
 </sc-if>
@@ -1173,7 +1176,7 @@ Todo</span>
 <div style="height: 3px; border-radius: 2px; background: {{ th.fill }}; overflow: hidden"><div style="height: 100%; border-radius: 2px; width: {{ ss.restPct }}%; background: {{ c.accent }}"></div></div>
 </div>
 <span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; font-variant-numeric: tabular-nums">{{ ss.restLeft }}</span>
-<button type="button" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
+<button type="button" class="hit" onClick="{{ restSkip }}" aria-label="Saltar descanso" style="appearance: none; border: 0; margin: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">Saltar</button>
 </div>
 </sc-if>
 <sc-if value="{{ ss.hasSetHint }}" hint-placeholder-val="{{ true }}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ ss.setHint }}</p></sc-if>
@@ -1230,9 +1233,9 @@ Todo</span>
 <sc-if value="{{ isTest }}" hint-placeholder-val="{{ false }}">
 <div style="position: absolute; inset: 0; background: {{ th.bg }}; display: flex; flex-direction: column; animation: present 0.5s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div style="padding: 56px 12px 0; display: flex; justify-content: space-between; align-items: center">
-<button type="button" onClick="{{ quizBack }}" aria-label="Atrás" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: {{ th.card }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
+<button type="button" onClick="{{ quizBack }}" aria-label="Atrás" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 44px; height: 44px; border-radius: 50%; background: {{ th.card }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"></path></svg></button>
 <div style="display: grid; grid-template-columns: repeat(3, 28px); gap: 8px" aria-hidden="true"><sc-for list="{{ q.bars }}" as="pb" hint-placeholder-count="3"><div style="height: 3px; border-radius: 2px; background: {{ pb.bg }}; transition: background 0.3s"></div></sc-for></div>
-<button type="button" onClick="{{ quizSkip }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 16px">Omitir</button>
+<button type="button" class="hit" onClick="{{ quizSkip }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 40px; padding: 0 16px; border-radius: 999px; background: transparent; color: {{ th.sub }}; font-size: 16px">Omitir</button>
 </div>
 <sc-if value="{{ q.s0 }}" hint-placeholder-val="{{ true }}">
 <div class="push scroll" style="flex: 1; overflow-y: auto; padding: 32px 16px 24px; display: flex; flex-direction: column; gap: 24px">
@@ -1241,7 +1244,7 @@ Todo</span>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
 <button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
-<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ o.subFg }}">min</span></button>
+<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ o.subFg }}">min</span></button>
 </sc-for>
 </div>
 </sc-if>
@@ -1262,7 +1265,7 @@ Todo</span>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
 <button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
-<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ o.subFg }}">min</span></button>
+<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ o.subFg }}">min</span></button>
 </sc-for>
 </div>
 </sc-if>
@@ -1283,7 +1286,7 @@ Todo</span>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{ q.opts }}" as="o" hint-placeholder-count="6">
 <button type="button" onClick="{{ o.pick }}" aria-pressed="{{ o.selected }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{ o.bg }}; color: {{ o.fg }}; transition: background 0.15s">
-<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 11px; color: {{ o.subFg }}">min</span></button>
+<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ o.label }}</span><span style="font-family: {{ mono }}; font-size: 12px; color: {{ o.subFg }}">min</span></button>
 </sc-for>
 </div>
 </sc-if>
@@ -1310,19 +1313,19 @@ Todo</span>
 <section style="position: relative; overflow: hidden; background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}; color: #FAFAFA; border-radius: 26px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: 250px">
 <span aria-hidden="true" style="position: absolute; inset: 0; pointer-events: none; background: {{ halo }}; transition: background 0.6s"></span>
 <span style="position: relative"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: rgba(250, 250, 250, 0.62)">Sesión completada · {{ v.dateLine }}</span></span>
-<span style="position: relative; display: flex; flex-direction: column; gap: 8px"><span style="font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{ v.name }}</span><span style="font-size: 16px; color: rgba(250, 250, 250, 0.7)">{{ v.title }}</span></span>
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px"><h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{ v.name }}</h1><span style="font-size: 16px; color: rgba(250, 250, 250, 0.7)">{{ v.title }}</span></span>
 <span style="position: relative; margin-top: auto; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 12px">
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.6)">Duración</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.minutes }}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> min</span></span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.6)">Energía</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.kcalNow }}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> kcal</span></span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.6)">Intensidad</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{ v.intensity }}</span></span>
-<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 11px; color: rgba(250, 250, 250, 0.6)">Series</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;">{{ v.sets }}</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">Duración</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.minutes }}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> min</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">Energía</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums;">{{ v.kcalNow }}<span style="font-size: 16px; color: rgba(250, 250, 250, 0.6); letter-spacing: 0"> kcal</span></span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">Intensidad</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{ v.intensity }}</span></span>
+<span style="display: flex; flex-direction: column; gap: 2px"><span style="font-family: {{ mono }}; font-size: 12px; color: rgba(250, 250, 250, 0.6)">Series</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; font-variant-numeric: tabular-nums;">{{ v.sets }}</span></span>
 </span>
 </section>
 <section style="background: {{ th.card }}; border-radius: 22px; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 16px">Sesiones esta semana</span><span style="font-family: {{ mono }}; font-size: 16px; font-variant-numeric: tabular-nums;">{{ v.week }}</span></section>
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px; padding: 12px 4px 0"><h2 style="margin: 0; font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.025em">Músculos trabajados</h2></div>
 <section style="background: {{ th.card }}; border-radius: 22px; padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px">
 <div id="b3-sum" class="body3d" role="img" aria-label="Cuerpo con los músculos trabajados" data-loads="{{ b3.sum }}" data-dark="{{ b3.dark }}" data-key="sum" style="width: 100%; height: 320px; background: url({{ b3.fallback }}) center / contain no-repeat"></div>
-<p style="margin: -4px 0 0; text-align: center; font-family: {{ mono }}; font-size: 11px; color: {{ th.tertiary }}">Desliza para girar</p>
+<p style="margin: -4px 0 0; text-align: center; font-family: {{ mono }}; font-size: 12px; color: {{ th.tertiary }}">Desliza para girar</p>
 <ul style="list-style: none; margin: 0 -20px 0 0; padding: 0">
 <sc-for list="{{ v.muscles }}" as="m" hint-placeholder-count="4">
 <li style="display: flex; flex-direction: column; justify-content: center; gap: 8px; min-height: 64px; padding-right: 20px; border-top: 0.5px solid {{ th.sep }}">
@@ -2066,6 +2069,13 @@ class Component extends DCLogic {
     let l = dark ? 56 : 46;
     if (x > 0.8) l -= (x - 0.8) / 0.2 * (dark ? 8 : 12);
     return this.hsl(h, sat, l);
+  }
+
+  /* El mismo tono, más oscuro, para escribir sobre fondos claros (≥ 4,5:1); en oscuro es el mismo color */
+  healthText(s, dark) {
+    if (dark || s == null || !isFinite(s)) return this.healthColor(s, dark);
+    const x = Math.max(0, Math.min(100, s)) / 100;
+    return this.hsl(2 + 140 * Math.pow(x, 1.05), 72, 26);
   }
 
   hsl(h, s, l) {
@@ -3094,7 +3104,7 @@ class Component extends DCLogic {
           return {
             title: e.t || m.name, sub: r0(et.kcal) + ' kcal · ' + r0(et.p) + ' g proteína',
             hasPhoto: !!ph, photo: ph || '', noPhoto: !ph,
-            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark),
+            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark), qText: this.healthText(e.q * 10, dark),
             open: () => { this.sfx('open'); this.setState({ fentry: { key: key, id: e.id }, fdelArmed: null }); }
           };
         })
@@ -3672,7 +3682,7 @@ class Component extends DCLogic {
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
     const list = areas.map((x, i) => ({
-      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
+      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), gText: this.healthText(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
       open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); }
     }));
@@ -3785,7 +3795,7 @@ class Component extends DCLogic {
     } : {
       bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
-      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#DC2626',
+      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
     };
   }
@@ -3870,7 +3880,7 @@ class Component extends DCLogic {
     const hv = this.healthVals(th, c, dark);
     hv.noop = () => {};
     const hcol = hv.has ? this.healthColor(hv.overallN, true) : null;
-    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = c.accent; }
+    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = this.healthText(hv.overallN, dark); }
     const halo = this.haloCss(hcol);
     /* el orbe de la marca toma el color de tu nota */
     const orb = (() => {

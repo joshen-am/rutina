@@ -726,6 +726,13 @@ class Component extends DCLogic {
     return this.hsl(h, sat, l);
   }
 
+  /* El mismo tono, más oscuro, para escribir sobre fondos claros (≥ 4,5:1); en oscuro es el mismo color */
+  healthText(s, dark) {
+    if (dark || s == null || !isFinite(s)) return this.healthColor(s, dark);
+    const x = Math.max(0, Math.min(100, s)) / 100;
+    return this.hsl(2 + 140 * Math.pow(x, 1.05), 72, 26);
+  }
+
   hsl(h, s, l) {
     s /= 100; l /= 100;
     const k = (n) => (n + h / 30) % 12;
@@ -1752,7 +1759,7 @@ class Component extends DCLogic {
           return {
             title: e.t || m.name, sub: r0(et.kcal) + ' kcal · ' + r0(et.p) + ' g proteína',
             hasPhoto: !!ph, photo: ph || '', noPhoto: !ph,
-            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark),
+            q: e.q || '', hasQ: !!e.q, qColor: this.healthColor(e.q * 10, dark), qText: this.healthText(e.q * 10, dark),
             open: () => { this.sfx('open'); this.setState({ fentry: { key: key, id: e.id }, fdelArmed: null }); }
           };
         })
@@ -2330,7 +2337,7 @@ class Component extends DCLogic {
     const g = this.gradeOf(overall);
     const gc = (x) => this.gradeColor(x, c, th);
     const list = areas.map((x, i) => ({
-      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
+      id: x.id, name: x.name, icon: x.icon, grade: x.grade, gColor: this.healthColor(x.score, dark), gText: this.healthText(x.score, dark), score: x.score == null ? '—' : x.score, status: x.status,
       pct: x.score || 0, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
       open: () => { this.sfx('open'); this.go({ screen: 'area', area: x.id, menu: false }); }
     }));
@@ -2443,7 +2450,7 @@ class Component extends DCLogic {
     } : {
       bg: '#FFFFFF', card: '#F6F6F7', raised: '#FFFFFF', menu: '#FFFFFF', text: '#18181B', sub: '#57575F', tertiary: '#6B6B74', sep: '#E4E4E7',
       fill: '#EBEBED', btn2: '#EBEBED', segBg: '#EBEBED', segSel: '#FFFFFF', bodyBase: '#E4E4E7', muscleOff: '#D4D4D8', barOff: '#D4D4D8',
-      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#DC2626',
+      bar: 'rgba(255, 255, 255, 0.84)', scrim: 'rgba(9, 9, 11, 0.32)', shadow: '0 24px 60px rgba(9, 9, 11, 0.16)', danger: '#C81E1E',
       inv: '#18181B', onInv: '#FFFFFF', line: 'rgba(9, 9, 11, 0.06)', input: '#FFFFFF'
     };
   }
@@ -2528,7 +2535,7 @@ class Component extends DCLogic {
     const hv = this.healthVals(th, c, dark);
     hv.noop = () => {};
     const hcol = hv.has ? this.healthColor(hv.overallN, true) : null;
-    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = c.accent; }
+    if (hv.has) { c.accent = this.healthColor(hv.overallN, dark); c.accentText = this.healthText(hv.overallN, dark); }
     const halo = this.haloCss(hcol);
     /* el orbe de la marca toma el color de tu nota */
     const orb = (() => {
