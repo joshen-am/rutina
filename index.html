@@ -887,7 +887,7 @@ button{transition:opacity .16s ease}button:active{transform:none}
 <label style="position: relative; display: flex; align-items: center; min-height: 52px; font-size: 16px; cursor: pointer; border-top: 0.5px solid {{ th.sep }}">Restaurar respaldo
 <input type="file" accept=".json,application/json" onChange="{{ importBackup }}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer"></label>
 <button type="button" onClick="{{ resetAll }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; width: 100%; min-height: 52px; padding: 0; background: transparent; color: {{ th.danger }}; font-size: 16px; text-align: left; font-weight: {{ resetWeight }}; border-top: 0.5px solid {{ th.sep }}">{{ resetLabel }}</button></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{ th.sub }}">Todo se guarda solo en este teléfono, en dos copias. El respaldo no incluye las fotos ni tu clave de IA.</p></section>
-<div aria-label="keystone" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px"><img src="img/orb-{{ orb.k }}.png" alt="" aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 50%; box-shadow: 0 1.3px 3.5px rgba(0, 0, 0, 0.22)"><span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em; margin-top: 8px">keystone</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Hecha para {{ prefs.nombre }}</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Versión 29</span></div>
+<div aria-label="keystone" style="display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 8px 0 4px"><img src="img/orb-{{ orb.k }}.png" alt="" aria-hidden="true" style="width: 44px; height: 44px; flex: none; border-radius: 50%; box-shadow: 0 1.3px 3.5px rgba(0, 0, 0, 0.22)"><span style="font-size: 28px; font-weight: 500; letter-spacing: -0.055em; margin-top: 8px">keystone</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Hecha para {{ prefs.nombre }}</span><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.tertiary }}">Versión 30</span></div>
 </div>
 </sc-if>
 
@@ -3192,8 +3192,9 @@ class Component extends DCLogic {
   // Lo que se pega puede traer espacios, saltos de línea, comillas o texto alrededor: se queda solo la clave
   cleanKey(s) {
     s = String(s || '');
-    const g = s.match(/AIza[0-9A-Za-z_\-]{20,}/);
-    if (g) return g[0];
+    // Google tiene dos formatos: el clásico AIza… y el nuevo AQ.… de AI Studio
+    const g = s.match(/AIza[0-9A-Za-z_\-]{20,}|AQ\.[0-9A-Za-z_\-.]{20,}/);
+    if (g) return g[0].replace(/\.+$/, '');
     const a = s.match(/sk-ant-[0-9A-Za-z_\-]{10,}/);
     if (a) return a[0];
     return s.replace(/\s+/g, '').replace(/^["'`«»]+|["'`«»]+$/g, '');
@@ -3202,7 +3203,7 @@ class Component extends DCLogic {
   aiCfg() {
     const a = this.state.prefs.ai || {};
     let model = String(a.model || '').trim().replace(/^models\//, '');
-    if (/^(AIza|sk-ant-)/.test(model)) model = '';   // una clave pegada en el campo del modelo
+    if (/^(AIza|AQ\.|sk-ant-)/.test(model)) model = '';   // una clave pegada en el campo del modelo
     return { provider: a.provider || 'gemini', key: this.cleanKey(a.key), model: model, ok: a.ok || '' };
   }
 
@@ -3211,8 +3212,8 @@ class Component extends DCLogic {
     const next = Object.assign({}, cur, patch);
     if ('key' in patch) {
       next.key = this.cleanKey(patch.key);
-      // la clave dice de quién es: AIza… es de Google y sk-ant-… de Anthropic
-      if (/^AIza/.test(next.key)) next.provider = 'gemini';
+      // la clave dice de quién es: AIza… o AQ.… es de Google y sk-ant-… de Anthropic
+      if (/^(AIza|AQ\.)/.test(next.key)) next.provider = 'gemini';
       else if (/^sk-ant-/.test(next.key)) next.provider = 'claude';
     }
     if (next.key !== cur.key || next.provider !== cur.provider || next.model !== cur.model) next.ok = '';
@@ -3243,8 +3244,8 @@ class Component extends DCLogic {
 
   // Google cambia y retira modelos: se le pregunta cuáles acepta esta clave y se eligen los Flash, del más nuevo al más viejo
   async geminiModels(cfg) {
-    if (cfg.model) return [cfg.model];
-    if (this._gm && this._gm.key === cfg.key) return this._gm.list;
+    if (cfg.model) return { flash: [cfg.model], lite: [], good: {} };
+    if (this._gm && this._gm.key === cfg.key) return this._gm;
     let r;
     try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
     catch (e) { throw new Error('red'); }
@@ -3252,31 +3253,54 @@ class Component extends DCLogic {
     if (!r.ok) throw this.aiErrorFrom(r.status, d);
     const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
       .map((m) => String(m.name || '').replace(/^models\//, ''))
-      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer)/.test(n));
+      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer|omni)/.test(n));
     const ver = (n) => { const m = n.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
-    const score = (n) => n === 'gemini-flash-latest' ? 1000 : n === 'gemini-flash-lite-latest' ? 90
-      : (/lite/.test(n) ? 0 : 100) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
-    let list = names.sort((a, b) => score(b) - score(a)).slice(0, 5);
-    if (!list.length) list = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
-    this._gm = { key: cfg.key, list: list };
-    return list;
+    const score = (n) => (/-latest$/.test(n) ? 1000 : 0) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
+    const best = (lite) => names.filter((n) => /lite/.test(n) === lite).sort((a, b) => score(b) - score(a));
+    let flash = best(false).slice(0, 2), lite = best(true).slice(0, 2);
+    if (!flash.length && !lite.length) { flash = ['gemini-flash-latest']; lite = ['gemini-flash-lite-latest']; }
+    this._gm = { key: cfg.key, flash: flash, lite: lite, good: {} };
+    return this._gm;
   }
 
   async geminiRun(cfg, parts, gen) {
-    const models = await this.geminiModels(cfg);
+    const gm = await this.geminiModels(cfg);
+    const img = parts.length > 1, kind = img ? 'img' : 'txt';
+    // Texto: primero Flash-Lite, que responde en 1 o 2 s. Fotos: primero Flash, que ve mejor, y Flash-Lite si Google
+    // está saturado (pasa seguido: el Flash puede tardar más de 45 s o responder 503)
+    let models = img ? gm.flash.concat(gm.lite) : gm.lite.concat(gm.flash);
+    const good = gm.good[kind];
+    if (good) models = [good].concat(models.filter((m) => m !== good));
     let last = new Error('modelo');
     for (let i = 0; i < models.length; i++) {
       const g = Object.assign({}, gen);
-      if (/^gemini-[3-9]/.test(models[i])) delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
-      let r;
+      if (!/^gemini-[12]\./.test(models[i])) {   // Gemini 3 en adelante, y los alias -latest que apuntan a ellos
+        delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
+        // por defecto razona harto: con «low» responde en ~6 s en vez de 30–45
+        if (!this._noThink || !this._noThink[models[i]]) g.thinkingConfig = { thinkingLevel: 'low' };
+      }
+      const wait = /lite/.test(models[i]) ? (img ? 75000 : 30000) : (img ? 50000 : 35000);
+      const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const timer = ac ? setTimeout(() => ac.abort(), wait) : 0;
+      let r, d;
       try {
         r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac ? ac.signal : undefined,
           body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: g })
         });
-      } catch (e) { throw new Error('red'); }
-      const d = await r.json().catch(() => ({}));
+        d = await r.json().catch(() => ({}));
+      } catch (e) {
+        clearTimeout(timer);
+        if (e && e.name === 'AbortError') { last = new Error('ocupada'); continue; }   // tardó demasiado: el siguiente
+        throw new Error('red');
+      }
+      clearTimeout(timer);
       if (!r.ok) {
+        // un modelo que no acepta el nivel de razonamiento: se repite sin él
+        if (r.status === 400 && g.thinkingConfig && /thinking/i.test(String((d.error || {}).message || ''))) {
+          this._noThink = Object.assign({}, this._noThink, { [models[i]]: true });
+          i--; continue;
+        }
         last = this.aiErrorFrom(r.status, d);
         // modelo retirado, sin cuota o saturado: prueba el siguiente
         if (['modelo', 'limite', 'sincuota', 'ocupada'].indexOf(last.message) >= 0) continue;
@@ -3288,7 +3312,7 @@ class Component extends DCLogic {
         const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
         throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
       }
-      if (this._gm && this._gm.key === cfg.key && i > 0) this._gm.list = [models[i]].concat(models.filter((m) => m !== models[i]));
+      gm.good[kind] = models[i];   // el que respondió va primero mientras la app siga abierta
       this.aiMarkOk(models[i]);
       return t;
     }
@@ -3365,7 +3389,7 @@ class Component extends DCLogic {
     const g = cfg.provider !== 'claude';
     const who = g ? 'Google' : 'Anthropic';
     if (m === 'nokey') return 'Conecta la IA en Ajustes para analizar tus comidas.';
-    if (m === 'clave') return g ? 'Google dice que esa clave no es válida. Cópiala de nuevo, completa, desde AI Studio: empieza con AIza.' : 'Anthropic dice que esa clave no es válida. Cópiala de nuevo, completa: empieza con sk-ant-.';
+    if (m === 'clave') return g ? 'Google dice que esa clave no es válida. Cópiala de nuevo, completa, desde AI Studio: empieza con AQ. o con AIza.' : 'Anthropic dice que esa clave no es válida. Cópiala de nuevo, completa: empieza con sk-ant-.';
     if (m === 'vencida') return 'Esa clave venció. Crea una nueva en ' + (g ? 'AI Studio' : 'la consola de Anthropic') + ' y pégala en Ajustes.';
     if (m === 'servicio') return 'Esa clave es de un proyecto de Google Cloud sin la API de Gemini activada. Crea la clave en AI Studio, con el botón «Obtener clave».';
     if (m === 'restringida') return 'La clave tiene restricciones (de sitio, app o IP) y ' + who + ' rechaza las llamadas desde keystone. Crea una clave nueva sin restricciones.';
@@ -5686,8 +5710,8 @@ class Component extends DCLogic {
     const aiv = {
       key: ai.key, model: ai.model,
       status: !ai.key ? 'Sin conectar' : ai.ok ? 'Conectada' : 'Sin probar', stColor: ai.key && ai.ok ? c.constanciaText : th.sub,
-      hasHint: !!ai.key && (isG ? !/^AIza/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
-      hint: isG ? 'Las claves de Google AI Studio empiezan con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
+      hasHint: !!ai.key && (isG ? !/^(AIza|AQ\.)/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
+      hint: isG ? 'Las claves de Google AI Studio empiezan con AQ. o con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',

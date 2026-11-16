@@ -182,8 +182,8 @@
     const aiv = {
       key: ai.key, model: ai.model,
       status: !ai.key ? 'Sin conectar' : ai.ok ? 'Conectada' : 'Sin probar', stColor: ai.key && ai.ok ? c.constanciaText : th.sub,
-      hasHint: !!ai.key && (isG ? !/^AIza/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
-      hint: isG ? 'Las claves de Google AI Studio empiezan con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
+      hasHint: !!ai.key && (isG ? !/^(AIza|AQ\.)/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
+      hint: isG ? 'Las claves de Google AI Studio empiezan con AQ. o con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',
