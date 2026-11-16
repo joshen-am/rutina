@@ -22,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 29        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 28
+python3 build_pwa3.py 30        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 29
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -66,6 +66,15 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - **Apoyos**: cada pose de suelo declara `touch` (`toes`, `knees`, `hands`, `forearms`, `hips`, `back`, `chest`, `head`, o un hueso con su altura, como `'RightFoot:0.05'`). Un ajuste por Levenberg-Marquardt mueve y gira la cadera para que esos apoyos toquen el suelo. De pie, el ajuste mantiene el centro de masa sobre los pies. Entre dos poses, un apoyo que solo tiene una de ellas se suelta (o se toma) con peso: cuenta entero en su pose y casi nada a medio tramo.
 - **`exfit.js` se genera**: después de cambiar `exercises.js` o el solver, corre `python3 b3d/preparar.py`, vacía `b3d/t/exfit.js` (`echo "window.KS_FIT={};" > b3d/t/exfit.js`) y luego `node b3d/bake.js`. Si el ajuste de un ejercicio no coincide con su definición, la app lo recalcula al abrirlo (más lento, pero correcto).
 - `edit_ex.py <script.py>` trae `setb(clave, texto)` para reemplazar el bloque entero de un ejercicio.
+
+## Conexión con la IA (`v3/food.js`, versión 29)
+
+- La clave la pone el usuario en Ajustes → «Inteligencia artificial». `cleanKey` deja solo la clave aunque se pegue con espacios, comillas o texto alrededor, y una clave `AIza…` elige Gemini y una `sk-ant-…` elige Claude.
+- Gemini: `geminiModels` pide a Google la lista de modelos de esa clave (`GET /v1beta/models`) y prueba los Flash del más nuevo al más viejo. Si uno no existe, no tiene cuota o está saturado, pasa al siguiente. Con Gemini 3 no se manda `temperature`. Todo pasa por `geminiRun` y `claudeRun` (también `aiCallN` de `cuerpo.js`).
+- `aiErrorFrom` lee el motivo que da Google o Anthropic (clave inválida o vencida, API sin activar, clave con restricciones, región, sin cuota gratis, sin saldo, filtros de contenido) y `aiErrorText` lo explica en español. «Probar conexión» suma el detalle original y, si funciona, nombra el modelo que respondió.
+- Ajustes dice «Conectada» solo después de una respuesta real (`prefs.ai.ok` guarda el modelo que respondió) y vuelve a «Sin probar» si la clave falla.
+- La app registra el service worker solo en https: en `localhost` las pruebas lo registran a mano.
+- iCloud deja copias como `gato_vaca-2 2.svg`. `build_pwa3.py` las salta (`COPIA`) y comprueba que existan todos los archivos de `FILES`, porque si falta uno el service worker no se instala (pasó en la 28).
 
 ## Reglas
 

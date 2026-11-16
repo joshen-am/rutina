@@ -8,38 +8,18 @@
     const cfg = this.aiCfg();
     if (!cfg.key) throw new Error('nokey');
     imgs = imgs || [];
+    let t;
     if (cfg.provider === 'claude') {
       const content = imgs.map((b) => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }));
       content.push({ type: 'text', text: prompt });
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: cfg.model || 'claude-haiku-5-5', max_tokens: maxTokens || 2000, messages: [{ role: 'user', content: content }] })
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const t = (d.content || []).map((x) => x.text || '').join('');
-      if (!t) throw new Error('vacio');
-      return json ? this.parseJSON(t) : t.trim();
+      t = await this.claudeRun(cfg, content, maxTokens || 2000);
+    } else {
+      const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
+      const gen = { temperature: json ? 0.2 : 0.6 };
+      if (json) gen.responseMimeType = 'application/json';
+      t = await this.geminiRun(cfg, parts, gen);
     }
-    const models = cfg.model ? [cfg.model] : ['gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite'];
-    const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
-    const gen = { temperature: json ? 0.2 : 0.6 };
-    if (json) gen.responseMimeType = 'application/json';
-    const body = JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: gen });
-    let last = new Error('modelo');
-    for (let i = 0; i < models.length; i++) {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key);
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-      if (r.status === 404) { last = new Error('modelo'); continue; }
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const c = d.candidates && d.candidates[0];
-      const t = c && c.content && c.content.parts ? c.content.parts.map((p) => p.text || '').join('') : '';
-      if (!t) throw new Error('vacio');
-      return json ? this.parseJSON(t) : t.trim();
-    }
-    throw last;
+    return json ? this.parseJSON(t) : t.trim();
   }
 
   aiProviderName() { return this.aiCfg().provider === 'claude' ? 'Claude (Anthropic)' : 'Gemini (Google)'; }

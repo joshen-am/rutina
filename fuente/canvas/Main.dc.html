@@ -809,7 +809,7 @@ button{transition:opacity .16s ease}button:active{transform:none}
 </button>
 </sc-for>
 <button type="button" onClick="{{ ad.cycleGoal }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 16px 0 0; background: transparent; font-size: 16px; border-top: 0.5px solid {{ th.sep }}"><span>Objetivo</span><span style="display: flex; align-items: center; gap: 8px; color: {{ th.sub }}">{{ ad.goal }}<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 9l4-4 4 4M8 15l4 4 4-4"></path></svg></span></button></div><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{ th.sub }}">Toca un día para cambiar su rutina.</p></section>
-<div id="ia" style="display: contents"><section style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; padding: 0 4px">IA para comidas</span><div style="background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px; padding: 0 0 0 16px; overflow: hidden"><div style="padding: 16px 16px 16px 0; display: flex; flex-direction: column; gap: 12px">
+<div id="ia" style="display: contents"><section style="display: flex; flex-direction: column; gap: 8px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; padding: 0 4px">Inteligencia artificial</span><div style="background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px; padding: 0 0 0 16px; overflow: hidden"><div style="padding: 16px 16px 16px 0; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-size: 16px">Estado</span><span style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: {{ ai.stColor }}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{ ai.stColor }}"></span>{{ ai.status }}</span></div>
 <div role="group" aria-label="Proveedor" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{ th.segBg }}">
 <sc-for list="{{ ai.provs }}" as="pv" hint-placeholder-count="2">
@@ -818,6 +818,7 @@ button{transition:opacity .16s ease}button:active{transform:none}
 </div>
 <label for="aikey" style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">Clave de API</label>
 <input id="aikey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{ ai.ph }}" value="{{ ai.key }}" onChange="{{ ai.setKey }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-family: {{ mono }}; font-size: 13px">
+<sc-if value="{{ ai.hasHint }}" hint-placeholder-val="{{ false }}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ ai.hint }}</p></sc-if>
 <label for="aimodel" style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">Modelo (opcional)</label>
 <input id="aimodel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{ ai.modelPh }}" value="{{ ai.model }}" onChange="{{ ai.setModel }}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{ th.input }}; box-shadow: inset 0 0 0 1px {{ th.line }}; color: {{ th.text }}; font: inherit; font-family: {{ mono }}; font-size: 13px">
 <div style="display: flex; gap: 8px">
@@ -3154,13 +3155,41 @@ class Component extends DCLogic {
 
   /* ---------- IA ---------- */
 
+  // Lo que se pega puede traer espacios, saltos de línea, comillas o texto alrededor: se queda solo la clave
+  cleanKey(s) {
+    s = String(s || '');
+    const g = s.match(/AIza[0-9A-Za-z_\-]{20,}/);
+    if (g) return g[0];
+    const a = s.match(/sk-ant-[0-9A-Za-z_\-]{10,}/);
+    if (a) return a[0];
+    return s.replace(/\s+/g, '').replace(/^["'`«»]+|["'`«»]+$/g, '');
+  }
+
   aiCfg() {
     const a = this.state.prefs.ai || {};
-    return { provider: a.provider || 'gemini', key: a.key || '', model: a.model || '' };
+    let model = String(a.model || '').trim().replace(/^models\//, '');
+    if (/^(AIza|sk-ant-)/.test(model)) model = '';   // una clave pegada en el campo del modelo
+    return { provider: a.provider || 'gemini', key: this.cleanKey(a.key), model: model, ok: a.ok || '' };
   }
 
   setAi(patch) {
-    this.setPref('ai', Object.assign({}, this.aiCfg(), patch));
+    const cur = this.aiCfg();
+    const next = Object.assign({}, cur, patch);
+    if ('key' in patch) {
+      next.key = this.cleanKey(patch.key);
+      // la clave dice de quién es: AIza… es de Google y sk-ant-… de Anthropic
+      if (/^AIza/.test(next.key)) next.provider = 'gemini';
+      else if (/^sk-ant-/.test(next.key)) next.provider = 'claude';
+    }
+    if (next.key !== cur.key || next.provider !== cur.provider || next.model !== cur.model) next.ok = '';
+    this.setPref('ai', next);
+  }
+
+  // Recuerda el modelo que respondió: Ajustes muestra «Conectada» solo después de una respuesta real
+  aiMarkOk(model) {
+    this._aiLast = model;
+    const a = this.state.prefs.ai || {};
+    if (a.ok !== model) this.setPref('ai', Object.assign({}, a, { ok: model }));
   }
 
   foodPrompt(meal, text, withImg) {
@@ -3178,54 +3207,144 @@ class Component extends DCLogic {
     ].filter(Boolean).join('\n');
   }
 
+  // Google cambia y retira modelos: se le pregunta cuáles acepta esta clave y se eligen los Flash, del más nuevo al más viejo
+  async geminiModels(cfg) {
+    if (cfg.model) return [cfg.model];
+    if (this._gm && this._gm.key === cfg.key) return this._gm.list;
+    let r;
+    try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
+    catch (e) { throw new Error('red'); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw this.aiErrorFrom(r.status, d);
+    const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
+      .map((m) => String(m.name || '').replace(/^models\//, ''))
+      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer)/.test(n));
+    const ver = (n) => { const m = n.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
+    const score = (n) => n === 'gemini-flash-latest' ? 1000 : n === 'gemini-flash-lite-latest' ? 90
+      : (/lite/.test(n) ? 0 : 100) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
+    let list = names.sort((a, b) => score(b) - score(a)).slice(0, 5);
+    if (!list.length) list = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+    this._gm = { key: cfg.key, list: list };
+    return list;
+  }
+
+  async geminiRun(cfg, parts, gen) {
+    const models = await this.geminiModels(cfg);
+    let last = new Error('modelo');
+    for (let i = 0; i < models.length; i++) {
+      const g = Object.assign({}, gen);
+      if (/^gemini-[3-9]/.test(models[i])) delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
+      let r;
+      try {
+        r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: g })
+        });
+      } catch (e) { throw new Error('red'); }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        last = this.aiErrorFrom(r.status, d);
+        // modelo retirado, sin cuota o saturado: prueba el siguiente
+        if (['modelo', 'limite', 'sincuota', 'ocupada'].indexOf(last.message) >= 0) continue;
+        throw last;
+      }
+      const c = d.candidates && d.candidates[0];
+      const t = c && c.content && c.content.parts ? c.content.parts.filter((p) => !p.thought).map((p) => p.text || '').join('') : '';
+      if (!t) {
+        const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
+        throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
+      }
+      if (this._gm && this._gm.key === cfg.key && i > 0) this._gm.list = [models[i]].concat(models.filter((m) => m !== models[i]));
+      this.aiMarkOk(models[i]);
+      return t;
+    }
+    throw last;
+  }
+
+  async claudeRun(cfg, content, maxTokens) {
+    const model = cfg.model || 'claude-haiku-5-5';
+    let r;
+    try {
+      r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: model, max_tokens: maxTokens || 1500, messages: [{ role: 'user', content: content }] })
+      });
+    } catch (e) { throw new Error('red'); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw this.aiErrorFrom(r.status, d);
+    const t = (d.content || []).map((x) => x.text || '').join('');
+    if (!t) throw new Error(d.stop_reason === 'refusal' ? 'bloqueo' : 'vacio');
+    this.aiMarkOk(model);
+    return t;
+  }
+
   async callGemini(cfg, prompt, img, json) {
-    const models = cfg.model ? [cfg.model] : ['gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite'];
     const parts = [{ text: prompt }];
     if (img) parts.push({ inline_data: { mime_type: 'image/jpeg', data: img } });
     const gen = { temperature: 0.2 };
     if (json) gen.responseMimeType = 'application/json';
-    const body = JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: gen });
-    let last = new Error('modelo');
-    for (let i = 0; i < models.length; i++) {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key);
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-      if (r.status === 404) { last = new Error('modelo'); continue; }
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const c = d.candidates && d.candidates[0];
-      const t = c && c.content && c.content.parts ? c.content.parts.map((p) => p.text || '').join('') : '';
-      if (!t) throw new Error('vacio');
-      return t;
-    }
-    throw last;
+    return this.geminiRun(cfg, parts, gen);
   }
 
   async callClaude(cfg, prompt, img) {
     const content = [];
     if (img) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
     content.push({ type: 'text', text: prompt });
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: cfg.model || 'claude-haiku-5-5', max_tokens: 1500, messages: [{ role: 'user', content: content }] })
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw this.aiError(r.status);
-    return (d.content || []).map((x) => x.text || '').join('');
+    return this.claudeRun(cfg, content, 1500);
   }
 
-  aiError(status) {
-    return new Error(status === 400 || status === 401 || status === 403 ? 'clave' : status === 429 ? 'limite' : status === 404 ? 'modelo' : 'red');
+  // Lee el motivo que da el proveedor (Google o Anthropic) y lo pasa a un código con su texto en Ajustes
+  aiErrorFrom(status, d) {
+    const er = (d && d.error) || {};
+    const msg = String(er.message || '');
+    const det = Array.isArray(er.details) ? er.details : [];
+    const reason = String((det.find((x) => x && x.reason) || {}).reason || '');
+    const st = String(er.status || er.type || '');
+    const all = reason + ' ' + st + ' ' + msg;
+    let code;
+    if (/EXPIRED|expired/.test(all)) code = 'vencida';
+    else if (/API_KEY_INVALID|API key not valid|invalid x-api-key|authentication_error/i.test(all)) code = 'clave';
+    else if (/SERVICE_DISABLED|has not been used in project|is disabled/i.test(all)) code = 'servicio';
+    else if (/REFERRER_BLOCKED|referer|referrer|_SERVICE_BLOCKED|IP_ADDRESS_BLOCKED|APP_BLOCKED/i.test(all)) code = 'restringida';
+    else if (/location is not supported|not available in your country|User location/i.test(all)) code = 'region';
+    else if (/credit balance|billing|prepay/i.test(all) && status !== 429) code = 'saldo';
+    else if (status === 429 || /RESOURCE_EXHAUSTED|rate_limit_error/.test(st)) code = /limit:\s*0\b|free_tier.*limit: 0/.test(msg) ? 'sincuota' : 'limite';
+    else if (status === 404 || /NOT_FOUND|not_found_error/.test(st)) code = 'modelo';
+    else if (status === 401 || status === 403) code = 'clave';
+    else if (status >= 500 || /overloaded_error|UNAVAILABLE/.test(st)) code = 'ocupada';
+    else code = 'otro';
+    // si la clave falla, Ajustes deja de decir «Conectada»
+    if (['clave', 'vencida', 'servicio', 'restringida', 'region', 'saldo'].indexOf(code) >= 0) {
+      const a = this.state.prefs.ai || {};
+      if (a.ok) this.setPref('ai', Object.assign({}, a, { ok: '' }));
+    }
+    const e = new Error(code);
+    e.detail = msg.replace(/\s+/g, ' ').slice(0, 220);
+    e.status = status;
+    return e;
   }
 
   aiErrorText(e) {
     const m = e && e.message;
+    const cfg = this.aiCfg();
+    const g = cfg.provider !== 'claude';
+    const who = g ? 'Google' : 'Anthropic';
     if (m === 'nokey') return 'Conecta la IA en Ajustes para analizar tus comidas.';
-    if (m === 'clave') return 'La clave de IA no funcionó. Revísala en Ajustes.';
+    if (m === 'clave') return g ? 'Google dice que esa clave no es válida. Cópiala de nuevo, completa, desde AI Studio: empieza con AIza.' : 'Anthropic dice que esa clave no es válida. Cópiala de nuevo, completa: empieza con sk-ant-.';
+    if (m === 'vencida') return 'Esa clave venció. Crea una nueva en ' + (g ? 'AI Studio' : 'la consola de Anthropic') + ' y pégala en Ajustes.';
+    if (m === 'servicio') return 'Esa clave es de un proyecto de Google Cloud sin la API de Gemini activada. Crea la clave en AI Studio, con el botón «Obtener clave».';
+    if (m === 'restringida') return 'La clave tiene restricciones (de sitio, app o IP) y ' + who + ' rechaza las llamadas desde keystone. Crea una clave nueva sin restricciones.';
+    if (m === 'region') return 'Google no ofrece la API de Gemini desde donde te estás conectando. Prueba sin VPN o usa Claude.';
+    if (m === 'sincuota') return 'Tu clave no tiene uso gratis disponible en los modelos Flash. En AI Studio revisa el plan de tu proyecto o activa la facturación, o usa Claude.';
+    if (m === 'saldo') return 'Tu cuenta de Anthropic no tiene saldo. Carga crédito en la consola de Anthropic.';
     if (m === 'limite') return 'Llegaste al límite de uso por ahora. Intenta de nuevo en un minuto.';
+    if (m === 'ocupada') return 'La IA está saturada en este momento. Intenta de nuevo en unos minutos.';
+    if (m === 'bloqueo') return 'La IA no quiso responder por sus filtros de contenido. En las fotos del cuerpo usa ropa deportiva (short y polera ajustada) e intenta otra vez.';
     if (m === 'formato' || m === 'vacio') return 'La IA no devolvió un resultado claro. Prueba con otra foto o descríbelo con palabras.';
-    if (m === 'modelo') return 'Ese modelo de IA no está disponible. Deja el campo de modelo vacío en Ajustes.';
+    if (m === 'modelo') return cfg.model ? 'El modelo «' + cfg.model + '» no está disponible con tu clave. Deja vacío el campo Modelo en Ajustes.' : 'Ningún modelo de ' + who + ' respondió con tu clave. Revisa la clave en Ajustes.';
     if (m === 'img') return 'No se pudo leer esa imagen.';
+    if (m === 'otro') return who + ' rechazó la solicitud' + (e.detail ? ': «' + e.detail + '»' : '.');
     return 'No hay conexión con la IA. Revisa tu internet e intenta otra vez.';
   }
 
@@ -4432,38 +4551,18 @@ class Component extends DCLogic {
     const cfg = this.aiCfg();
     if (!cfg.key) throw new Error('nokey');
     imgs = imgs || [];
+    let t;
     if (cfg.provider === 'claude') {
       const content = imgs.map((b) => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }));
       content.push({ type: 'text', text: prompt });
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: cfg.model || 'claude-haiku-5-5', max_tokens: maxTokens || 2000, messages: [{ role: 'user', content: content }] })
-      });
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const t = (d.content || []).map((x) => x.text || '').join('');
-      if (!t) throw new Error('vacio');
-      return json ? this.parseJSON(t) : t.trim();
+      t = await this.claudeRun(cfg, content, maxTokens || 2000);
+    } else {
+      const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
+      const gen = { temperature: json ? 0.2 : 0.6 };
+      if (json) gen.responseMimeType = 'application/json';
+      t = await this.geminiRun(cfg, parts, gen);
     }
-    const models = cfg.model ? [cfg.model] : ['gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite'];
-    const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
-    const gen = { temperature: json ? 0.2 : 0.6 };
-    if (json) gen.responseMimeType = 'application/json';
-    const body = JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: gen });
-    let last = new Error('modelo');
-    for (let i = 0; i < models.length; i++) {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key);
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-      if (r.status === 404) { last = new Error('modelo'); continue; }
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const c = d.candidates && d.candidates[0];
-      const t = c && c.content && c.content.parts ? c.content.parts.map((p) => p.text || '').join('') : '';
-      if (!t) throw new Error('vacio');
-      return json ? this.parseJSON(t) : t.trim();
-    }
-    throw last;
+    return json ? this.parseJSON(t) : t.trim();
   }
 
   aiProviderName() { return this.aiCfg().provider === 'claude' ? 'Claude (Anthropic)' : 'Gemini (Google)'; }
@@ -5552,7 +5651,9 @@ class Component extends DCLogic {
     const isG = ai.provider !== 'claude';
     const aiv = {
       key: ai.key, model: ai.model,
-      status: ai.key ? 'Conectada' : 'Sin conectar', stColor: ai.key ? c.constanciaText : th.sub,
+      status: !ai.key ? 'Sin conectar' : ai.ok ? 'Conectada' : 'Sin probar', stColor: ai.key && ai.ok ? c.constanciaText : th.sub,
+      hasHint: !!ai.key && (isG ? !/^AIza/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
+      hint: isG ? 'Las claves de Google AI Studio empiezan con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',
@@ -5561,7 +5662,11 @@ class Component extends DCLogic {
         const sel = (ai.provider || 'gemini') === p[0];
         return { label: p[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 500 : 400, shadow: sel && !dark ? '0 1px 3px rgba(9, 9, 11, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setAi({ provider: p[0], model: '' }); this.setState({ aiMsg: '' }); } };
       }),
-      setKey: (e) => { this.setAi({ key: ((e && e.target ? e.target.value : '') || '').trim() }); },
+      setKey: (e) => {
+        const el = e && e.target, raw = (el && el.value) || '', k = this.cleanKey(raw);
+        if (el && raw !== k) el.value = k;   // lo pegado queda limpio también en el campo
+        this.setAi({ key: k });
+      },
       setModel: (e) => { this.setAi({ model: ((e && e.target ? e.target.value : '') || '').trim() }); },
       testLabel: st.aiBusy ? 'Probando…' : 'Probar conexión',
       test: () => this.aiTest(),
@@ -5715,11 +5820,14 @@ class Component extends DCLogic {
     this.sfx('tap');
     this.setState({ aiBusy: true, aiMsg: '' });
     try {
-      const j = await this.aiJSON('Responde solo este JSON: {"ok":true}', null);
-      this.setState({ aiBusy: false, aiOk: !!j.ok, aiMsg: j.ok ? 'Conexión lista. Ya puedes analizar tus comidas.' : 'La IA respondió algo inesperado, pero hay conexión.' });
+      this._gm = null;   // vuelve a preguntar a Google qué modelos acepta la clave
+      await this.aiJSON('Responde solo este JSON: {"ok":true}', null);
+      this.setState({ aiBusy: false, aiOk: true, aiMsg: 'Conexión lista con ' + (this._aiLast || 'la IA') + '. Ya puedes usarla en Comida, Fotos y con tu entrenador.' });
       this.sfx('done');
     } catch (e) {
-      this.setState({ aiBusy: false, aiOk: false, aiMsg: this.aiErrorText(e) });
+      // aquí sí va el motivo original: es lo que sirve para saber qué pasa con la clave
+      const det = e && e.detail && e.message !== 'otro' ? ' Detalle: ' + e.detail : '';
+      this.setState({ aiBusy: false, aiOk: false, aiMsg: this.aiErrorText(e) + det });
     }
   }
 

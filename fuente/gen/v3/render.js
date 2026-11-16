@@ -181,7 +181,9 @@
     const isG = ai.provider !== 'claude';
     const aiv = {
       key: ai.key, model: ai.model,
-      status: ai.key ? 'Conectada' : 'Sin conectar', stColor: ai.key ? c.constanciaText : th.sub,
+      status: !ai.key ? 'Sin conectar' : ai.ok ? 'Conectada' : 'Sin probar', stColor: ai.key && ai.ok ? c.constanciaText : th.sub,
+      hasHint: !!ai.key && (isG ? !/^AIza/.test(ai.key) : !/^sk-ant-/.test(ai.key)),
+      hint: isG ? 'Las claves de Google AI Studio empiezan con AIza. Revisa que copiaste la clave y no otro dato.' : 'Las claves de Anthropic empiezan con sk-ant-. Revisa que copiaste la clave completa.',
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',
@@ -190,7 +192,11 @@
         const sel = (ai.provider || 'gemini') === p[0];
         return { label: p[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 500 : 400, shadow: sel && !dark ? '0 1px 3px rgba(9, 9, 11, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setAi({ provider: p[0], model: '' }); this.setState({ aiMsg: '' }); } };
       }),
-      setKey: (e) => { this.setAi({ key: ((e && e.target ? e.target.value : '') || '').trim() }); },
+      setKey: (e) => {
+        const el = e && e.target, raw = (el && el.value) || '', k = this.cleanKey(raw);
+        if (el && raw !== k) el.value = k;   // lo pegado queda limpio también en el campo
+        this.setAi({ key: k });
+      },
       setModel: (e) => { this.setAi({ model: ((e && e.target ? e.target.value : '') || '').trim() }); },
       testLabel: st.aiBusy ? 'Probando…' : 'Probar conexión',
       test: () => this.aiTest(),
@@ -344,10 +350,13 @@
     this.sfx('tap');
     this.setState({ aiBusy: true, aiMsg: '' });
     try {
-      const j = await this.aiJSON('Responde solo este JSON: {"ok":true}', null);
-      this.setState({ aiBusy: false, aiOk: !!j.ok, aiMsg: j.ok ? 'Conexión lista. Ya puedes analizar tus comidas.' : 'La IA respondió algo inesperado, pero hay conexión.' });
+      this._gm = null;   // vuelve a preguntar a Google qué modelos acepta la clave
+      await this.aiJSON('Responde solo este JSON: {"ok":true}', null);
+      this.setState({ aiBusy: false, aiOk: true, aiMsg: 'Conexión lista con ' + (this._aiLast || 'la IA') + '. Ya puedes usarla en Comida, Fotos y con tu entrenador.' });
       this.sfx('done');
     } catch (e) {
-      this.setState({ aiBusy: false, aiOk: false, aiMsg: this.aiErrorText(e) });
+      // aquí sí va el motivo original: es lo que sirve para saber qué pasa con la clave
+      const det = e && e.detail && e.message !== 'otro' ? ' Detalle: ' + e.detail : '';
+      this.setState({ aiBusy: false, aiOk: false, aiMsg: this.aiErrorText(e) + det });
     }
   }

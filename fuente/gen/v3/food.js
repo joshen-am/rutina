@@ -75,13 +75,41 @@
 
   /* ---------- IA ---------- */
 
+  // Lo que se pega puede traer espacios, saltos de línea, comillas o texto alrededor: se queda solo la clave
+  cleanKey(s) {
+    s = String(s || '');
+    const g = s.match(/AIza[0-9A-Za-z_\-]{20,}/);
+    if (g) return g[0];
+    const a = s.match(/sk-ant-[0-9A-Za-z_\-]{10,}/);
+    if (a) return a[0];
+    return s.replace(/\s+/g, '').replace(/^["'`«»]+|["'`«»]+$/g, '');
+  }
+
   aiCfg() {
     const a = this.state.prefs.ai || {};
-    return { provider: a.provider || 'gemini', key: a.key || '', model: a.model || '' };
+    let model = String(a.model || '').trim().replace(/^models\//, '');
+    if (/^(AIza|sk-ant-)/.test(model)) model = '';   // una clave pegada en el campo del modelo
+    return { provider: a.provider || 'gemini', key: this.cleanKey(a.key), model: model, ok: a.ok || '' };
   }
 
   setAi(patch) {
-    this.setPref('ai', Object.assign({}, this.aiCfg(), patch));
+    const cur = this.aiCfg();
+    const next = Object.assign({}, cur, patch);
+    if ('key' in patch) {
+      next.key = this.cleanKey(patch.key);
+      // la clave dice de quién es: AIza… es de Google y sk-ant-… de Anthropic
+      if (/^AIza/.test(next.key)) next.provider = 'gemini';
+      else if (/^sk-ant-/.test(next.key)) next.provider = 'claude';
+    }
+    if (next.key !== cur.key || next.provider !== cur.provider || next.model !== cur.model) next.ok = '';
+    this.setPref('ai', next);
+  }
+
+  // Recuerda el modelo que respondió: Ajustes muestra «Conectada» solo después de una respuesta real
+  aiMarkOk(model) {
+    this._aiLast = model;
+    const a = this.state.prefs.ai || {};
+    if (a.ok !== model) this.setPref('ai', Object.assign({}, a, { ok: model }));
   }
 
   foodPrompt(meal, text, withImg) {
@@ -99,54 +127,144 @@
     ].filter(Boolean).join('\n');
   }
 
+  // Google cambia y retira modelos: se le pregunta cuáles acepta esta clave y se eligen los Flash, del más nuevo al más viejo
+  async geminiModels(cfg) {
+    if (cfg.model) return [cfg.model];
+    if (this._gm && this._gm.key === cfg.key) return this._gm.list;
+    let r;
+    try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
+    catch (e) { throw new Error('red'); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw this.aiErrorFrom(r.status, d);
+    const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
+      .map((m) => String(m.name || '').replace(/^models\//, ''))
+      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer)/.test(n));
+    const ver = (n) => { const m = n.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
+    const score = (n) => n === 'gemini-flash-latest' ? 1000 : n === 'gemini-flash-lite-latest' ? 90
+      : (/lite/.test(n) ? 0 : 100) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
+    let list = names.sort((a, b) => score(b) - score(a)).slice(0, 5);
+    if (!list.length) list = ['gemini-flash-latest', 'gemini-2.5-flash', 'gemini-flash-lite-latest'];
+    this._gm = { key: cfg.key, list: list };
+    return list;
+  }
+
+  async geminiRun(cfg, parts, gen) {
+    const models = await this.geminiModels(cfg);
+    let last = new Error('modelo');
+    for (let i = 0; i < models.length; i++) {
+      const g = Object.assign({}, gen);
+      if (/^gemini-[3-9]/.test(models[i])) delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
+      let r;
+      try {
+        r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: g })
+        });
+      } catch (e) { throw new Error('red'); }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) {
+        last = this.aiErrorFrom(r.status, d);
+        // modelo retirado, sin cuota o saturado: prueba el siguiente
+        if (['modelo', 'limite', 'sincuota', 'ocupada'].indexOf(last.message) >= 0) continue;
+        throw last;
+      }
+      const c = d.candidates && d.candidates[0];
+      const t = c && c.content && c.content.parts ? c.content.parts.filter((p) => !p.thought).map((p) => p.text || '').join('') : '';
+      if (!t) {
+        const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
+        throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
+      }
+      if (this._gm && this._gm.key === cfg.key && i > 0) this._gm.list = [models[i]].concat(models.filter((m) => m !== models[i]));
+      this.aiMarkOk(models[i]);
+      return t;
+    }
+    throw last;
+  }
+
+  async claudeRun(cfg, content, maxTokens) {
+    const model = cfg.model || 'claude-haiku-5-5';
+    let r;
+    try {
+      r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: model, max_tokens: maxTokens || 1500, messages: [{ role: 'user', content: content }] })
+      });
+    } catch (e) { throw new Error('red'); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw this.aiErrorFrom(r.status, d);
+    const t = (d.content || []).map((x) => x.text || '').join('');
+    if (!t) throw new Error(d.stop_reason === 'refusal' ? 'bloqueo' : 'vacio');
+    this.aiMarkOk(model);
+    return t;
+  }
+
   async callGemini(cfg, prompt, img, json) {
-    const models = cfg.model ? [cfg.model] : ['gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite'];
     const parts = [{ text: prompt }];
     if (img) parts.push({ inline_data: { mime_type: 'image/jpeg', data: img } });
     const gen = { temperature: 0.2 };
     if (json) gen.responseMimeType = 'application/json';
-    const body = JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: gen });
-    let last = new Error('modelo');
-    for (let i = 0; i < models.length; i++) {
-      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key);
-      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
-      if (r.status === 404) { last = new Error('modelo'); continue; }
-      const d = await r.json().catch(() => ({}));
-      if (!r.ok) throw this.aiError(r.status);
-      const c = d.candidates && d.candidates[0];
-      const t = c && c.content && c.content.parts ? c.content.parts.map((p) => p.text || '').join('') : '';
-      if (!t) throw new Error('vacio');
-      return t;
-    }
-    throw last;
+    return this.geminiRun(cfg, parts, gen);
   }
 
   async callClaude(cfg, prompt, img) {
     const content = [];
     if (img) content.push({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: img } });
     content.push({ type: 'text', text: prompt });
-    const r = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-      body: JSON.stringify({ model: cfg.model || 'claude-haiku-5-5', max_tokens: 1500, messages: [{ role: 'user', content: content }] })
-    });
-    const d = await r.json().catch(() => ({}));
-    if (!r.ok) throw this.aiError(r.status);
-    return (d.content || []).map((x) => x.text || '').join('');
+    return this.claudeRun(cfg, content, 1500);
   }
 
-  aiError(status) {
-    return new Error(status === 400 || status === 401 || status === 403 ? 'clave' : status === 429 ? 'limite' : status === 404 ? 'modelo' : 'red');
+  // Lee el motivo que da el proveedor (Google o Anthropic) y lo pasa a un código con su texto en Ajustes
+  aiErrorFrom(status, d) {
+    const er = (d && d.error) || {};
+    const msg = String(er.message || '');
+    const det = Array.isArray(er.details) ? er.details : [];
+    const reason = String((det.find((x) => x && x.reason) || {}).reason || '');
+    const st = String(er.status || er.type || '');
+    const all = reason + ' ' + st + ' ' + msg;
+    let code;
+    if (/EXPIRED|expired/.test(all)) code = 'vencida';
+    else if (/API_KEY_INVALID|API key not valid|invalid x-api-key|authentication_error/i.test(all)) code = 'clave';
+    else if (/SERVICE_DISABLED|has not been used in project|is disabled/i.test(all)) code = 'servicio';
+    else if (/REFERRER_BLOCKED|referer|referrer|_SERVICE_BLOCKED|IP_ADDRESS_BLOCKED|APP_BLOCKED/i.test(all)) code = 'restringida';
+    else if (/location is not supported|not available in your country|User location/i.test(all)) code = 'region';
+    else if (/credit balance|billing|prepay/i.test(all) && status !== 429) code = 'saldo';
+    else if (status === 429 || /RESOURCE_EXHAUSTED|rate_limit_error/.test(st)) code = /limit:\s*0\b|free_tier.*limit: 0/.test(msg) ? 'sincuota' : 'limite';
+    else if (status === 404 || /NOT_FOUND|not_found_error/.test(st)) code = 'modelo';
+    else if (status === 401 || status === 403) code = 'clave';
+    else if (status >= 500 || /overloaded_error|UNAVAILABLE/.test(st)) code = 'ocupada';
+    else code = 'otro';
+    // si la clave falla, Ajustes deja de decir «Conectada»
+    if (['clave', 'vencida', 'servicio', 'restringida', 'region', 'saldo'].indexOf(code) >= 0) {
+      const a = this.state.prefs.ai || {};
+      if (a.ok) this.setPref('ai', Object.assign({}, a, { ok: '' }));
+    }
+    const e = new Error(code);
+    e.detail = msg.replace(/\s+/g, ' ').slice(0, 220);
+    e.status = status;
+    return e;
   }
 
   aiErrorText(e) {
     const m = e && e.message;
+    const cfg = this.aiCfg();
+    const g = cfg.provider !== 'claude';
+    const who = g ? 'Google' : 'Anthropic';
     if (m === 'nokey') return 'Conecta la IA en Ajustes para analizar tus comidas.';
-    if (m === 'clave') return 'La clave de IA no funcionó. Revísala en Ajustes.';
+    if (m === 'clave') return g ? 'Google dice que esa clave no es válida. Cópiala de nuevo, completa, desde AI Studio: empieza con AIza.' : 'Anthropic dice que esa clave no es válida. Cópiala de nuevo, completa: empieza con sk-ant-.';
+    if (m === 'vencida') return 'Esa clave venció. Crea una nueva en ' + (g ? 'AI Studio' : 'la consola de Anthropic') + ' y pégala en Ajustes.';
+    if (m === 'servicio') return 'Esa clave es de un proyecto de Google Cloud sin la API de Gemini activada. Crea la clave en AI Studio, con el botón «Obtener clave».';
+    if (m === 'restringida') return 'La clave tiene restricciones (de sitio, app o IP) y ' + who + ' rechaza las llamadas desde keystone. Crea una clave nueva sin restricciones.';
+    if (m === 'region') return 'Google no ofrece la API de Gemini desde donde te estás conectando. Prueba sin VPN o usa Claude.';
+    if (m === 'sincuota') return 'Tu clave no tiene uso gratis disponible en los modelos Flash. En AI Studio revisa el plan de tu proyecto o activa la facturación, o usa Claude.';
+    if (m === 'saldo') return 'Tu cuenta de Anthropic no tiene saldo. Carga crédito en la consola de Anthropic.';
     if (m === 'limite') return 'Llegaste al límite de uso por ahora. Intenta de nuevo en un minuto.';
+    if (m === 'ocupada') return 'La IA está saturada en este momento. Intenta de nuevo en unos minutos.';
+    if (m === 'bloqueo') return 'La IA no quiso responder por sus filtros de contenido. En las fotos del cuerpo usa ropa deportiva (short y polera ajustada) e intenta otra vez.';
     if (m === 'formato' || m === 'vacio') return 'La IA no devolvió un resultado claro. Prueba con otra foto o descríbelo con palabras.';
-    if (m === 'modelo') return 'Ese modelo de IA no está disponible. Deja el campo de modelo vacío en Ajustes.';
+    if (m === 'modelo') return cfg.model ? 'El modelo «' + cfg.model + '» no está disponible con tu clave. Deja vacío el campo Modelo en Ajustes.' : 'Ningún modelo de ' + who + ' respondió con tu clave. Revisa la clave en Ajustes.';
     if (m === 'img') return 'No se pudo leer esa imagen.';
+    if (m === 'otro') return who + ' rechazó la solicitud' + (e.detail ? ': «' + e.detail + '»' : '.');
     return 'No hay conexión con la IA. Revisa tu internet e intenta otra vez.';
   }
 

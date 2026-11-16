@@ -989,6 +989,7 @@ def ajustes():
 </div>
 <label for="aikey" style="{EYE}">Clave de API</label>
 <input id="aikey" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{{{ ai.ph }}}}" value="{{{{ ai.key }}}}" onChange="{{{{ ai.setKey }}}}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{{{ th.input }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; color: {{{{ th.text }}}}; font: inherit; {MONO} font-size: 13px">
+<sc-if value="{{{{ ai.hasHint }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ ai.hint }}}}</p></sc-if>
 <label for="aimodel" style="{EYE}">Modelo (opcional)</label>
 <input id="aimodel" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="{{{{ ai.modelPh }}}}" value="{{{{ ai.model }}}}" onChange="{{{{ ai.setModel }}}}" style="appearance: none; border: 0; outline: none; border-radius: 12px; padding: 0 12px; height: 44px; background: {{{{ th.input }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; color: {{{{ th.text }}}}; font: inherit; {MONO} font-size: 13px">
 <div style="display: flex; gap: 8px">
@@ -1042,7 +1043,7 @@ def ajustes():
     body = header('Configuración', 'Ajustes') + '\n'
     body += group('Perfil', perfil) + '\n'
     body += group('Entrenamiento', entreno, 'Toca un día para cambiar su rutina.') + '\n'
-    body += f'<div id="ia" style="display: contents">{group("IA para comidas", ia, "{{ ai.help }}")}</div>\n'
+    body += f'<div id="ia" style="display: contents">{group("Inteligencia artificial", ia, "{{ ai.help }}")}</div>\n'
     body += group('Recordatorios', rec) + '\n' + rec_actions + '\n'
     body += group('Apariencia', apar) + '\n'
     body += group('Tus datos', datos, 'Todo se guarda solo en este teléfono, en dos copias. El respaldo no incluye las fotos ni tu clave de IA.') + '\n'

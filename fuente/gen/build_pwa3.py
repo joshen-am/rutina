@@ -40,7 +40,9 @@ tpl = rep(tpl, 'top: 106px', 'top: calc(env(safe-area-inset-top) + 90px)', 1)
 assert tpl.count('<div id="paso-{{ ss.num }}" class="push scroll"') == 1
 
 # los dibujos de los ejercicios (poses/, de gen_figs.py) viajan con la app en img/p/
-POSES = sorted(f for f in os.listdir(os.path.join(HERE, 'poses')) if f.endswith('.svg'))
+# iCloud deja copias como «gato_vaca-2 2.svg»: no viajan, porque el service worker no se instala si falta un archivo
+COPIA = re.compile(r' \d+(\.\w+)?$')
+POSES = sorted(f for f in os.listdir(os.path.join(HERE, 'poses')) if f.endswith('.svg') and not COPIA.search(f))
 assert '/_blob/' not in js and '/_blob/' not in tpl
 
 RUNTIME = r'''
@@ -296,10 +298,11 @@ for f in POSES:
     shutil.copy(os.path.join(HERE, 'poses', f), os.path.join(OUT, 'img', 'p', f))
 shutil.copy(os.path.join(VEN, 'morphdom', 'morphdom-umd.min.js'), os.path.join(OUT, 'vendor'))
 shutil.copy(os.path.join(VEN, 'morphdom', 'LICENSE'), os.path.join(OUT, 'vendor', 'morphdom-LICENSE'))
-ORBS = sorted(os.listdir(os.path.join(HERE, 'orbimg')))
+ORBS = sorted(f for f in os.listdir(os.path.join(HERE, 'orbimg')) if not COPIA.search(f))
 for f in ORBS:
     shutil.copy(os.path.join(HERE, 'orbimg', f), os.path.join(OUT, 'img', f))
-for f in os.listdir(os.path.join(HERE, 'icons')):
+ICONS = sorted(f for f in os.listdir(os.path.join(HERE, 'icons')) if not COPIA.search(f))
+for f in ICONS:
     shutil.copy(os.path.join(HERE, 'icons', f), os.path.join(OUT, 'icons', f.replace('.png', '-orbe.png')))
 
 manifest = {
@@ -317,7 +320,10 @@ json.dump(manifest, open(os.path.join(OUT, 'manifest.webmanifest'), 'w'), ensure
 
 files = ['./', 'index.html', 'manifest.webmanifest', 'vendor/morphdom-umd.min.js', 'fonts/Geist-Variable.woff2', 'fonts/GeistMono-Variable.woff2',
          ] + ['img/' + f for f in ORBS] + \
-        ['img/p/' + f for f in POSES] + ['icons/' + f.replace('.png', '-orbe.png') for f in sorted(os.listdir(os.path.join(HERE, 'icons')))]
+        ['img/p/' + f for f in POSES] + ['icons/' + f.replace('.png', '-orbe.png') for f in ICONS]
+# addAll del service worker falla entero si falta un solo archivo: todos tienen que existir y no llevar espacios
+for f in files[1:]:
+    assert ' ' not in f and os.path.isfile(os.path.join(OUT, f)), 'falta o tiene espacio: ' + f
 SW = f'''// Funciona sin conexión: guarda la app en el teléfono y la actualiza cuando hay internet.
 const CACHE = 'rutina-v{VERSION}';
 const FILES = {json.dumps(files)};
