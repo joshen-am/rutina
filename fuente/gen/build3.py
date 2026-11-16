@@ -37,10 +37,11 @@ def brand_footer():
 tpl = open(os.path.join(HERE, 'Main3.tpl.html')).read()
 script = open(os.path.join(HERE, 'script3.js')).read()
 step_html = open(os.path.join(HERE, 'v3', 'session_step.html')).read()
-tpl = tpl.replace('%%SESSION_STEPS%%',
-    '<sc-if value="{{ ss.even }}" hint-placeholder-val="{{ true }}">\n' + step_html + '</sc-if>\n'
-    '<sc-if value="{{ ss.odd }}" hint-placeholder-val="{{ false }}">\n' + step_html + '</sc-if>')
+# Un solo paso: su id cambia con cada ejercicio (paso-1, paso-2…), así morphdom lo reemplaza
+# en vez de transformarlo y la animación de entrada vuelve a correr (antes iban dos copias, par e impar).
+tpl = tpl.replace('%%SESSION_STEPS%%', step_html)
 script = script.replace('%%SESSION%%', open(os.path.join(HERE, 'session.json')).read())
+script = script.replace('%%PROGRAM%%', open(os.path.join(HERE, 'program.json')).read())
 rep = {
     '%%BRAND%%': brand_footer(),
     '%%SCRIPT%%': f"<script type=\"text/x-dc\" data-dc-script data-props='{DATA_PROPS}'>\n{script}</script>",

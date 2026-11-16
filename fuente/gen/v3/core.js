@@ -9,7 +9,7 @@ class Component extends DCLogic {
     peso: null,
     quiz: { step: 0, minutes: null, intensity: null, series: null },
     t: 1,
-    prefs: { tema: 'auto', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['salud', 'hist', 'habitos', 'comida', 'agua', 'recup', 'semana', 'rutina'], homeHidden: {}, lastBackup: 0, backupSnooze: 0, histMode: 'habitos', v3: true },
+    prefs: { tema: 'auto', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['diario', 'salud', 'hoy', 'rutina', 'fotos', 'recup', 'semanal', 'progreso'], homeHidden: {}, lastBackup: 0, backupSnooze: 0, histMode: 'habitos', v3: true, v4: true, v5: true, goal: 'general' },
     plan: { 0: 'superiorA', 1: 'piernasA', 2: 'cardio', 3: 'superiorB', 4: 'piernasB', 5: 'caminata' },
     resetArmed: false,
     noDemo: false,
@@ -36,7 +36,19 @@ class Component extends DCLogic {
     ev: null,
     area: null,
     msheet: null,
-    aiShow: false
+    aiShow: false,
+    xlog: {},
+    hpHist: [],
+    prog: false,
+    recAdv: false,
+    daily: {},
+    bodyPhotos: [],
+    adapt: {},
+    chat: [],
+    cap: null,
+    photos: false,
+    aspecto: false,
+    chatOpen: false
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -45,17 +57,25 @@ class Component extends DCLogic {
 
   applyData(s) {
     const next = {};
-    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood'].forEach((k) => {
+    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
       next.prefs = Object.assign({}, this.state.prefs, s.prefs);
-      const known = ['salud', 'hist', 'habitos', 'comida', 'agua', 'recup', 'semana', 'rutina'];
+      // Inicio desde la versión 27: más corto (hoy, rutina, recuperación, semana y progreso)
+      // desde la versión 28 se suman el check-in diario (arriba) y la foto semanal (después de la rutina)
+      const known = ['diario', 'salud', 'hoy', 'rutina', 'fotos', 'recup', 'semanal', 'progreso'];
       let ord = (next.prefs.homeOrder || []).filter((k) => known.indexOf(k) >= 0);
-      if (!s.prefs.v3) ord = known.slice();
+      if (!s.prefs.v4) { ord = known.slice(); next.prefs.homeHidden = {}; }
+      if (!s.prefs.v5) {
+        if (ord.indexOf('diario') < 0) ord.unshift('diario');
+        if (ord.indexOf('fotos') < 0) { const r = ord.indexOf('rutina'); ord.splice(r >= 0 ? r + 1 : ord.length, 0, 'fotos'); }
+      }
       known.forEach((k) => { if (ord.indexOf(k) < 0) ord.push(k); });
       next.prefs.homeOrder = ord;
       next.prefs.v3 = true;
+      next.prefs.v4 = true;
+      next.prefs.v5 = true;
       ['clase', 'acento', 'fuente', 'marca'].forEach((k) => { delete next.prefs[k]; });
     }
     return next;
@@ -66,7 +86,7 @@ class Component extends DCLogic {
     return {
       schema: 4, savedAt: Date.now(),
       log: s.log, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
-      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, derived: this.derived()
+      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, derived: this.derived()
     };
   }
 
@@ -266,9 +286,20 @@ class Component extends DCLogic {
     s.at = si === this.todayIdx() ? Date.now() : days[si].getTime() + 19 * 3600000;
     if (!r0) { s.weekDone = 0; this.go({ last: s, screen: 'victoria' }, () => this.startAnim()); return; }
     const log = Object.assign({}, st.log);
-    log[this.keyOf(days[si])] = { status: 'done', summary: s };
+    const dkey = this.keyOf(days[si]);
+    // repeticiones de la sesión → historial de cada ejercicio, récords e hitos
+    let xlog = st.xlog || {};
+    if (st.sess && st.sess.rid === r.id && st.sess.reps) {
+      const rr = this.recordReps(st.sess, dkey);
+      xlog = rr.xlog;
+      if (rr.prs.length) s.prs = rr.prs;
+    }
+    log[dkey] = { status: 'done', summary: s };
     s.weekDone = days.filter((d) => log[this.keyOf(d)] && log[this.keyOf(d)].status === 'done').length;
-    this.go({ log: log, sess: null, last: s, screen: 'victoria' }, () => { this.persist(); this.startAnim(); });
+    const total = Object.keys(log).filter((k) => log[k] && log[k].status === 'done').length;
+    const ms = this.milestoneOf(total);
+    if (ms) s.milestone = ms;
+    this.go({ log: log, xlog: xlog, sess: null, last: s, screen: 'victoria' }, () => { this.persist(); this.startAnim(); });
   }
 
 %%HOME%%
@@ -282,7 +313,7 @@ class Component extends DCLogic {
       return;
     }
     this.go({
-      log: {}, hlog: {}, flog: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
+      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
   }
 
@@ -337,7 +368,14 @@ class Component extends DCLogic {
           line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none'
         }))
       },
-      vb: vb
+      vb: vb,
+      cele: {
+        has: !!((s.prs && s.prs.length) || s.milestone),
+        hasPrs: !!(s.prs && s.prs.length),
+        prs: (s.prs || []).map((x, i) => ({ name: x.name, val: x.val, unit: this.repUnit(x.unit, x.val) + (x.each ? ' ' + x.each : ''), prev: 'Antes ' + x.prev, line: i ? 'inset 0 0.5px 0 rgba(255, 255, 255, 0.1)' : 'none' })),
+        hasMs: !!s.milestone, ms: s.milestone || '', msLabel: s.milestone === 1 ? 'Tu primera sesión' : 'Sesión número ' + s.milestone,
+        halo: this.haloCss(c.constancia)
+      }
     };
   }
 

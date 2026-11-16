@@ -101,7 +101,11 @@
     const meas = (this.state.meas || []).filter((m) => m.d !== today);
     meas.push({ d: today, peso: hp.peso, cintura: hp.cintura == null ? null : hp.cintura, fc: hp.fc == null ? null : hp.fc, pas: hp.pas == null ? null : hp.pas, pad: hp.pad == null ? null : hp.pad });
     this.sfx('done');
-    this.go({ hp: hp, peso: hp.peso, meas: meas, ev: null, screen: 'inicio', tab: 'salud', area: null }, () => this.persist());
+    this.go({ hp: hp, peso: hp.peso, meas: meas, ev: null, screen: 'inicio', tab: 'salud', area: null }, () => {
+      const ov = this.healthOverall(this.healthAreas());
+      const hh = (this.state.hpHist || []).filter((x) => x.at !== hp.at).concat(ov == null ? [] : [{ at: hp.at, s: ov }]).slice(-24);
+      this.setState({ hpHist: hh }, () => this.persist());
+    });
   }
 
   /* ---------- puntajes ---------- */
@@ -445,17 +449,17 @@
   openMeas() {
     this.sfx('open');
     const L = (f, d) => { const v = this.latest(f); return v == null ? d : v; };
-    this.setState({ msheet: { peso: this.peso(), cintura: L('cintura', 82), fc: L('fc', 68), pas: L('pas', 120), pad: L('pad', 78), on: { cintura: this.latest('cintura') != null, fc: this.latest('fc') != null, bp: this.latest('pas') != null } } });
+    this.setState({ msheet: { peso: this.peso(), cintura: L('cintura', 82), fc: L('fc', 68), pas: L('pas', 120), pad: L('pad', 78), pecho: L('pecho', 96), brazo: L('brazo', 32), cadera: L('cadera', 96), hombros: L('hombros', 112), on: { cintura: this.latest('cintura') != null, fc: this.latest('fc') != null, bp: this.latest('pas') != null, pecho: this.latest('pecho') != null, brazo: this.latest('brazo') != null, cadera: this.latest('cadera') != null, hombros: this.latest('hombros') != null } } });
   }
 
   measStep(f, d) {
     const m = this.state.msheet;
     if (!m) return;
     this.sfx('tap');
-    const lim = { peso: [35, 180, 0.1], cintura: [50, 160, 0.5], fc: [35, 130, 1], pas: [80, 220, 1], pad: [40, 140, 1] }[f];
+    const lim = { peso: [35, 180, 0.1], cintura: [50, 160, 0.5], fc: [35, 130, 1], pas: [80, 220, 1], pad: [40, 140, 1], pecho: [60, 160, 0.5], brazo: [18, 60, 0.5], cadera: [60, 160, 0.5], hombros: [80, 170, 0.5] }[f];
     const n = Object.assign({}, m);
     n[f] = Math.max(lim[0], Math.min(lim[1], Math.round((m[f] + d * lim[2]) * 10) / 10));
-    if (f === 'cintura' || f === 'fc') n.on = Object.assign({}, m.on, { [f]: true });
+    if (['cintura', 'fc', 'pecho', 'brazo', 'cadera', 'hombros'].indexOf(f) >= 0) n.on = Object.assign({}, m.on, { [f]: true });
     if (f === 'pas' || f === 'pad') n.on = Object.assign({}, m.on, { bp: true });
     this.setState({ msheet: n });
   }
@@ -465,7 +469,7 @@
     if (!m) return;
     const d = this.keyOf(new Date());
     const meas = (this.state.meas || []).filter((x) => x.d !== d);
-    meas.push({ d: d, peso: m.peso, cintura: m.on.cintura ? m.cintura : null, fc: m.on.fc ? m.fc : null, pas: m.on.bp ? m.pas : null, pad: m.on.bp ? m.pad : null });
+    meas.push({ d: d, peso: m.peso, cintura: m.on.cintura ? m.cintura : null, fc: m.on.fc ? m.fc : null, pas: m.on.bp ? m.pas : null, pad: m.on.bp ? m.pad : null, pecho: m.on.pecho ? m.pecho : null, brazo: m.on.brazo ? m.brazo : null, cadera: m.on.cadera ? m.cadera : null, hombros: m.on.hombros ? m.hombros : null });
     this.sfx('yes');
     this.setState({ meas: meas, peso: m.peso, msheet: null }, () => this.persist());
   }
@@ -532,7 +536,7 @@
       evalAgo: has ? this.agoText(st.hp.at).toLowerCase() : '', evalOld: has && Date.now() - st.hp.at > 60 * 864e5,
       startEval: () => this.startEval(),
       detail: detail,
-      measOpen: !!ms, mrows: ms ? [mrow('peso', 'Peso', 'kg'), mrow('cintura', 'Cintura', 'cm', 'cintura'), mrow('fc', 'Pulso en reposo', 'lpm', 'fc'), mrow('pas', 'Presión, número alto', 'mmHg', 'bp'), mrow('pad', 'Presión, número bajo', 'mmHg', 'bp')] : [],
+      measOpen: !!ms, mrows: ms ? [mrow('peso', 'Peso', 'kg'), mrow('cintura', 'Cintura', 'cm', 'cintura'), mrow('fc', 'Pulso en reposo', 'lpm', 'fc'), mrow('pas', 'Presión, número alto', 'mmHg', 'bp'), mrow('pad', 'Presión, número bajo', 'mmHg', 'bp'), mrow('hombros', 'Hombros (contorno)', 'cm', 'hombros'), mrow('pecho', 'Pecho', 'cm', 'pecho'), mrow('brazo', 'Brazo', 'cm', 'brazo'), mrow('cadera', 'Cadera', 'cm', 'cadera')] : [],
       openMeas: () => this.openMeas(), saveMeas: () => this.saveMeas(), closeMeas: () => { this.sfx('tap'); this.setState({ msheet: null }); },
       lastMeas: lastM ? this.agoText(this.dateOf(lastM.d).getTime()).toLowerCase() : 'nunca',
       kpis: [

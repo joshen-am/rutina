@@ -26,7 +26,7 @@ def poses(key):
 
 
 keys = []
-for lst in (C.WARMUP, C.COOLDOWN, C.LUNES, C.MARTES, C.MIE_INTERVALOS, C.MIE_CORE, C.MIE_POSTURA, C.JUEVES, C.VIERNES):
+for lst in (C.WARMUP, C.COOLDOWN, C.LUNES, C.MARTES, C.MIE_INTERVALOS, C.MIE_CORE, C.MIE_POSTURA, C.JUEVES, C.VIERNES, C.VARIANTES):
     for c in lst:
         if c['ex'] not in keys:
             keys.append(c['ex'])

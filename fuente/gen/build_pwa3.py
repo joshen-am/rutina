@@ -5,7 +5,7 @@ SRC = os.path.join(HERE, '..', 'canvas', 'Main.dc.html')
 OUT = os.path.join(HERE, '..', '..')   # la app publicada vive en la raíz del repo (GitHub Pages)
 VEN = os.path.join(HERE, '..', 'vendor')
 # lo que no es salida del build y nunca se borra al reconstruir
-KEEP = {'.git', '.github', '.gitignore', 'fuente', 'CLAUDE.md', 'brand', 'nativo'}
+KEEP = {'.git', '.github', '.gitignore', '.claude', 'fuente', 'CLAUDE.md', 'brand'}
 VERSION = sys.argv[1] if len(sys.argv) > 1 else '1'
 
 src = open(SRC).read()
@@ -35,11 +35,9 @@ tpl = rep(tpl, 'padding: 12px 20px 34px', 'padding: 12px 20px calc(env(safe-area
 tpl = rep(tpl, 'height: 83px', 'height: calc(49px + env(safe-area-inset-bottom))', 1)
 tpl = rep(tpl, 'bottom: 83px', 'bottom: calc(49px + env(safe-area-inset-bottom))', None)
 tpl = rep(tpl, 'top: 106px', 'top: calc(env(safe-area-inset-top) + 90px)', 1)
-# keep the two alternating step views distinct so their entrance replays
-_m = '<div class="push scroll" style="position: absolute; inset: 0;'
-assert tpl.count(_m) == 2, tpl.count(_m)
-tpl = tpl.replace(_m, '<div id="step-a" class="push scroll" style="position: absolute; inset: 0;', 1)
-tpl = tpl.replace(_m, '<div id="step-b" class="push scroll" style="position: absolute; inset: 0;', 1)
+# el paso de la sesión va una sola vez, con un id por ejercicio (paso-N): morphdom lo reemplaza al avanzar
+# y su animación de entrada vuelve a correr
+assert tpl.count('<div id="paso-{{ ss.num }}" class="push scroll"') == 1
 
 # los dibujos de los ejercicios (poses/, de gen_figs.py) viajan con la app en img/p/
 POSES = sorted(f for f in os.listdir(os.path.join(HERE, 'poses')) if f.endswith('.svg'))

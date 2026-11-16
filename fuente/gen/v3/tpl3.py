@@ -3,6 +3,7 @@ import sys as _s, os as _o
 _s.path.insert(0, _o.path.join(_o.path.dirname(_o.path.abspath(__file__)), ".."))
 from orbtpl import orb_tpl
 from mapa2d import body_map
+from tpl_cuerpo import make as _make_cuerpo
 import os
 HERE = os.path.dirname(os.path.abspath(__file__))
 
@@ -10,7 +11,7 @@ B = 'appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: 
 MONO = 'font-family: {{ mono }};'
 EYE = 'font-size: 13px; line-height: 20px; color: {{ th.sub }}'
 NUM = 'font-variant-numeric: tabular-nums;'
-CARD = 'background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 22px'
+CARD = 'background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px'
 HALO_BG = 'background: #0B0B0C; box-shadow: inset 0 0 0 1px {{ th.line }}'
 HALO = ('<span aria-hidden="true" class="halo" style="position: absolute; inset: 0; pointer-events: none; '
         'background: {{ halo }}; transition: background 0.6s"></span>')
@@ -111,29 +112,29 @@ def sheet(cond, inner, close_fn, label, top=None):
 # ---------------------------------------------------------------- inicio
 
 def home_section(key, inner):
-    return f'''<div style="order: {{{{ ho.{key}.order }}}}; display: {{{{ ho.{key}.display }}}}; border-radius: 26px; padding: {{{{ ho.pad }}}}; box-shadow: {{{{ ho.frame }}}}">
+    return f'''<div style="order: {{{{ ho.{key}.order }}}}; display: {{{{ ho.{key}.display }}}}; border-radius: 24px; padding: {{{{ ho.pad }}}}; box-shadow: {{{{ ho.frame }}}}">
 <sc-if value="{{{{ editHome }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 4px 12px">
 <span style="font-size: 16px; font-weight: 500">{{{{ ho.{key}.label }}}}</span>
 <div style="display: flex; align-items: center; gap: 8px">
 {round_btn(f"ho.{key}.up", "M6 15l6-6 6 6", "Subir", 40).replace('style="', 'style="opacity: {{ ho.' + key + '.upOp }}; ', 1)}
 {round_btn(f"ho.{key}.down", "M6 9l6 6 6-6", "Bajar", 40).replace('style="', 'style="opacity: {{ ho.' + key + '.downOp }}; ', 1)}
-<button type="button" class="hit" onClick="{{{{ ho.{key}.toggle }}}}" aria-pressed="{{{{ ho.{key}.hidden }}}}" style="{B} height: 40px; min-width: 84px; padding: 0 16px; border-radius: 20px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500">{{{{ ho.{key}.toggleLabel }}}}</button>
+<button type="button" class="hit" onClick="{{{{ ho.{key}.toggle }}}}" aria-pressed="{{{{ ho.{key}.hidden }}}}" style="{B} height: 40px; min-width: 84px; padding: 0 16px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500">{{{{ ho.{key}.toggleLabel }}}}</button>
 </div>
 </div>
 </sc-if>
-<div style="opacity: {{{{ ho.{key}.opacity }}}}; pointer-events: {{{{ ho.pe }}}}; max-height: {{{{ ho.maxH }}}}; overflow: {{{{ ho.ov }}}}; border-radius: 22px; display: flex; flex-direction: column; gap: 12px">
+<div style="opacity: {{{{ ho.{key}.opacity }}}}; pointer-events: {{{{ ho.pe }}}}; max-height: {{{{ ho.maxH }}}}; overflow: {{{{ ho.ov }}}}; border-radius: 24px; display: flex; flex-direction: column; gap: 12px">
 {inner}
 </div>
 </div>'''
 
 
-def health_hero(prefix, on_has, on_none):
+def health_hero(prefix, on_has, on_none, compact=False):
     """Tarjeta oscura con halo cálido: puntaje general o invitación a la evaluación."""
     return f'''<sc-if value="{{{{ {prefix}.has }}}}" hint-placeholder-val="{{{{ true }}}}">
-<button type="button" onClick="{{{{ {on_has} }}}}" style="{B} position: relative; overflow: hidden; width: 100%; text-align: left; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 20px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: 236px">
+<button type="button" onClick="{{{{ {on_has} }}}}" style="{B} position: relative; overflow: hidden; width: 100%; text-align: left; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: {'0' if compact else '236px'}">
 {HALO}
-<span style="position: relative; display: flex; justify-content: space-between; align-items: center; gap: 8px">{eyebrow("Perfil de salud", "rgba(250, 250, 250, 0.62)")}<span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.62)">8 áreas</span></span>
+<span style="position: relative">{eyebrow("Perfil de salud", "rgba(250, 250, 250, 0.62)")}</span>
 <span style="position: relative; display: flex; align-items: flex-end; gap: 12px">
 <span data-count="{{{{ {prefix}.overall }}}}" data-count-id="perfil" style="font-size: 76px; line-height: 70px; font-weight: 400; letter-spacing: -0.06em; {NUM}">{{{{ {prefix}.overall }}}}</span>
 <span style="display: flex; flex-direction: column; gap: 8px; padding-bottom: 8px">
@@ -151,7 +152,7 @@ def health_hero(prefix, on_has, on_none):
 </span>
 </span>
 </sc-if>
-<sc-if value="{{{{ {prefix}.hasFocus }}}}" hint-placeholder-val="{{{{ true }}}}">
+<sc-if value="{{{{ {'hasNoFocusHere' if compact else prefix + '.hasFocus'} }}}}" hint-placeholder-val="{{{{ true }}}}">
 <span style="position: relative; display: flex; flex-direction: column; gap: 8px; padding: 12px 16px; border-radius: 16px; background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px)">
 <span style="{MONO} font-size: 13px; color: rgba(250, 250, 250, 0.6)">Enfócate en</span>
 <sc-for list="{{{{ {prefix}.focus }}}}" as="fo" hint-placeholder-count="2">
@@ -162,7 +163,7 @@ def health_hero(prefix, on_has, on_none):
 </button>
 </sc-if>
 <sc-if value="{{{{ {prefix}.none }}}}" hint-placeholder-val="{{{{ false }}}}">
-<button type="button" onClick="{{{{ {on_none} }}}}" style="{B} position: relative; overflow: hidden; width: 100%; text-align: left; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 270px">
+<button type="button" onClick="{{{{ {on_none} }}}}" style="{B} position: relative; overflow: hidden; width: 100%; text-align: left; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 12px; min-height: 270px">
 {HALO}
 <span style="position: relative">{eyebrow("Perfil de salud", "rgba(250, 250, 250, 0.62)")}</span>
 <span style="position: relative; font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; max-width: 290px">Conoce tu punto de partida</span>
@@ -181,7 +182,7 @@ def water_card(idp):
 </div>
 <div style="display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 4px">
 <sc-for list="{{{{ hd.water.glasses }}}}" as="g" hint-placeholder-count="10">
-<button type="button" onClick="{{{{ g.pick }}}}" aria-label="{{{{ g.aria }}}}" style="{B} padding: 0; height: 44px; border-radius: 10px; background: {{{{ g.bg }}}}; display: flex; align-items: center; justify-content: center; transition: background 0.2s">{ico(DROP, 15, "{{ g.stroke }}", 1.6, "{{ g.fill }}")}</button>
+<button type="button" onClick="{{{{ g.pick }}}}" aria-label="{{{{ g.aria }}}}" style="{B} padding: 0; height: 44px; border-radius: 12px; background: {{{{ g.bg }}}}; display: flex; align-items: center; justify-content: center; transition: background 0.2s">{ico(DROP, 15, "{{ g.stroke }}", 1.6, "{{ g.fill }}")}</button>
 </sc-for>
 </div>
 <div style="display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
@@ -274,7 +275,7 @@ RECUP = f'''<section aria-labelledby="recup" style="{CARD}; padding: 20px; displ
 
 WEEK = f'''<nav aria-label="Semana" style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ days }}}}" as="d" hint-placeholder-count="7">
-<button type="button" onClick="{{{{ d.pick }}}}" aria-label="{{{{ d.aria }}}}" aria-pressed="{{{{ d.selected }}}}" style="{B} padding: 0; height: 72px; border-radius: 18px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: {{{{ d.bg }}}}; color: {{{{ d.fg }}}}; box-shadow: {{{{ d.ring }}}}">
+<button type="button" onClick="{{{{ d.pick }}}}" aria-label="{{{{ d.aria }}}}" aria-pressed="{{{{ d.selected }}}}" style="{B} padding: 0; height: 72px; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: {{{{ d.bg }}}}; color: {{{{ d.fg }}}}; box-shadow: {{{{ d.ring }}}}">
 <span style="{MONO} font-size: 11px; color: {{{{ d.sub }}}}">{{{{ d.letter }}}}</span>
 <span style="font-size: 20px; font-weight: 500; {NUM}">{{{{ d.num }}}}</span>
 <span style="height: 10px; display: flex; align-items: center; justify-content: center">
@@ -290,8 +291,8 @@ ROUTINE = f'''<sc-if value="{{{{ hasRoutine }}}}" hint-placeholder-val="{{{{ tru
 <section aria-label="Rutina del día" style="{CARD}; overflow: hidden">
 <div style="padding: 20px 20px 16px; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">
-{eyebrow("Rutina · {{ r.minutes }} min")}
-<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{{{ r.name }}}}</h2>
+{eyebrow("Semana {{ pg.week }} · {{ r.minutes }} min")}
+<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.035em">{{{{ r.name }}}}</h2>
 <p style="margin: 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">{{{{ r.title }}}}</p>
 </div>
 <sc-if value="{{{{ isDone }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="flex: none; display: flex; align-items: center; gap: 4px; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}">{ico(CHECK, 11, "currentColor", 3)}HECHA</span></sc-if>
@@ -311,32 +312,168 @@ ROUTINE = f'''<sc-if value="{{{{ hasRoutine }}}}" hint-placeholder-val="{{{{ tru
 <sc-if value="{{{{ isRest }}}}" hint-placeholder-val="{{{{ false }}}}">
 <section style="{CARD}; padding: 20px 20px; display: flex; flex-direction: column; gap: 8px">
 {eyebrow("Rutina")}
-<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">Descanso</h2>
+<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.035em">Descanso</h2>
 <p style="margin: 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">No hay rutina programada para este día. Recuperarse también es parte del plan.</p>
 </section>
 </sc-if>'''
 
+def today_item(k, fn):
+    return (f'<button type="button" onClick="{{{{ {fn} }}}}" style="{B} color: inherit; background: transparent; display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 0 0 4px">'
+            f'<span style="position: relative; width: 72px; height: 72px">{ring(72, 30, 6, "{{ ty.%s.off }}" % k, "{{ ty.%s.color }}" % k, 188.5)}'
+            f'<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; {MONO} font-size: 13px; {NUM}">{{{{ ty.{k}.center }}}}</span></span>'
+            f'<span style="display: flex; flex-direction: column; align-items: center; gap: 2px"><span style="font-size: 16px">{{{{ ty.{k}.label }}}}</span>'
+            f'<span style="font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ ty.{k}.sub }}}}</span></span></button>')
+
+
+TODAY = f"""<section aria-label="Hoy" style="{CARD}; padding: 20px 8px 16px; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px">
+{today_item('habits', 'goHabitos')}
+{today_item('food', 'goComida')}
+<sc-if value="{{{{ ty.water.on }}}}" hint-placeholder-val="{{{{ true }}}}">{today_item('water', 'goHabitos')}</sc-if>
+</section>"""
+
+WEEKLY = f"""<sc-if value="{{{{ pg.wk.show }}}}" hint-placeholder-val="{{{{ false }}}}">
+<section aria-label="{{{{ pg.wk.title }}}}" style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+{HALO}
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px">{eyebrow("{{ pg.wk.title }}", "rgba(250, 250, 250, 0.62)")}<span style="font-size: 20px; line-height: 28px; letter-spacing: -0.02em">{{{{ pg.wk.line }}}}</span></span>
+<span style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px">
+<sc-for list="{{{{ pg.wk.items }}}}" as="wi" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; gap: 4px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">{{{{ wi.label }}}}</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; {NUM}">{{{{ wi.val }}}}</span></span></sc-for>
+</span>
+<sc-if value="{{{{ pg.wk.hasPrs }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="position: relative; {MONO} font-size: 13px; color: rgba(250, 250, 250, 0.72)">{{{{ pg.wk.prs }}}}</span></sc-if>
+</section>
+</sc-if>"""
+
+PROG_CARD = f"""<button type="button" onClick="{{{{ pg.open }}}}" style="{B} color: inherit; text-align: left; width: 100%; {CARD}; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 20px; font-weight: 500; letter-spacing: -0.02em">Progreso</span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}">Semana {{{{ pg.week }}}}</span></span>
+<span aria-hidden="true" style="display: flex; align-items: flex-end; gap: 4px; height: 48px">
+<sc-for list="{{{{ pg.bars }}}}" as="b" hint-placeholder-count="12"><span class="col-in" style="flex: 1; height: {{{{ b.h }}}}%; border-radius: 3px; background: {{{{ b.bg }}}}; animation-delay: {{{{ b.delay }}}}ms"></span></sc-for>
+</span>
+<span style="display: flex; justify-content: space-between; align-items: center; gap: 8px"><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ pg.done12 }}}} sesiones en 12 semanas</span><span style="display: flex; align-items: center; gap: 4px; font-size: 16px">Ver progreso {CHEV}</span></span>
+</button>"""
+
+
+def spark(prefix, color):
+    return (f'<div aria-hidden="true" style="position: relative; height: 64px">'
+            f'<svg viewBox="0 0 300 64" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible">'
+            f'<path class="line-in" pathLength="1" d="{{{{ pg.{prefix}Path }}}}" fill="none" stroke="{color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"></path></svg>'
+            f'<span style="position: absolute; left: {{{{ pg.{prefix}X }}}}%; top: {{{{ pg.{prefix}Y }}}}%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%; background: {color}"></span></div>')
+
+
+def progreso():
+    return f"""<sc-if value="{{{{ isProg }}}}" hint-placeholder-val="{{{{ false }}}}">
+<div role="dialog" aria-modal="true" aria-label="Progreso" style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; display: flex; flex-direction: column; animation: push 0.42s cubic-bezier(.32,.72,0,1) both; z-index: 20">
+<div style="padding: 56px 12px 8px; display: flex; align-items: center">
+<button type="button" class="hit" onClick="{{{{ pg.close }}}}" style="{B} height: 40px; padding: 0 16px 0 8px; border-radius: 999px; background: {{{{ th.card }}}}; box-shadow: {{{{ th.cardShadow }}}}; color: {{{{ th.text }}}}; font-size: 16px; display: flex; align-items: center; gap: 4px">{ico(BACK, 17, "currentColor", 2)}Volver</button>
+</div>
+<div class="scroll scr" style="flex: 1; overflow-y: auto; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("{{ pg.weekLabel }}")}<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">Progreso</h1></div>
+<section aria-label="Esta semana" style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+{HALO}
+<span style="position: relative; display: flex; flex-direction: column; gap: 8px">{eyebrow("Esta semana", "rgba(250, 250, 250, 0.62)")}<span style="font-size: 20px; line-height: 28px; letter-spacing: -0.02em">{{{{ pg.now.line }}}}</span></span>
+<span style="position: relative; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 12px">
+<sc-for list="{{{{ pg.now.items }}}}" as="wi" hint-placeholder-count="4"><span style="display: flex; flex-direction: column; gap: 4px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">{{{{ wi.label }}}}</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; {NUM}">{{{{ wi.val }}}}</span></span></sc-for>
+</span>
+</section>
+{CU['ADAPT']}
+{CU['LINKS']}
+{sec_title("Sesiones por semana", "Meta {{ pg.meta }}")}
+<section aria-label="Sesiones por semana" style="{CARD}; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em; {NUM}">{{{{ pg.avg }}}}</span><span style="font-size: 16px; color: {{{{ th.sub }}}}">por semana en promedio</span></div>
+<div style="position: relative; height: 120px; display: flex; align-items: flex-end; gap: 6px">
+<span aria-hidden="true" style="position: absolute; left: 0; right: 0; bottom: {{{{ pg.metaLine }}}}%; border-top: 1px dashed {{{{ th.sep }}}}"></span>
+<sc-for list="{{{{ pg.bars }}}}" as="b" hint-placeholder-count="12"><span role="img" aria-label="{{{{ b.aria }}}}" class="col-in" style="position: relative; flex: 1; height: {{{{ b.h }}}}%; border-radius: 4px; background: {{{{ b.bg }}}}; animation-delay: {{{{ b.delay }}}}ms"></span></sc-for>
+</div>
+<div style="display: flex; justify-content: space-between; {MONO} font-size: 12px; color: {{{{ th.tertiary }}}}"><span>{{{{ pg.firstWeek }}}}</span><span>{{{{ pg.lastWeek }}}}</span></div>
+</section>
+{sec_title("Puntaje de salud")}
+<section aria-label="Puntaje de salud" style="{CARD}; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<sc-if value="{{{{ pg.hasScore }}}}" hint-placeholder-val="{{{{ true }}}}"><div style="display: flex; align-items: baseline; gap: 8px"><span style="font-size: 44px; line-height: 44px; letter-spacing: -0.05em; {NUM}">{{{{ pg.score }}}}</span><span style="font-size: 16px; color: {{{{ th.sub }}}}">de 100</span></div></sc-if>
+<sc-if value="{{{{ pg.hasScoreLine }}}}" hint-placeholder-val="{{{{ false }}}}">{spark('score', '{{ pg.scoreColor }}')}</sc-if>
+<p style="margin: 0; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ pg.scoreNote }}}}</p>
+</section>
+{sec_title("Cuerpo")}
+<section aria-label="Peso y cintura" style="{CARD}; padding: 20px; display: flex; flex-direction: column; gap: 20px">
+<sc-if value="{{{{ pg.hasPeso }}}}" hint-placeholder-val="{{{{ true }}}}"><div style="display: flex; flex-direction: column; gap: 8px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 16px">Peso</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em; {NUM}">{{{{ pg.peso }}}}</span><span style="font-size: 16px; color: {{{{ th.sub }}}}">kg</span></span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}">{{{{ pg.pesoDelta }}}}</span></div>
+<sc-if value="{{{{ pg.hasPesoLine }}}}" hint-placeholder-val="{{{{ false }}}}">{spark('peso', '{{ th.text }}')}</sc-if>
+</div></sc-if>
+<sc-if value="{{{{ pg.hasCin }}}}" hint-placeholder-val="{{{{ true }}}}">
+<div style="display: flex; flex-direction: column; gap: 8px; border-top: 0.5px solid {{{{ th.sep }}}}; padding-top: 16px">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="display: flex; align-items: baseline; gap: 6px"><span style="font-size: 16px">Cintura</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em; {NUM}">{{{{ pg.cin }}}}</span><span style="font-size: 16px; color: {{{{ th.sub }}}}">cm</span></span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}">{{{{ pg.cinDelta }}}}</span></div>
+<sc-if value="{{{{ pg.hasCinLine }}}}" hint-placeholder-val="{{{{ false }}}}">{spark('cin', '{{ th.text }}')}</sc-if>
+</div>
+</sc-if>
+<sc-if value="{{{{ pg.hasMeasNote }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ pg.measNote }}}}</p></sc-if>
+</section>
+{sec_title("Carga por músculo", "Esta semana")}
+<section aria-label="Carga por músculo" style="{CARD}; padding: 4px 20px 16px">
+<sc-if value="{{{{ pg.hasMuscles }}}}" hint-placeholder-val="{{{{ true }}}}">
+<sc-for list="{{{{ pg.muscles }}}}" as="mu" hint-placeholder-count="5">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 12px 0; box-shadow: {{{{ mu.line }}}}">
+<div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 16px">{{{{ mu.name }}}}</span><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ mu.trend }}}}</span></div>
+<div style="position: relative; height: 6px; border-radius: 3px; background: {{{{ th.fill }}}}"><div class="bar-in" style="height: 100%; width: {{{{ mu.w }}}}%; border-radius: 3px; background: {{{{ c.heat }}}}"></div><span aria-hidden="true" style="position: absolute; top: -3px; left: {{{{ mu.prev }}}}%; width: 2px; height: 12px; border-radius: 1px; background: {{{{ th.text }}}}; opacity: 0.5"></span></div>
+</div>
+</sc-for>
+<p style="margin: 0; padding-top: 4px; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">La marca fina es la semana pasada.</p>
+</sc-if>
+<sc-if value="{{{{ pg.noMuscles }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 12px 0 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">Cuando registres sesiones verás aquí cuánto trabajó cada músculo.</p></sc-if>
+</section>
+{sec_title("Récords")}
+<section aria-label="Récords" style="{CARD}; padding: 4px 20px">
+<sc-if value="{{{{ pg.hasRecs }}}}" hint-placeholder-val="{{{{ true }}}}">
+<sc-for list="{{{{ pg.recs }}}}" as="rc" hint-placeholder-count="4">
+<div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 60px; box-shadow: {{{{ rc.line }}}}"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 16px">{{{{ rc.name }}}}</span><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ rc.when }}}}</span></span><span style="flex: none; display: flex; align-items: baseline; gap: 6px"><span style="font-size: 20px; letter-spacing: -0.02em; {NUM}">{{{{ rc.val }}}}</span><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ rc.unit }}}}</span></span></div>
+</sc-for>
+</sc-if>
+<sc-if value="{{{{ pg.noRecs }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 16px 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">Anota tus repeticiones en cada serie y aquí quedarán tus mejores marcas.</p></sc-if>
+</section>
+{sec_title("Tu escalera", "Fase {{ pg.phase }} de 3")}
+<section aria-label="Escalera de progresión" style="{CARD}; padding: 4px 20px">
+<sc-for list="{{{{ pg.ladder }}}}" as="ld" hint-placeholder-count="4">
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 16px 0; box-shadow: {{{{ ld.line }}}}">
+<span style="font-size: 16px; font-weight: 500">{{{{ ld.group }}}}</span>
+<sc-for list="{{{{ ld.steps }}}}" as="sp" hint-placeholder-count="3"><span style="display: flex; align-items: flex-start; gap: 12px"><span style="flex: none; width: 24px; height: 24px; border-radius: 50%; background: {{{{ sp.bg }}}}; color: {{{{ sp.fg }}}}; box-shadow: inset 0 0 0 1px {{{{ th.sep }}}}; display: flex; align-items: center; justify-content: center; {MONO} font-size: 12px">{{{{ sp.n }}}}</span><span style="font-size: 13px; line-height: 24px; color: {{{{ sp.tc }}}}; font-weight: {{{{ sp.tw }}}}">{{{{ sp.text }}}}</span></span></sc-for>
+</div>
+</sc-for>
+</section>
+<sc-if value="{{{{ pg.hasLater }}}}" hint-placeholder-val="{{{{ true }}}}">
+{sec_title("Más adelante")}
+<section aria-label="Más adelante" style="{CARD}; padding: 4px 20px">
+<sc-for list="{{{{ pg.later }}}}" as="la" hint-placeholder-count="3">
+<div style="display: flex; flex-direction: column; gap: 4px; padding: 16px 0; box-shadow: {{{{ la.line }}}}"><span style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><span style="font-size: 16px">{{{{ la.name }}}}</span><sc-if value="{{{{ la.hasLock }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="flex: none; {MONO} font-size: 12px; color: {{{{ th.tertiary }}}}">{{{{ la.lock }}}}</span></sc-if></span><span style="font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ la.text }}}}</span></div>
+</sc-for>
+</section>
+</sc-if>
+{HIST}
+{CU['REPORT']}
+</div>
+</div>
+</sc-if>"""
+
+
+# bloques de la versión 28 (check-in, fotos, Aspecto, chat y rutina adaptativa), en tpl_cuerpo.py
+CU = _make_cuerpo(globals())
+
 BACKUP_NUDGE = f'''<sc-if value="{{{{ showBackupNudge }}}}" hint-placeholder-val="{{{{ false }}}}">
 <section aria-label="Respaldo" style="{CARD}; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px">
-<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 500">Respalda tus datos</span><span style="font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">Guarda una copia en Archivos o iCloud Drive por si cambias de teléfono.</span></span>
-<div style="display: flex; gap: 8px">{pill("Respaldar", "exportBackup", "primary", "flex: 1", 44)}{pill("Ahora no", "snoozeBackup", "secondary", "flex: 1", 44)}</div>
+<span style="display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 500">Tu respaldo semanal</span><span style="font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">Tus datos viven solo en este teléfono. Un toque y queda una copia en Archivos o iCloud Drive.</span></span>
+<div style="display: flex; gap: 8px">{pill("Guardar respaldo", "exportBackup", "primary", "flex: 1", 44)}{pill("Ahora no", "snoozeBackup", "secondary", "flex: 1", 44)}</div>
 </section>
 </sc-if>'''
 
 
 def inicio():
     secs = {
-        'salud': health_hero('hs', 'goSalud', 'hs.startEval'),
-        'hist': HIST,
-        'habitos': HABITS_HOME,
-        'comida': FOOD_HOME,
-        'agua': water_card('agua-home'),
+        'diario': CU['DIARIO'],
+        'salud': health_hero('hs', 'goSalud', 'hs.startEval', compact=True),
+        'hoy': TODAY,
+        'rutina': '<div style="display: flex; flex-direction: column; gap: 12px">' + WEEK + ROUTINE + '</div>',
+        'fotos': CU['FOTOS_HOME'],
         'recup': RECUP,
-        'semana': WEEK,
-        'rutina': ROUTINE,
+        'semanal': WEEKLY,
+        'progreso': PROG_CARD,
     }
     body = (f'<header style="display: flex; flex-direction: column; gap: 24px; padding: 0 4px 4px">'
-            f'<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span aria-label="keystone" style="display: flex; align-items: center; gap: 8px">{orb_tpl(24)}<span style="font-size: 22px; font-weight: 500; letter-spacing: -0.055em">keystone</span></span>{AVATAR}</div>'
+            f'<div style="display: flex; align-items: center; justify-content: space-between; gap: 12px"><span aria-label="keystone" style="display: flex; align-items: center; gap: 8px">{orb_tpl(24)}<span style="font-size: 20px; font-weight: 500; letter-spacing: -0.055em">keystone</span></span><span style="display: flex; gap: 8px">{CU["CHAT_BTN"]}{AVATAR}</span></div>'
             f'<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ dateLabel }}}}</h1></header>')
     body += '\n' + BACKUP_NUDGE + '\n'
     body += '\n'.join(home_section(k, v) for k, v in secs.items())
@@ -382,7 +519,7 @@ def habitos():
 </div>
 <section aria-label="Resumen del día" style="{CARD}; padding: 20px; display: flex; align-items: center; gap: 20px">
 <div style="position: relative; width: 84px; height: 84px; flex: none">{ring(84, 36, 7, "{{ hd.ringOff84 }}", "{{ th.text }}", 226.2)}
-<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ hd.done }}}}/{{{{ hd.total }}}}</div></div>
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ hd.done }}}}/{{{{ hd.total }}}}</div></div>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.03em">{{{{ hd.title }}}}</span><span style="font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">{{{{ hd.sub }}}}</span></div>
 </section>
 {water_card("agua-h")}
@@ -411,7 +548,7 @@ def habitos():
 </sc-if>
 <span style="margin-left: 52px; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ h.cue }}}}</span>
 <sc-if value="{{{{ h.atRisk }}}}" hint-placeholder-val="{{{{ false }}}}">
-<div style="margin-left: 52px; display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 14px; background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}">
+<div style="margin-left: 52px; display: flex; align-items: center; gap: 12px; padding: 12px 12px; border-radius: 12px; background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}">
 <span style="flex: 1; font-size: 13px; line-height: 20px"><b style="font-weight: 500">Nunca falles dos veces.</b> Ayer no se cumplió: hoy basta con la versión mínima, {{{{ h.mini }}}}.</span>
 <button type="button" class="hit" onClick="{{{{ h.doMini }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; flex: none; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 13px; font-weight: 500">La hice</button>
 </div>
@@ -465,10 +602,10 @@ def habitos():
 
 def comida():
     no_ai = f'''<sc-if value="{{{{ fd.noAi }}}}" hint-placeholder-val="{{{{ false }}}}">
-<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
 {HALO}
 <span style="position: relative">{eyebrow("Análisis con IA", "rgba(250, 250, 250, 0.62)")}</span>
-<span style="position: relative; font-size: 24px; line-height: 28px; font-weight: 400; letter-spacing: -0.035em">Saca una foto y obtén calorías, proteína, fibra y más</span>
+<span style="position: relative; font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.035em">Saca una foto y obtén calorías, proteína, fibra y más</span>
 <span style="position: relative; font-size: 16px; line-height: 24px; color: rgba(250, 250, 250, 0.72)">Conecta una IA una sola vez. Gemini de Google tiene un plan gratis que alcanza de sobra.</span>
 <span style="position: relative; align-self: flex-start">{pill("Conectar IA", "goAiSettings", "light", "", 46)}</span>
 </section>
@@ -485,8 +622,8 @@ def comida():
 <div style="position: relative; width: 128px; height: 128px; flex: none">{ring(128, 56, 9, "{{ fd.ringOff }}", "{{ fd.ringColor }}", 351.9)}
 <div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.kcal }}}}</span><span style="{MONO} font-size: 12px; color: {{{{ th.sub }}}}">kcal</span></div></div>
 <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 12px">
-<div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("{{ fd.leftLabel }}")}<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.left }}}}</span></div>
-<div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("Meta diaria")}<span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.goal }}}} kcal</span></div>
+<sc-if value="{{{{ fd.hasKcal }}}}" hint-placeholder-val="{{{{ true }}}}"><div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("{{ fd.leftLabel }}")}<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.left }}}}</span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">de {{{{ fd.goal }}}} kcal</span></div></sc-if>
+<sc-if value="{{{{ fd.noKcal }}}}" hint-placeholder-val="{{{{ false }}}}"><div style="display: flex; flex-direction: column; gap: 4px">{eyebrow("Meta del día")}<span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.05em; {NUM}">{{{{ fd.goal }}}}<span style="font-size: 16px; color: {{{{ th.sub }}}}; letter-spacing: 0"> kcal</span></span><span style="font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">Registra tu primera comida del día</span></div></sc-if>
 </div>
 </div>
 <div style="display: flex; flex-direction: column; gap: 12px">
@@ -499,7 +636,7 @@ def comida():
 </div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ fd.micro }}}}" as="mi" hint-placeholder-count="2">
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ mi.label }}}}</span><span style="{MONO} font-size: 16px; color: {{{{ mi.color }}}}; {NUM}">{{{{ mi.val }}}}</span><span style="font-size: 13px; color: {{{{ th.tertiary }}}}">{{{{ mi.goal }}}}</span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 12px; padding: 12px 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ mi.label }}}}</span><span style="{MONO} font-size: 16px; color: {{{{ mi.color }}}}; {NUM}">{{{{ mi.val }}}}</span><span style="font-size: 13px; color: {{{{ th.tertiary }}}}">{{{{ mi.goal }}}}</span></div>
 </sc-for>
 </div>
 </section>
@@ -511,8 +648,8 @@ def comida():
 </div>
 <sc-for list="{{{{ ml.entries }}}}" as="en" hint-placeholder-count="1">
 <button type="button" onClick="{{{{ en.open }}}}" style="{B} color: inherit; text-align: left; width: 100%; padding: 0; background: transparent; display: flex; align-items: center; gap: 12px">
-<sc-if value="{{{{ en.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ en.photo }}}}" alt="" style="width: 52px; height: 52px; border-radius: 14px; object-fit: cover; flex: none"></sc-if>
-<sc-if value="{{{{ en.noPhoto }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="width: 52px; height: 52px; border-radius: 14px; flex: none; background: {{{{ th.fill }}}}; display: flex; align-items: center; justify-content: center; color: {{{{ th.tertiary }}}}">{ico("M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4", 20)}</span></sc-if>
+<sc-if value="{{{{ en.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ en.photo }}}}" alt="" style="width: 52px; height: 52px; border-radius: 12px; object-fit: cover; flex: none"></sc-if>
+<sc-if value="{{{{ en.noPhoto }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="width: 52px; height: 52px; border-radius: 12px; flex: none; background: {{{{ th.fill }}}}; display: flex; align-items: center; justify-content: center; color: {{{{ th.tertiary }}}}">{ico("M7 3v8a2 2 0 0 0 2 2v8M7 3v5M11 3v5M17 21V3c-2.2 0-3.5 2.5-3.5 6s1.3 4 3.5 4", 20)}</span></sc-if>
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ en.title }}}}</span><span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ en.sub }}}}</span></span>
 <sc-if value="{{{{ en.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 13px; padding: 4px 8px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px {{{{ en.qColor }}}}; color: {{{{ en.qText }}}}; flex: none">{{{{ en.q }}}}/10</span></sc-if>
 </button>
@@ -535,10 +672,10 @@ def comida():
 <sc-for list="{{{{ fd.week.bars }}}}" as="wb" hint-placeholder-count="7"><span style="{MONO} font-size: 12px; text-align: center; color: {{{{ wb.lc }}}}">{{{{ wb.label }}}}</span></sc-for>
 </div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Energía promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgK }}}} kcal</span></div>
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Proteína promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgP }}}} g</span></div>
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Días con meta de proteína</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.protDays }}}} de {{{{ fd.week.days }}}}</span></div>
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 14px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Calidad promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgQ }}}} / 10</span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Energía promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgK }}}} kcal</span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Proteína promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgP }}}} g</span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Días con meta de proteína</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.protDays }}}} de {{{{ fd.week.days }}}}</span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">Calidad promedio</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ fd.week.avgQ }}}} / 10</span></div>
 </div>
 <sc-if value="{{{{ fd.hasRev }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: flex; flex-direction: column; gap: 12px; border-top: 0.5px solid {{{{ th.sep }}}}; padding-top: 16px">
@@ -563,7 +700,7 @@ def comida():
 </sc-if>'''
     # hoja: agregar
     out += '\n' + sheet('fd.sheetOpen', f'''
-<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Registrar")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.04em">¿Qué comiste?</h2></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Registrar")}<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.04em">¿Qué comiste?</h2></div>
 <div role="group" aria-label="Comida" style="display: flex; flex-wrap: wrap; gap: 8px">
 <sc-for list="{{{{ fd.mealOpts }}}}" as="mo" hint-placeholder-count="5">
 <button type="button" class="hit" onClick="{{{{ mo.pick }}}}" aria-pressed="{{{{ mo.selected }}}}" style="{B} height: 36px; padding: 0 16px; border-radius: 999px; background: {{{{ mo.bg }}}}; color: {{{{ mo.fg }}}}; font-size: 16px; font-weight: 500">{{{{ mo.label }}}}</button>
@@ -574,14 +711,14 @@ def comida():
 <input type="file" accept="image/*" aria-label="Tomar o elegir foto" onChange="{{{{ fd.onPhoto }}}}" style="position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer">
 </label>
 <div style="display: flex; align-items: center; gap: 12px; color: {{{{ th.tertiary }}}}"><span style="flex: 1; height: 0.5px; background: {{{{ th.sep }}}}"></span><span style="{MONO} font-size: 13px">O descríbelo</span><span style="flex: 1; height: 0.5px; background: {{{{ th.sep }}}}"></span></div>
-<textarea aria-label="Describe lo que comiste" placeholder="Ej: dos huevos revueltos, una marraqueta con palta y un café con leche" onChange="{{{{ fd.onText }}}}" style="appearance: none; border: 0; outline: none; resize: none; height: 96px; border-radius: 18px; padding: 16px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font: inherit; font-size: 16px; line-height: 24px">{{{{ fd.ftext }}}}</textarea>
+<textarea aria-label="Describe lo que comiste" placeholder="Ej: dos huevos revueltos, una marraqueta con palta y un café con leche" onChange="{{{{ fd.onText }}}}" style="appearance: none; border: 0; outline: none; resize: none; height: 96px; border-radius: 16px; padding: 16px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font: inherit; font-size: 16px; line-height: 24px">{{{{ fd.ftext }}}}</textarea>
 {pill("Analizar descripción", "fd.analyzeText", "secondary", "opacity: {{ fd.textOp }}")}
 <sc-if value="{{{{ fd.noAi }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; text-align: center; font-size: 13px; color: {{{{ c.heatText }}}}">Primero conecta la IA en Ajustes.</p></sc-if>''', 'fd.closeSheet', 'Registrar comida')
     # hoja: borrador
     out += '\n' + sheet('fd.draftOpen', f'''
-<sc-if value="{{{{ fd.dHasThumb }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ fd.dThumb }}}}" alt="Foto de tu comida" style="width: 100%; height: 210px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
+<sc-if value="{{{{ fd.dHasThumb }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ fd.dThumb }}}}" alt="Foto de tu comida" style="width: 100%; height: 210px; object-fit: cover; border-radius: 24px; flex: none"></sc-if>
 <sc-if value="{{{{ fd.dLoading }}}}" hint-placeholder-val="{{{{ true }}}}">
-<div style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 22px; padding: 24px 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px">
+<div style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 24px 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px">
 {HALO}
 <span style="position: relative">{eyebrow("Analizando", "rgba(250, 250, 250, 0.62)")}</span>
 <span style="position: relative; font-size: 20px; line-height: 24px; letter-spacing: -0.03em">Identificando alimentos y porciones…</span>
@@ -589,7 +726,7 @@ def comida():
 </sc-if>
 <sc-if value="{{{{ fd.dReady }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("Resultado")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.dTitle }}}}</h2></div>
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("Resultado")}<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.dTitle }}}}</h2></div>
 <sc-if value="{{{{ fd.dHasQ }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.well }}}}">Calidad {{{{ fd.dQ }}}}/10</span></sc-if>
 </div>
 <div style="display: grid; grid-template-columns: 1.4fr repeat(4, minmax(0, 1fr)); gap: 8px">
@@ -622,9 +759,9 @@ def comida():
 </sc-if>''', 'fd.discardDraft', 'Análisis de comida', 54)
     # hoja: detalle
     out += '\n' + sheet('fd.entryOpen', f'''
-<sc-if value="{{{{ fd.fe.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ fd.fe.photo }}}}" alt="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 22px; flex: none"></sc-if>
+<sc-if value="{{{{ fd.fe.hasPhoto }}}}" hint-placeholder-val="{{{{ false }}}}"><img src="{{{{ fd.fe.photo }}}}" alt="" style="width: 100%; height: 200px; object-fit: cover; border-radius: 24px; flex: none"></sc-if>
 <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 0 4px">
-<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("{{ fd.fe.meal }} · {{ fd.fe.time }}")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.fe.title }}}}</h2></div>
+<div style="display: flex; flex-direction: column; gap: 8px; min-width: 0">{eyebrow("{{ fd.fe.meal }} · {{ fd.fe.time }}")}<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.035em">{{{{ fd.fe.title }}}}</h2></div>
 <sc-if value="{{{{ fd.fe.hasQ }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="flex: none; {MONO} font-size: 13px; padding: 8px 12px; border-radius: 999px; background: {{{{ th.well }}}}">Calidad {{{{ fd.fe.q }}}}/10</span></sc-if>
 </div>
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
@@ -651,22 +788,24 @@ def comida():
 def salud():
     body = header('Perfil de salud', 'Salud') + '\n' + health_hero('hv', 'noop', 'hv.startEval') + f'''
 <sc-if value="{{{{ hv.has }}}}" hint-placeholder-val="{{{{ true }}}}">
-{sec_title("Tus áreas", "A · B · C · D")}
+{sec_title("Tus áreas")}
 <section aria-label="Áreas" style="{CARD}; padding: 0 0 0 16px">
 <sc-for list="{{{{ hv.areas }}}}" as="ar" hint-placeholder-count="8">
 <button type="button" onClick="{{{{ ar.open }}}}" style="{B} color: inherit; text-align: left; width: 100%; padding: 16px 16px 16px 0; background: transparent; display: flex; align-items: center; gap: 12px; box-shadow: {{{{ ar.line }}}}">
-{grade_badge("{{ ar.grade }}", "{{ ar.gColor }}", 34, 14, "{{ ar.gText }}")}
+{grade_badge("{{ ar.grade }}", "{{ ar.gColor }}", 34, 13, "{{ ar.gText }}")}
 <span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 16px; font-weight: 500">{{{{ ar.name }}}}</span><span style="font-size: 13px; color: {{{{ th.sub }}}}; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">{{{{ ar.status }}}}</span></span>
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ ar.score }}}}</span>
 {CHEV}
 </button>
 </sc-for>
 </section>
+{PROG_CARD}
+{CU['LINKS']}
 {sec_title("Mediciones", "Última: {{ hv.lastMeas }}")}
 <section aria-label="Mediciones" style="{CARD}; padding: 16px; display: flex; flex-direction: column; gap: 12px">
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ hv.kpis }}}}" as="kp" hint-placeholder-count="4">
-<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 16px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ kp.label }}}}</span><span style="font-size: 24px; line-height: 28px; letter-spacing: -0.04em; {NUM}">{{{{ kp.value }}}}<span style="font-size: 13px; color: {{{{ th.sub }}}}; letter-spacing: 0"> {{{{ kp.unit }}}}</span></span></div>
+<div style="background: {{{{ th.raised }}}}; box-shadow: inset 0 0 0 1px {{{{ th.line }}}}; border-radius: 16px; padding: 12px 16px; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; color: {{{{ th.sub }}}}">{{{{ kp.label }}}}</span><span style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em; {NUM}">{{{{ kp.value }}}}<span style="font-size: 13px; color: {{{{ th.sub }}}}; letter-spacing: 0"> {{{{ kp.unit }}}}</span></span></div>
 </sc-for>
 </div>
 {pill("Registrar medición", "hv.openMeas", "secondary", "", 46)}
@@ -689,7 +828,7 @@ def area():
 </div>
 <div class="scroll" style="flex: 1; overflow-y: auto; padding: 16px 16px 48px; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Área")}<h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ hv.detail.name }}}}</h1></div>
-<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 20px; display: flex; align-items: center; gap: 20px">
+<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 20px">
 {HALO.replace('{{ halo }}', '{{ hv.detail.halo }}')}
 <div style="position: relative; width: 104px; height: 104px; flex: none">{ring(104, 44, 6, "{{ hv.detail.ringOff }}", "{{ hv.detail.gColor }}", 276.5, "rgba(255, 255, 255, 0.12)")}
 <div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; {MONO} font-size: 28px; color: {{{{ hv.detail.gColor }}}}">{{{{ hv.detail.grade }}}}</div></div>
@@ -772,7 +911,7 @@ def evaluation():
 <sc-if value="{{{{ ev.isScale }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ ev.opts }}}}" as="o" hint-placeholder-count="5">
-<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.sel }}}}" style="{B} height: 64px; border-radius: 20px; background: {{{{ o.bg }}}}; color: {{{{ o.fg }}}}; {MONO} font-size: 20px">{{{{ o.label }}}}</button>
+<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.sel }}}}" style="{B} height: 64px; border-radius: 16px; background: {{{{ o.bg }}}}; color: {{{{ o.fg }}}}; {MONO} font-size: 20px">{{{{ o.label }}}}</button>
 </sc-for>
 </div>
 <div style="display: flex; justify-content: space-between; {MONO} font-size: 13px; color: {w}"><span>{{{{ ev.lo }}}}</span><span>{{{{ ev.hi }}}}</span></div>
@@ -800,7 +939,7 @@ def evaluation():
 
 def meas_sheet():
     return sheet('hv.measOpen', f'''
-<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Hoy")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.04em">Registrar medición</h2></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 0 4px">{eyebrow("Hoy")}<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.04em">Registrar medición</h2></div>
 <section style="{CARD}; padding: 0 0 0 16px">
 <sc-for list="{{{{ hv.mrows }}}}" as="mr" hint-placeholder-count="5">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; padding-right: 12px; border-top: 0.5px solid {{{{ th.sep }}}}">
@@ -839,7 +978,8 @@ def ajustes():
 <button type="button" onClick="{{{{ pr.pick }}}}" aria-label="{{{{ pr.aria }}}}" style="{B} color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px 0 0; background: transparent; font-size: 16px; border-top: 0.5px solid {{{{ th.sep }}}}">
 <span>{{{{ pr.day }}}}</span><span style="display: flex; align-items: center; gap: 8px; color: {{{{ pr.color }}}}; font-size: 16px">{{{{ pr.value }}}}{ico("M8 9l4-4 4 4M8 15l4 4 4-4", 13, "{{ th.tertiary }}", 2)}</span>
 </button>
-</sc-for>'''
+</sc-for>
+{CU['GOAL_ROW']}'''
     ia = f'''<div style="padding: 16px 16px 16px 0; display: flex; flex-direction: column; gap: 12px">
 <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px"><span style="font-size: 16px">Estado</span><span style="display: flex; align-items: center; gap: 8px; font-size: 16px; color: {{{{ ai.stColor }}}}"><span style="width: 7px; height: 7px; border-radius: 50%; background: {{{{ ai.stColor }}}}"></span>{{{{ ai.status }}}}</span></div>
 <div role="group" aria-label="Proveedor" style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
@@ -875,13 +1015,15 @@ def ajustes():
     rec_actions = f'''<sc-if value="{{{{ rm.supported }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="display: flex; flex-direction: column; gap: 8px">
 <sc-if value="{{{{ rm.inactive }}}}" hint-placeholder-val="{{{{ true }}}}">{pill("Activar notificaciones", "rm.enable")}</sc-if>
-<sc-if value="{{{{ rm.active }}}}" hint-placeholder-val="{{{{ false }}}}">{pill("Copiar código para GitHub", "rm.copy")}
-<a href="{{{{ rm.ghUrl }}}}" target="_blank" rel="noopener" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500; text-decoration: none">Abrir GitHub para pegarlo</a></sc-if>
+<sc-if value="{{{{ rm.active }}}}" hint-placeholder-val="{{{{ false }}}}"><button type="button" onClick="{{{{ rm.toggleAdv }}}}" aria-expanded="{{{{ rm.adv }}}}" style="{B} color: inherit; width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; padding: 0 20px; border-radius: 999px; background: {{{{ th.card }}}}; box-shadow: {{{{ th.cardShadow }}}}; font-size: 16px">Configuración avanzada<span style="display: flex; transform: rotate({{{{ rm.advRot }}}}deg); transition: transform 0.2s var(--ease-out)">{CHEV}</span></button>
+<sc-if value="{{{{ rm.adv }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">Una sola vez: copia el código y, en GitHub, crea un secreto llamado RUTINA_PUSH con ese código. Si cambias los horarios, cópialo otra vez y actualiza el secreto.</p>
+{pill("Copiar código para GitHub", "rm.copy")}
+<a href="{{{{ rm.ghUrl }}}}" target="_blank" rel="noopener" style="display: flex; align-items: center; justify-content: center; height: 52px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500; text-decoration: none">Abrir GitHub para pegarlo</a></sc-if></sc-if>
 </div>
 </sc-if>
-<sc-if value="{{{{ rm.dirty }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ c.heatText }}}}">Cambiaste los horarios: copia el código otra vez y actualiza el secreto RUTINA_PUSH en GitHub.</p></sc-if>
+<sc-if value="{{{{ rm.dirty }}}}" hint-placeholder-val="{{{{ false }}}}"><p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ c.heatText }}}}">Cambiaste los horarios: actualiza el código en Configuración avanzada.</p></sc-if>
 <sc-if value="{{{{ rm.hasMsg }}}}" hint-placeholder-val="{{{{ false }}}}"><p role="status" style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ c.constanciaText }}}}">{{{{ rm.msg }}}}</p></sc-if>
-<sc-if value="{{{{ rm.showCode }}}}" hint-placeholder-val="{{{{ false }}}}"><textarea readonly aria-label="Código para GitHub" style="height: 96px; border: 0; border-radius: 14px; padding: 12px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font-size: 13px; {MONO} -webkit-user-select: text; user-select: text">{{{{ rm.code }}}}</textarea></sc-if>'''
+<sc-if value="{{{{ rm.showCode }}}}" hint-placeholder-val="{{{{ false }}}}"><textarea readonly aria-label="Código para GitHub" style="height: 96px; border: 0; border-radius: 12px; padding: 12px; background: {{{{ th.well }}}}; color: {{{{ th.text }}}}; font-size: 13px; {MONO} -webkit-user-select: text; user-select: text">{{{{ rm.code }}}}</textarea></sc-if>'''
     apar = f'''<div style="padding: 12px 16px 12px 0">
 <div role="group" aria-label="Tema" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); padding: 4px; border-radius: 999px; background: {{{{ th.segBg }}}}">
 <sc-for list="{{{{ temaOpts }}}}" as="o" hint-placeholder-count="3">
@@ -902,7 +1044,6 @@ def ajustes():
     body += group('Entrenamiento', entreno, 'Toca un día para cambiar su rutina.') + '\n'
     body += f'<div id="ia" style="display: contents">{group("IA para comidas", ia, "{{ ai.help }}")}</div>\n'
     body += group('Recordatorios', rec) + '\n' + rec_actions + '\n'
-    body += f'<p style="margin: 0; padding: 0 4px; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">Una sola vez: toca Activar, después Copiar código, y en GitHub crea un secreto llamado RUTINA_PUSH con ese código.</p>\n'
     body += group('Apariencia', apar) + '\n'
     body += group('Tus datos', datos, 'Todo se guarda solo en este teléfono, en dos copias. El respaldo no incluye las fotos ni tu clave de IA.') + '\n'
     body += '%%BRAND%%'
@@ -956,7 +1097,7 @@ SESION = f'''<sc-if value="{{{{ isSesion }}}}" hint-placeholder-val="{{{{ false 
 </sc-if>'''
 
 CONFIRM = sheet('isConfirm', f'''
-<div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 4px 4px; text-align: center; align-items: center">{eyebrow("{{ rc.name }}")}<h2 style="margin: 0; font-size: 24px; line-height: 28px; font-weight: 500; letter-spacing: -0.04em">¿Completaste la rutina?</h2><p style="margin: 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">{{{{ rcTitle }}}}</p></div>
+<div style="display: flex; flex-direction: column; gap: 8px; padding: 8px 4px 4px; text-align: center; align-items: center">{eyebrow("{{ rc.name }}")}<h2 style="margin: 0; font-size: 28px; line-height: 32px; font-weight: 500; letter-spacing: -0.04em">¿Completaste la rutina?</h2><p style="margin: 0; font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">{{{{ rcTitle }}}}</p></div>
 <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px">{pill("No", "answerNo", "secondary")}{pill("Sí", "answerYes")}</div>''', 'closeConfirm', '¿Completaste la rutina?')
 
 
@@ -967,7 +1108,7 @@ def quiz_block(cond):
 <sc-if value="{{{{ q.isGrid }}}}" hint-placeholder-val="{{{{ true }}}}">
 <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px">
 <sc-for list="{{{{ q.opts }}}}" as="o" hint-placeholder-count="6">
-<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 80px; border-radius: 22px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{{{ o.bg }}}}; color: {{{{ o.fg }}}}; transition: background 0.15s">
+<button type="button" onClick="{{{{ o.pick }}}}" aria-pressed="{{{{ o.selected }}}}" style="{B} height: 80px; border-radius: 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; background: {{{{ o.bg }}}}; color: {{{{ o.fg }}}}; transition: background 0.15s">
 <span style="font-size: 28px; line-height: 32px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ o.label }}}}</span><span style="{MONO} font-size: 12px; color: {{{{ o.subFg }}}}">min</span></button>
 </sc-for>
 </div>
@@ -1004,7 +1145,7 @@ TEST = f'''<sc-if value="{{{{ isTest }}}}" hint-placeholder-val="{{{{ false }}}}
 VICTORY = f'''<sc-if value="{{{{ isVictory }}}}" hint-placeholder-val="{{{{ false }}}}">
 <div style="position: absolute; inset: 0; background: {{{{ th.bg }}}}; animation: present 0.55s cubic-bezier(.32,.72,0,1) both; z-index: 20">
 <div class="scroll" style="position: absolute; inset: 0; overflow-y: auto; box-sizing: border-box; padding: 60px 16px 120px; display: flex; flex-direction: column; gap: 12px">
-<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 26px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: 250px">
+<section style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 24px 20px 20px; display: flex; flex-direction: column; gap: 20px; min-height: 250px">
 {HALO}
 <span style="position: relative">{eyebrow("Sesión completada · {{ v.dateLine }}", "rgba(250, 250, 250, 0.62)")}</span>
 <span style="position: relative; display: flex; flex-direction: column; gap: 8px"><h1 style="margin: 0; font-size: 34px; line-height: 40px; font-weight: 400; letter-spacing: -0.045em">{{{{ v.name }}}}</h1><span style="font-size: 16px; color: rgba(250, 250, 250, 0.7)">{{{{ v.title }}}}</span></span>
@@ -1015,6 +1156,15 @@ VICTORY = f'''<sc-if value="{{{{ isVictory }}}}" hint-placeholder-val="{{{{ fals
 <span style="display: flex; flex-direction: column; gap: 2px"><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">Series</span><span style="font-size: 20px; line-height: 24px; letter-spacing: -0.03em; {NUM}">{{{{ v.sets }}}}</span></span>
 </span>
 </section>
+<sc-if value="{{{{ cele.has }}}}" hint-placeholder-val="{{{{ false }}}}">
+<section aria-label="Logros de hoy" style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 12px">
+<span aria-hidden="true" class="halo" style="position: absolute; inset: 0; pointer-events: none; background: {{{{ cele.halo }}}}"></span>
+<sc-if value="{{{{ cele.hasMs }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="position: relative; display: flex; flex-direction: column; gap: 4px">{eyebrow("Hito", "rgba(250, 250, 250, 0.62)")}<span style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em">{{{{ cele.msLabel }}}}</span></span></sc-if>
+<sc-if value="{{{{ cele.hasPrs }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="position: relative; display: flex; flex-direction: column">{eyebrow("Récords de hoy", "rgba(250, 250, 250, 0.62)")}
+<sc-for list="{{{{ cele.prs }}}}" as="x" hint-placeholder-count="2"><span style="display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 0; box-shadow: {{{{ x.line }}}}"><span style="display: flex; flex-direction: column; gap: 2px; min-width: 0"><span style="font-size: 16px">{{{{ x.name }}}}</span><span style="{MONO} font-size: 12px; color: rgba(250, 250, 250, 0.6)">{{{{ x.prev }}}}</span></span><span style="flex: none; display: flex; align-items: baseline; gap: 6px"><span data-count="{{{{ x.val }}}}" style="font-size: 28px; line-height: 32px; letter-spacing: -0.04em; {NUM}">{{{{ x.val }}}}</span><span style="font-size: 13px; color: rgba(250, 250, 250, 0.6)">{{{{ x.unit }}}}</span></span></span></sc-for>
+</span></sc-if>
+</section>
+</sc-if>
 <section style="{CARD}; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px"><span style="font-size: 16px">Sesiones esta semana</span><span style="{MONO} font-size: 16px; {NUM}">{{{{ v.week }}}}</span></section>
 {sec_title("Músculos trabajados")}
 <section style="{CARD}; padding: 20px 20px 4px; display: flex; flex-direction: column; gap: 12px">
@@ -1089,6 +1239,8 @@ input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-vis
 @keyframes bloom{from{opacity:0;transform:translateY(14%) scale(.94)}}
 @keyframes ringIn{from{stroke-dashoffset:var(--full)}}
 @keyframes grow{from{transform:scaleX(0)}}
+@keyframes colIn{from{transform:scaleY(0)}}
+@keyframes lineIn{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
 @keyframes scanIn{from{clip-path:inset(0 0 100% 0)}to{clip-path:inset(0)}}
 @keyframes scanLine{from{transform:translateY(-100%);opacity:1}85%{opacity:1}to{transform:translateY(0);opacity:0}}
 @keyframes scanUp{from{clip-path:inset(100% 0 0 0)}to{clip-path:inset(0)}}
@@ -1103,13 +1255,15 @@ input:focus-visible,button:focus-visible,textarea:focus-visible,select:focus-vis
 [data-motion="on"] .ring-in{animation:ringIn 1s var(--ease-out) .12s both}
 [data-motion="on"] .bar-in{transform-origin:left center;animation:grow .8s var(--ease-out) .16s both}
 [data-motion="on"] .seg-in{transform-origin:left center;animation:grow .7s var(--ease-out) both}
+[data-motion="on"] .col-in{transform-origin:center bottom;animation:colIn .7s var(--ease-out) both}
+[data-motion="on"] .line-in{stroke-dasharray:1;animation:lineIn 1.2s var(--ease-out) .2s both}
 .pg::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;background:linear-gradient(to bottom,rgba(250,250,250,0) 70%,rgba(250,250,250,.08) 99.2%,rgba(250,250,250,.9) 99.6%)}
 [data-motion="on"] .pg[data-on="1"]>img{animation:scanIn .6s var(--ease-out) both}
 [data-motion="on"] .pg[data-on="1"]::after{animation:scanLine .6s var(--ease-out) both}
 [data-motion="on"] .bm-reveal{animation:scanUp 1.1s var(--ease-out) .35s both}
 @media (prefers-reduced-motion: reduce){
 [data-motion="on"] .scr>*,[data-motion="on"] .halo{animation-name:fade}
-[data-motion="on"] .ring-in,[data-motion="on"] .bar-in,[data-motion="on"] .seg-in,[data-motion="on"] .pg[data-on="1"]>img,[data-motion="on"] .pg[data-on="1"]::after,[data-motion="on"] .bm-reveal{animation:none}
+[data-motion="on"] .ring-in,[data-motion="on"] .bar-in,[data-motion="on"] .seg-in,[data-motion="on"] .col-in,[data-motion="on"] .line-in,[data-motion="on"] .pg[data-on="1"]>img,[data-motion="on"] .pg[data-on="1"]::after,[data-motion="on"] .bm-reveal{animation:none}
 .push,[style*="animation: sheet"],[style*="animation: present"],[style*="animation: push"]{animation-name:fade!important}
 button{transition:opacity .16s ease}button:active{transform:none}
 }
@@ -1119,7 +1273,7 @@ button{transition:opacity .16s ease}button:active{transform:none}
 '''
     parts = [inicio(), habitos(), comida(), salud(), ajustes(),
              f'<sc-if value="{{{{ showTabs }}}}" hint-placeholder-val="{{{{ true }}}}">\n{tabbar()}\n</sc-if>',
-             MENU, area(), meas_sheet(), evaluation(), SESION, CONFIRM, TEST, VICTORY]
+             MENU, area(), progreso(), CU['FOTOS'], CU['ASPECTO'], CU['CHATO'], CU['CAPTURA'], meas_sheet(), evaluation(), SESION, CONFIRM, TEST, VICTORY]
     tail = '\n</div>\n</x-dc>\n%%SCRIPT%%\n</body>\n</html>\n'
     return head + '\n\n'.join(parts) + tail
 

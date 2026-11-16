@@ -137,6 +137,18 @@ S = {
     'superiorB': strength('JUEVES', False), 'piernasB': strength('VIERNES', True), 'caminata': walk,
 }
 json.dump(S, open(os.path.join(HERE, 'session.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
+# escalera de progresión y lo que viene más adelante, para la pantalla Progreso
+# catálogo de la rutina adaptativa: cada ejercicio con series (de los días y las variantes) listo para entrar a una sesión
+CAT = {}
+for day in ('LUNES', 'MARTES', 'JUEVES', 'VIERNES', 'VARIANTES'):
+    for c in getattr(C, day):
+        if c['ex'] not in CAT:
+            CAT[c['ex']] = step(c, 'Ejercicios', main=True, day=day if day != 'VARIANTES' else None)
+for g, keys in C.ESCALERAS.items():
+    for k in keys:
+        assert k in CAT, ('escalera sin ejercicio en el catálogo', g, k)
+json.dump({'ladder': [list(x) for x in C.LADDER], 'later': [list(x) for x in C.MAS_ADELANTE], 'catalog': CAT, 'groups': C.ESCALERAS},
+          open(os.path.join(HERE, 'program.json'), 'w'), ensure_ascii=False, separators=(',', ':'))
 print({k: len(v) for k, v in S.items()}, os.path.getsize(os.path.join(HERE, 'session.json')))
 print(json.dumps(S['superiorA'][8], ensure_ascii=False, indent=1))
 assert USED == set(FIGS), set(FIGS) - USED  # cada elección de FIGS tiene que corresponder a un ejercicio de la sesión

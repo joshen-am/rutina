@@ -475,5 +475,176 @@
    "2",
    "2s"
   ]
+ },
+ "flex_pared": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "flex_meson": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "flex_banco": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "remo_marco_cerca": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "remo_australiano": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sentadilla_silla": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "sentadilla_libre": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "subida_escalon": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "bulgara": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "pistol_marco": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "hip_thrust": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "puente_isquios_una": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
+ },
+ "curl_isquios": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "talones": {
+  "panels": 2,
+  "ghost": [
+   false,
+   true
+  ],
+  "files": [
+   "1",
+   "2",
+   "2s"
+  ]
+ },
+ "hollow_completo": {
+  "panels": 1,
+  "ghost": [
+   false
+  ],
+  "files": [
+   "1"
+  ]
  }
 }

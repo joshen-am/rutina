@@ -9,7 +9,7 @@ class Component extends DCLogic {
     peso: null,
     quiz: { step: 0, minutes: null, intensity: null, series: null },
     t: 1,
-    prefs: { tema: 'auto', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['salud', 'hist', 'habitos', 'comida', 'agua', 'recup', 'semana', 'rutina'], homeHidden: {}, lastBackup: 0, backupSnooze: 0, histMode: 'habitos', v3: true },
+    prefs: { tema: 'auto', nombre: 'Joshen', meta: 5, efectos: true, sonido: true, homeOrder: ['diario', 'salud', 'hoy', 'rutina', 'fotos', 'recup', 'semanal', 'progreso'], homeHidden: {}, lastBackup: 0, backupSnooze: 0, histMode: 'habitos', v3: true, v4: true, v5: true, goal: 'general' },
     plan: { 0: 'superiorA', 1: 'piernasA', 2: 'cardio', 3: 'superiorB', 4: 'piernasB', 5: 'caminata' },
     resetArmed: false,
     noDemo: false,
@@ -36,7 +36,19 @@ class Component extends DCLogic {
     ev: null,
     area: null,
     msheet: null,
-    aiShow: false
+    aiShow: false,
+    xlog: {},
+    hpHist: [],
+    prog: false,
+    recAdv: false,
+    daily: {},
+    bodyPhotos: [],
+    adapt: {},
+    chat: [],
+    cap: null,
+    photos: false,
+    aspecto: false,
+    chatOpen: false
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -68,23 +80,32 @@ class Component extends DCLogic {
         navigator.storage.persisted().then((p) => (p ? p : navigator.storage.persist())).then((p) => this.setState({ persisted: !!p })).catch(() => {});
       }
     } catch (e) {}
+    this.warmAudio();
     this.syncTicker();
     if (this.isNative()) setTimeout(() => this.nativeSchedule(), 1500);
   }
 
   applyData(s) {
     const next = {};
-    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood'].forEach((k) => {
+    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
       next.prefs = Object.assign({}, this.state.prefs, s.prefs);
-      const known = ['salud', 'hist', 'habitos', 'comida', 'agua', 'recup', 'semana', 'rutina'];
+      // Inicio desde la versión 27: más corto (hoy, rutina, recuperación, semana y progreso)
+      // desde la versión 28 se suman el check-in diario (arriba) y la foto semanal (después de la rutina)
+      const known = ['diario', 'salud', 'hoy', 'rutina', 'fotos', 'recup', 'semanal', 'progreso'];
       let ord = (next.prefs.homeOrder || []).filter((k) => known.indexOf(k) >= 0);
-      if (!s.prefs.v3) ord = known.slice();
+      if (!s.prefs.v4) { ord = known.slice(); next.prefs.homeHidden = {}; }
+      if (!s.prefs.v5) {
+        if (ord.indexOf('diario') < 0) ord.unshift('diario');
+        if (ord.indexOf('fotos') < 0) { const r = ord.indexOf('rutina'); ord.splice(r >= 0 ? r + 1 : ord.length, 0, 'fotos'); }
+      }
       known.forEach((k) => { if (ord.indexOf(k) < 0) ord.push(k); });
       next.prefs.homeOrder = ord;
       next.prefs.v3 = true;
+      next.prefs.v4 = true;
+      next.prefs.v5 = true;
       ['clase', 'acento', 'fuente', 'marca'].forEach((k) => { delete next.prefs[k]; });
     }
     return next;
@@ -95,7 +116,7 @@ class Component extends DCLogic {
     return {
       schema: 4, savedAt: Date.now(),
       log: s.log, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
-      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, derived: this.derived()
+      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, derived: this.derived()
     };
   }
 
@@ -195,13 +216,14 @@ class Component extends DCLogic {
     return s;
   }
 
-  componentDidUpdate() { this.syncTicker(); }
+  componentDidUpdate() { this.syncTicker(); this.syncCam(); }
 
   componentWillUnmount() {
     if (this.raf) cancelAnimationFrame(this.raf);
     if (this.timer) clearTimeout(this.timer);
     if (this.rt) clearTimeout(this.rt);
     if (this.iv) clearInterval(this.iv);
+    this.stopCam();
   }
 
   persist() {
@@ -230,6 +252,14 @@ class Component extends DCLogic {
       if (this.ac.state === 'suspended') this.ac.resume();
       return this.ac;
     } catch (e) { return null; }
+  }
+
+  /* Crear el motor de audio cuesta ~250 ms en un teléfono medio: se hace en un momento libre después de abrir,
+     no en el primer toque. Queda en pausa hasta que el primer toque lo reanuda (eso sí es instantáneo). */
+  warmAudio() {
+    if (this.ac || !this.sndOn()) return;
+    const go = () => { try { if (!this.ac) { const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return; this.ac = new AC(); this.master = this.ac.createGain(); this.master.gain.value = 0.55; this.master.connect(this.ac.destination); } } catch (e) {} };
+    if (window.requestIdleCallback) window.requestIdleCallback(go, { timeout: 3000 }); else setTimeout(go, 1500);
   }
 
   tone(freq, start, dur, o) {
@@ -300,12 +330,30 @@ class Component extends DCLogic {
 
   sessionData() { return %%SESSION%%; }
 
-  stepsFor(rid) { return this.sessionData()[rid] || []; }
+  stepsFor(rid) { return this.adaptedSteps(rid); }
 
   syncTicker() {
     const on = this.nav().screen === 'sesion';
     if (on && !this.iv) this.iv = setInterval(() => this.onTick(), 100);
     if (!on && this.iv) { clearInterval(this.iv); this.iv = null; }
+    this.syncWake(on);
+  }
+
+  /* Pantalla encendida mientras dura la sesión. iOS la suelta al salir de la app, así que se vuelve a pedir al volver. */
+  syncWake(on) {
+    try {
+      if (!('wakeLock' in navigator)) return;
+      if (!this.wakeVis) {
+        this.wakeVis = () => { if (document.visibilityState === 'visible' && this.nav().screen === 'sesion') { this.wake = null; this.syncWake(true); } };
+        document.addEventListener('visibilitychange', this.wakeVis);
+      }
+      if (on && !this.wake) {
+        this.wake = 'pidiendo';
+        navigator.wakeLock.request('screen').then((w) => { this.wake = w; w.addEventListener('release', () => { if (this.wake === w) this.wake = null; }); if (this.nav().screen !== 'sesion') { w.release(); } }).catch(() => { this.wake = null; });
+      } else if (!on && this.wake && this.wake !== 'pidiendo') {
+        const w = this.wake; this.wake = null; w.release().catch(() => {});
+      }
+    } catch (e) {}
   }
 
   onTick() {
@@ -377,9 +425,21 @@ class Component extends DCLogic {
     const done = s.sets[s.i] || 0;
     const sets = Object.assign({}, s.sets);
     const next = Object.assign({}, s, { sets: sets });
-    if (k <= done) { sets[s.i] = k - 1; next.restEnd = null; this.sfx('tap'); }
+    const info = this.doseInfo(p);
+    const reps = Object.assign({}, s.reps || {});
+    const arr = (reps[s.i] || []).slice();
+    if (k <= done) { sets[s.i] = k - 1; arr.length = Math.min(arr.length, k - 1); reps[s.i] = arr; next.reps = reps; next.restEnd = null; this.sfx('tap'); }
     else {
       sets[s.i] = k;
+      if (info) {
+        const v = this.repValue(p, s.i, Math.min(done, p.sets - 1), s);
+        for (let j = done; j < k; j++) arr[j] = v;
+        reps[s.i] = arr;
+        next.reps = reps;
+        const rv = Object.assign({}, s.rv || {});
+        delete rv[s.i];
+        next.rv = rv;
+      }
       this.sfx('pick');
       if (k < p.sets && p.rest) { next.restEnd = Date.now() + p.rest * 1000; next.restTotal = p.rest; this.beeped = {}; }
       else next.restEnd = null;
@@ -452,6 +512,10 @@ class Component extends DCLogic {
     const notes = [['Ojo', p.watch, c.fuerzaText], ['Más fácil', p.easier, c.constanciaText], ['Más difícil', p.harder, c.tecnicaText], ['Consejo', p.tip, c.resistenciaText]]
       .filter((x) => x[1]).map((x, j) => ({ label: x[0], text: x[1], color: x[2], line: j ? ('inset 0 0.5px 0 ' + th.sep) : 'none' }));
     const isRest = p.k === 'rest';
+    const info = this.doseInfo(p);
+    const last = info ? this.xLast(p.k, s.date) : null;
+    const ready = info ? this.repReady(p, s.date) : false;
+    const repsDone = (s.reps || {})[i] || [];
     return {
       title: R.name, num: i + 1, total: steps.length, pct: Math.round(((i + 1) / Math.max(1, steps.length)) * 1000) / 10,
       elapsed: this.fmtClock((now - s.start) / 1000),
@@ -460,7 +524,7 @@ class Component extends DCLogic {
       hasPages: pages.length > 0, multiPg: pages.length > 1, pgN: pg + 1, pgCount: pages.length,
       pages: pages.map((x, k) => ({ op: k === pg ? 1 : 0, on: k === pg ? '1' : '0', figs: x.figs.map((src) => ({ src: src })) })),
       pgAlt: (pages.length > 1 ? 'Dibujo del paso ' + (pg + 1) + ': ' : 'Dibujo: ') + cur.lines.join(' '),
-      pgLines: cur.lines.map((t) => ({ text: t })), pgSize: big ? 22 : 18, pgLh: big ? 28 : 26,
+      pgLines: cur.lines.map((t) => ({ text: t })), pgSize: big ? 20 : 16, pgLh: big ? 28 : 24,
       pgDots: pages.map((x, k) => ({ w: k === pg ? 18 : 6, bg: k === pg ? '#FAFAFA' : 'rgba(250, 250, 250, 0.28)' })),
       pgFade: fx ? 'opacity 0.3s ease' : 'none', pgDotFx: fx ? 'width 0.25s ease, background 0.25s ease' : 'none',
       pgPrev: () => this.pgGo(pg - 1), pgNext: () => this.pgGo(pg + 1), pgTap: () => this.pgGo(pg + 1),
@@ -471,8 +535,13 @@ class Component extends DCLogic {
       name: p.name, dose: p.dose, hasRest: !!p.rest && !isRest, restLabel: p.rest ? (p.rest >= 60 && p.rest % 60 === 0 ? (p.rest / 60) + ' min' : p.rest + ' s') : '',
       hasWorks: !!p.works, works: p.works || '',
       hasSets: p.sets > 0, sets: p.sets, setsDone: Math.min(done, p.sets),
+      hasReps: !!info && done < p.sets, repLabel: info && info.unit === 's' ? 'Segundos' : 'Repeticiones', repEach: info ? info.each : '', hasEach: !!(info && info.each),
+      repVal: info ? this.repValue(p, i, Math.min(done, (p.sets || 1) - 1), s) : '', repMinus: () => this.repAdj(-1), repPlus: () => this.repAdj(1),
+      hasLast: !!last, lastLine: last ? 'La última vez: ' + last.r.join(' · ') + (info && info.unit === 's' ? ' s' : '') : '',
+      hasReady: ready, readyText: ready ? (p.harder ? 'Llegaste al tope del rango la última vez. Si te sentiste firme, sube de nivel: ' + p.harder : 'Llegaste al tope del rango la última vez. Si te sentiste firme, hazlo más lento o suma una serie.') : '',
       setBtns: Array.from({ length: p.sets || 0 }, (_, k) => ({
-        n: k + 1, aria: 'Serie ' + (k + 1) + (k < done ? ', hecha' : ''), pressed: k < done, open: k >= done,
+        n: k + 1, val: repsDone[k] != null ? String(repsDone[k]) : '', hasVal: k < done && repsDone[k] != null, noVal: k < done && repsDone[k] == null,
+        aria: 'Serie ' + (k + 1) + (k < done ? ', hecha' + (repsDone[k] != null ? ' con ' + repsDone[k] : '') : ''), pressed: k < done, open: k >= done,
         bg: k < done ? primary : th.segBg, fg: k < done ? onPrimary : th.text,
         ring: k === done ? ('inset 0 0 0 2px ' + primary) : 'none',
         pick: () => this.markSet(k + 1)
@@ -480,7 +549,7 @@ class Component extends DCLogic {
       resting: !!s.restEnd && !isRest, restLeft: this.fmtClock(isRest && !s.restEnd ? 0 : left),
       restPct: s.restEnd && s.restTotal ? Math.round((left / s.restTotal) * 1000) / 10 : 0,
       hasSetHint: p.sets > 0 && (done === 0 || done >= p.sets),
-      setHint: done >= p.sets ? 'Series completas. Toca Siguiente para continuar.' : 'Toca cada serie al terminarla y empieza el descanso.',
+      setHint: done >= p.sets ? 'Series completas. Toca Siguiente para continuar.' : (info ? 'Ajusta las repeticiones y toca la serie al terminarla: empieza el descanso.' : 'Toca cada serie al terminarla y empieza el descanso.'),
       hasHow: p.how && p.how.length > 0 && !pages.length,
       how: (p.how || []).map((h, j) => ({ n: j + 1, text: h, line: j ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })),
       hasNotes: notes.length > 0, notes: notes,
@@ -912,9 +981,20 @@ class Component extends DCLogic {
     s.at = si === this.todayIdx() ? Date.now() : days[si].getTime() + 19 * 3600000;
     if (!r0) { s.weekDone = 0; this.go({ last: s, screen: 'victoria' }, () => this.startAnim()); return; }
     const log = Object.assign({}, st.log);
-    log[this.keyOf(days[si])] = { status: 'done', summary: s };
+    const dkey = this.keyOf(days[si]);
+    // repeticiones de la sesión → historial de cada ejercicio, récords e hitos
+    let xlog = st.xlog || {};
+    if (st.sess && st.sess.rid === r.id && st.sess.reps) {
+      const rr = this.recordReps(st.sess, dkey);
+      xlog = rr.xlog;
+      if (rr.prs.length) s.prs = rr.prs;
+    }
+    log[dkey] = { status: 'done', summary: s };
     s.weekDone = days.filter((d) => log[this.keyOf(d)] && log[this.keyOf(d)].status === 'done').length;
-    this.go({ log: log, sess: null, last: s, screen: 'victoria' }, () => { this.persist(); this.startAnim(); });
+    const total = Object.keys(log).filter((k) => log[k] && log[k].status === 'done').length;
+    const ms = this.milestoneOf(total);
+    if (ms) s.milestone = ms;
+    this.go({ log: log, xlog: xlog, sess: null, last: s, screen: 'victoria' }, () => { this.persist(); this.startAnim(); });
   }
 
   moveHome(k, dir) {
@@ -963,7 +1043,7 @@ class Component extends DCLogic {
       return;
     }
     this.go({
-      log: {}, hlog: {}, flog: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
+      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
   }
 
@@ -1018,7 +1098,15 @@ class Component extends DCLogic {
       { id: 'diario', name: 'Diario o gratitud', kind: 'bin', color: 'tecnica', def: false,
         icon: 'M4 20h4L19 9l-4-4L4 16zM14 6l4 4',
         desc: 'Anotar 3 cosas buenas del día o lo que aprendiste.',
-        cue: 'Antes de apagar la luz, escribo 3 cosas buenas del día', mini: 'Escribir una línea' }
+        cue: 'Antes de apagar la luz, escribo 3 cosas buenas del día', mini: 'Escribir una línea' },
+      { id: 'protector', name: 'Protector solar', kind: 'bin', color: 'heat', def: false,
+        icon: 'M12 4v2M12 18v2M4 12h2M18 12h2M6.3 6.3l1.4 1.4M16.3 16.3l1.4 1.4M6.3 17.7l1.4-1.4M16.3 7.7l1.4-1.4M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z',
+        desc: 'FPS 30 o más cada mañana, aunque esté nublado. Es lo que más cuida la piel a largo plazo.',
+        cue: 'Después de lavarme los dientes en la mañana, me pongo protector', mini: 'Solo en la cara' },
+      { id: 'piel', name: 'Rutina de piel de noche', kind: 'bin', color: 'tecnica', def: false,
+        icon: 'M12 3c3 3.5 6 6.4 6 10a6 6 0 0 1-12 0c0-3.6 3-6.5 6-10zM9.5 13.5a2.5 2.5 0 0 0 2.5 2.5',
+        desc: 'Limpiador suave e hidratante antes de dormir. Simple y todos los días.',
+        cue: 'Antes de acostarme, me lavo la cara y me pongo hidratante', mini: 'Solo lavarme la cara' }
     ];
   }
 
@@ -1372,6 +1460,8 @@ class Component extends DCLogic {
       showCode: !!st.showCode && active, code: st.showCode ? this.pushCode() : '',
       ghUrl: 'https://github.com/joshen-am/rutina/settings/secrets/actions/new',
       testUrl: 'https://github.com/joshen-am/rutina/actions/workflows/recordatorios.yml',
+      adv: !!st.recAdv, advRot: st.recAdv ? 90 : 0,
+      toggleAdv: () => { this.sfx('tap'); this.setState({ recAdv: !st.recAdv }); },
       enable: () => this.enablePush(),
       copy: () => this.copyPushCode()
     };
@@ -1805,8 +1895,9 @@ class Component extends DCLogic {
       dateLabel: this.longDate(date), canNext: !isToday, nextOp: isToday ? 0.3 : 1, prevOp: (st.fday || 0) > -30 ? 1 : 0.3,
       prev: () => { this.sfx('tap'); this.setState({ fday: Math.max(-30, (st.fday || 0) - 1) }); },
       next: () => { if (isToday) return; this.sfx('tap'); this.setState({ fday: (st.fday || 0) + 1 }); },
-      kcal: r0(tot.kcal), goal: this.fmt(T.kcal), left: this.fmt(Math.abs(left)), leftLabel: left >= 0 ? 'Restantes' : 'Sobre tu meta',
-      ringOff: (603.2 * (1 - Math.min(1, tot.kcal / T.kcal))).toFixed(1), ringColor: tot.kcal > T.kcal * 1.05 ? c.heat : th.text,
+      kcal: r0(tot.kcal), goal: this.fmt(T.kcal), left: this.fmt(Math.abs(left)), leftLabel: left >= 0 ? 'Te quedan' : 'Sobre tu meta',
+      hasKcal: tot.kcal > 0, noKcal: !(tot.kcal > 0),
+      ringOff: (351.9 * (1 - Math.min(1, tot.kcal / T.kcal))).toFixed(1), ringColor: tot.kcal > T.kcal * 1.05 ? c.heat : th.text,
       macros: [macro('Proteína', tot.p, T.prot, c.prot), macro('Carbohidratos', tot.c, T.carb, c.carb), macro('Grasa', tot.f, T.fat, c.fat), macro('Fibra', tot.fib, T.fib, c.fib)],
       micro: [
         { label: 'Azúcar', val: r0(tot.sug) + ' g', goal: 'máx. ' + T.sug + ' g', over: tot.sug > T.sug },
@@ -1963,7 +2054,11 @@ class Component extends DCLogic {
     const meas = (this.state.meas || []).filter((m) => m.d !== today);
     meas.push({ d: today, peso: hp.peso, cintura: hp.cintura == null ? null : hp.cintura, fc: hp.fc == null ? null : hp.fc, pas: hp.pas == null ? null : hp.pas, pad: hp.pad == null ? null : hp.pad });
     this.sfx('done');
-    this.go({ hp: hp, peso: hp.peso, meas: meas, ev: null, screen: 'inicio', tab: 'salud', area: null }, () => this.persist());
+    this.go({ hp: hp, peso: hp.peso, meas: meas, ev: null, screen: 'inicio', tab: 'salud', area: null }, () => {
+      const ov = this.healthOverall(this.healthAreas());
+      const hh = (this.state.hpHist || []).filter((x) => x.at !== hp.at).concat(ov == null ? [] : [{ at: hp.at, s: ov }]).slice(-24);
+      this.setState({ hpHist: hh }, () => this.persist());
+    });
   }
 
   /* ---------- puntajes ---------- */
@@ -2307,17 +2402,17 @@ class Component extends DCLogic {
   openMeas() {
     this.sfx('open');
     const L = (f, d) => { const v = this.latest(f); return v == null ? d : v; };
-    this.setState({ msheet: { peso: this.peso(), cintura: L('cintura', 82), fc: L('fc', 68), pas: L('pas', 120), pad: L('pad', 78), on: { cintura: this.latest('cintura') != null, fc: this.latest('fc') != null, bp: this.latest('pas') != null } } });
+    this.setState({ msheet: { peso: this.peso(), cintura: L('cintura', 82), fc: L('fc', 68), pas: L('pas', 120), pad: L('pad', 78), pecho: L('pecho', 96), brazo: L('brazo', 32), cadera: L('cadera', 96), hombros: L('hombros', 112), on: { cintura: this.latest('cintura') != null, fc: this.latest('fc') != null, bp: this.latest('pas') != null, pecho: this.latest('pecho') != null, brazo: this.latest('brazo') != null, cadera: this.latest('cadera') != null, hombros: this.latest('hombros') != null } } });
   }
 
   measStep(f, d) {
     const m = this.state.msheet;
     if (!m) return;
     this.sfx('tap');
-    const lim = { peso: [35, 180, 0.1], cintura: [50, 160, 0.5], fc: [35, 130, 1], pas: [80, 220, 1], pad: [40, 140, 1] }[f];
+    const lim = { peso: [35, 180, 0.1], cintura: [50, 160, 0.5], fc: [35, 130, 1], pas: [80, 220, 1], pad: [40, 140, 1], pecho: [60, 160, 0.5], brazo: [18, 60, 0.5], cadera: [60, 160, 0.5], hombros: [80, 170, 0.5] }[f];
     const n = Object.assign({}, m);
     n[f] = Math.max(lim[0], Math.min(lim[1], Math.round((m[f] + d * lim[2]) * 10) / 10));
-    if (f === 'cintura' || f === 'fc') n.on = Object.assign({}, m.on, { [f]: true });
+    if (['cintura', 'fc', 'pecho', 'brazo', 'cadera', 'hombros'].indexOf(f) >= 0) n.on = Object.assign({}, m.on, { [f]: true });
     if (f === 'pas' || f === 'pad') n.on = Object.assign({}, m.on, { bp: true });
     this.setState({ msheet: n });
   }
@@ -2327,7 +2422,7 @@ class Component extends DCLogic {
     if (!m) return;
     const d = this.keyOf(new Date());
     const meas = (this.state.meas || []).filter((x) => x.d !== d);
-    meas.push({ d: d, peso: m.peso, cintura: m.on.cintura ? m.cintura : null, fc: m.on.fc ? m.fc : null, pas: m.on.bp ? m.pas : null, pad: m.on.bp ? m.pad : null });
+    meas.push({ d: d, peso: m.peso, cintura: m.on.cintura ? m.cintura : null, fc: m.on.fc ? m.fc : null, pas: m.on.bp ? m.pas : null, pad: m.on.bp ? m.pad : null, pecho: m.on.pecho ? m.pecho : null, brazo: m.on.brazo ? m.brazo : null, cadera: m.on.cadera ? m.cadera : null, hombros: m.on.hombros ? m.hombros : null });
     this.sfx('yes');
     this.setState({ meas: meas, peso: m.peso, msheet: null }, () => this.persist());
   }
@@ -2394,7 +2489,7 @@ class Component extends DCLogic {
       evalAgo: has ? this.agoText(st.hp.at).toLowerCase() : '', evalOld: has && Date.now() - st.hp.at > 60 * 864e5,
       startEval: () => this.startEval(),
       detail: detail,
-      measOpen: !!ms, mrows: ms ? [mrow('peso', 'Peso', 'kg'), mrow('cintura', 'Cintura', 'cm', 'cintura'), mrow('fc', 'Pulso en reposo', 'lpm', 'fc'), mrow('pas', 'Presión, número alto', 'mmHg', 'bp'), mrow('pad', 'Presión, número bajo', 'mmHg', 'bp')] : [],
+      measOpen: !!ms, mrows: ms ? [mrow('peso', 'Peso', 'kg'), mrow('cintura', 'Cintura', 'cm', 'cintura'), mrow('fc', 'Pulso en reposo', 'lpm', 'fc'), mrow('pas', 'Presión, número alto', 'mmHg', 'bp'), mrow('pad', 'Presión, número bajo', 'mmHg', 'bp'), mrow('hombros', 'Hombros (contorno)', 'cm', 'hombros'), mrow('pecho', 'Pecho', 'cm', 'pecho'), mrow('brazo', 'Brazo', 'cm', 'brazo'), mrow('cadera', 'Cadera', 'cm', 'cadera')] : [],
       openMeas: () => this.openMeas(), saveMeas: () => this.saveMeas(), closeMeas: () => { this.sfx('tap'); this.setState({ msheet: null }); },
       lastMeas: lastM ? this.agoText(this.dateOf(lastM.d).getTime()).toLowerCase() : 'nunca',
       kpis: [
@@ -2428,6 +2523,1128 @@ class Component extends DCLogic {
       next: () => this.evalNext(), skip: () => this.evalSkip(), back: () => { this.sfx('tap'); this.evalGo(Object.assign({}, a), -1); },
       close: () => { this.sfx('tap'); this.go({ screen: 'inicio', ev: null }); }
     };
+  }
+
+  /* ---------- progreso: repeticiones por serie, progresión, récords y tendencias (versión 27) ---------- */
+
+  /* Rango de la dosis: «4 × 6–12», «3 × 20–40 s», «3 × 8 por lado», «2 × 8 de cada letra» */
+  doseInfo(p) {
+    if (!p || !p.sets) return null;
+    const dose = String(p.dose || '');
+    const m = dose.match(/[×x]\s*(\d+)(?:\s*[-–]\s*(\d+))?\s*(s\b)?/);
+    const each = /por pierna/.test(dose) ? 'por pierna' : /por brazo/.test(dose) ? 'por brazo' : /por lado/.test(dose) ? 'por lado' : /de cada letra/.test(dose) ? 'de cada letra' : '';
+    if (!m) return { lo: 10, hi: 10, unit: 'r', each: each };
+    const lo = +m[1];
+    return { lo: lo, hi: m[2] ? +m[2] : lo, unit: m[3] ? 's' : 'r', each: each };
+  }
+
+  xHist(k) { return ((this.state.xlog || {})[k] || []); }
+
+  /* Último registro de un ejercicio antes de una fecha (para no compararse con el de hoy) */
+  xLast(k, before) {
+    const h = this.xHist(k);
+    for (let i = h.length - 1; i >= 0; i--) if (!before || h[i].d < before) return h[i];
+    return null;
+  }
+
+  xBest(k, before) {
+    let b = null;
+    this.xHist(k).forEach((e) => { if (before && e.d >= before) return; e.r.forEach((v) => { if (v != null && (b === null || v > b)) b = v; }); });
+    return b;
+  }
+
+  repStep(info) { return info.unit === 's' ? 5 : 1; }
+
+  /* Meta de la serie j: lo de la vez anterior más un paso, sin pasar el tope del rango */
+  repTarget(p, j, before) {
+    const info = this.doseInfo(p);
+    if (!info) return null;
+    const last = this.xLast(p.k, before);
+    if (!last || !last.r.length) return info.lo;
+    const prev = last.r[j] != null ? last.r[j] : last.r[last.r.length - 1];
+    if (prev >= info.hi) return info.hi;
+    return Math.min(info.hi, prev + this.repStep(info));
+  }
+
+  /* La vez anterior todas las series llegaron al tope: toca subir de nivel */
+  repReady(p, before) {
+    const info = this.doseInfo(p);
+    const last = this.xLast(p.k, before);
+    if (!info || !last) return false;
+    const r = last.r.filter((v) => v != null);
+    return r.length >= p.sets && r.every((v) => v >= info.hi);
+  }
+
+  repValue(p, i, j, s) {
+    const rv = (s.rv || {})[i];
+    return rv != null ? rv : this.repTarget(p, j, s.date);
+  }
+
+  repAdj(d) {
+    const s = this.state.sess;
+    if (!s) return;
+    const p = this.stepsFor(s.rid)[s.i];
+    const info = this.doseInfo(p);
+    if (!info) return;
+    const done = s.sets[s.i] || 0;
+    const j = Math.min(done, p.sets - 1);
+    const cur = this.repValue(p, s.i, j, s);
+    const st = this.repStep(info);
+    const v = Math.max(st, Math.min(info.unit === 's' ? 600 : 200, cur + d * st));
+    this.sfx('tap');
+    const rv = Object.assign({}, s.rv || {});
+    rv[s.i] = v;
+    this.setState({ sess: Object.assign({}, s, { rv: rv }) }, () => this.persist());
+  }
+
+  /* Al guardar la sesión: pasa las repeticiones al historial de cada ejercicio y detecta récords */
+  recordReps(sess, dkey) {
+    const xlog = Object.assign({}, this.state.xlog || {});
+    const prs = [];
+    const steps = this.stepsFor(sess.rid);
+    Object.keys(sess.reps || {}).forEach((i) => {
+      const p = steps[+i];
+      const info = this.doseInfo(p);
+      const r = (sess.reps[i] || []).filter((v) => v != null);
+      if (!p || !info || !r.length) return;
+      const prevBest = this.xBest(p.k, dkey);
+      const hist = (xlog[p.k] || []).filter((e) => e.d !== dkey);
+      hist.push({ d: dkey, r: r, u: info.unit });
+      xlog[p.k] = hist.slice(-40);
+      const best = Math.max.apply(null, r);
+      if (prevBest != null && best > prevBest) prs.push({ k: p.k, name: p.name, val: best, prev: prevBest, unit: info.unit, each: info.each });
+    });
+    return { xlog: xlog, prs: prs };
+  }
+
+  milestoneOf(n) {
+    return [1, 5, 10, 25, 50, 75, 100, 150, 200, 300, 500].indexOf(n) >= 0 ? n : null;
+  }
+
+  repUnit(u, n) { return u === 's' ? 's' : (n === 1 ? 'repetición' : 'repeticiones'); }
+
+  exerciseNames() {
+    if (this._xn) return this._xn;
+    const out = {};
+    const d = this.sessionData();
+    Object.keys(d).forEach((day) => d[day].forEach((p) => { if (p.k && p.name && !out[p.k]) out[p.k] = p.name; }));
+    this._xn = out;
+    return out;
+  }
+
+  /* ---------- programa: semana, fase y escalera ---------- */
+
+  programWeek() {
+    const st = this.state;
+    if (!st.since) return 1;
+    const a = this.mondayOf(this.dateOf(st.since));
+    const b = this.mondayOf(new Date());
+    return Math.max(1, Math.floor((b.getTime() - a.getTime()) / (7 * 864e5) + 0.5) + 1);
+  }
+
+  programPhase(w) { return w <= 4 ? 1 : w <= 8 ? 2 : 3; }
+
+  /* ---------- resumen de una semana (lunes a domingo) ---------- */
+
+  weekSummary(offset) {
+    const st = this.state;
+    const mon = this.mondayOf(new Date());
+    const start = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * (offset || 0));
+    const now = new Date();
+    const T = this.targets();
+    let ses = 0, prs = 0, habSum = 0, habN = 0, foodDays = 0, protSum = 0;
+    for (let k = 0; k < 7; k++) {
+      const d = new Date(start.getFullYear(), start.getMonth(), start.getDate() + k);
+      if (d > now) break;
+      const key = this.keyOf(d);
+      const e = st.log[key];
+      if (e && e.status === 'done') { ses++; if (e.summary && e.summary.prs) prs += e.summary.prs.length; }
+      const sc = this.dayScore(key, d);
+      if (sc !== null && sc !== undefined) { habSum += sc; habN++; }
+      const fl = (st.flog || {})[key];
+      if (fl && Object.keys(fl).some((m) => (fl[m] || []).length)) { foodDays++; protSum += this.dayTotals(key).p; }
+    }
+    return {
+      start: start, sessions: ses, meta: st.prefs.meta || 5, prs: prs,
+      habits: habN ? Math.round((habSum / habN) * 100) : null,
+      foodDays: foodDays, prot: foodDays ? Math.round(protSum / foodDays) : null, protGoal: T.prot
+    };
+  }
+
+  /* ---------- gráficos simples (SVG) ---------- */
+
+  sparkPath(vals, w, h) {
+    const v = vals.filter((x) => x != null);
+    if (v.length < 2) return { path: '', x: 0, y: 0 };
+    let lo = Math.min.apply(null, v), hi = Math.max.apply(null, v);
+    if (hi - lo < 1e-9) { lo -= 1; hi += 1; }
+    const pad = 6;
+    const pts = v.map((y, i) => [pad + (i * (w - 2 * pad)) / (v.length - 1), pad + (1 - (y - lo) / (hi - lo)) * (h - 2 * pad)]);
+    const path = 'M' + pts.map((p) => p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join(' L');
+    const last = pts[pts.length - 1];
+    return { path: path, x: Math.round((last[0] / w) * 1000) / 10, y: Math.round((last[1] / h) * 1000) / 10 };
+  }
+
+  deltaText(a, b, unit) {
+    if (a == null || b == null) return '';
+    const d = Math.round((b - a) * 10) / 10;
+    if (!d) return 'Sin cambio';
+    return (d > 0 ? '+' : '−') + this.fmtNum(Math.abs(d)) + ' ' + unit;
+  }
+
+  /* ---------- valores de la pantalla Progreso y de las tarjetas de Inicio ---------- */
+
+  progressVals(th, c, dark) {
+    const st = this.state;
+    const now = new Date();
+    const week = this.programWeek();
+    const phase = this.programPhase(week);
+    const meta = st.prefs.meta || 5;
+
+    // sesiones por semana, últimas 12
+    const mon = this.mondayOf(now);
+    const mshort = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    const weeks = [];
+    for (let w = 11; w >= 0; w--) {
+      const s0 = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * w);
+      let n = 0;
+      for (let k = 0; k < 7; k++) { const e = st.log[this.keyOf(new Date(s0.getFullYear(), s0.getMonth(), s0.getDate() + k))]; if (e && e.status === 'done') n++; }
+      weeks.push({ n: n, label: s0.getDate() + ' ' + mshort[s0.getMonth()], cur: w === 0 });
+    }
+    const maxN = Math.max(meta, Math.max.apply(null, weeks.map((x) => x.n)));
+    const done12 = weeks.reduce((a, x) => a + x.n, 0);
+    const bars = weeks.map((x, i) => ({
+      h: Math.max(4, Math.round((x.n / maxN) * 1000) / 10), n: x.n,
+      bg: x.cur ? c.constancia : (x.n >= meta ? th.text : th.barOff), delay: 120 + i * 30,
+      aria: 'Semana del ' + x.label + ': ' + x.n + (x.n === 1 ? ' sesión' : ' sesiones')
+    }));
+    const metaLine = Math.round((meta / maxN) * 1000) / 10;
+
+    // puntaje de salud a lo largo de las evaluaciones
+    const hh = (st.hpHist || []).slice(-12);
+    const curScore = st.hp ? this.healthOverall(this.healthAreas()) : null;
+    const scoreVals = hh.map((x) => x.s);
+    const scoreSpark = this.sparkPath(scoreVals, 300, 72);
+
+    // peso y cintura
+    const meas = (st.meas || []).slice().sort((a, b) => (a.d < b.d ? -1 : 1));
+    const pesoV = meas.map((m) => m.peso).filter((v) => v != null).slice(-16);
+    const cinV = meas.map((m) => m.cintura).filter((v) => v != null).slice(-16);
+    const pesoS = this.sparkPath(pesoV, 300, 64);
+    const cinS = this.sparkPath(cinV, 300, 64);
+
+    // carga por músculo: esta semana contra la anterior
+    const load = (off) => {
+      const out = {};
+      const s0 = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() - 7 * off);
+      for (let k = 0; k < 7; k++) {
+        const e = st.log[this.keyOf(new Date(s0.getFullYear(), s0.getMonth(), s0.getDate() + k))];
+        if (e && e.status === 'done' && e.summary && e.summary.muscles) e.summary.muscles.forEach((m) => { out[m.name] = (out[m.name] || 0) + m.w; });
+      }
+      return out;
+    };
+    const L0 = load(0), L1 = load(1);
+    const names = Object.keys(Object.assign({}, L0, L1));
+    const maxL = Math.max(1, Math.max.apply(null, names.map((n) => Math.max(L0[n] || 0, L1[n] || 0)).concat([0])));
+    const muscles = names.sort((a, b) => (L0[b] || 0) - (L0[a] || 0)).slice(0, 8).map((n, i) => ({
+      name: n, w: Math.round(((L0[n] || 0) / maxL) * 1000) / 10, prev: Math.round(((L1[n] || 0) / maxL) * 1000) / 10,
+      trend: (L0[n] || 0) > (L1[n] || 0) + 0.05 ? 'Más que la semana pasada' : (L0[n] || 0) < (L1[n] || 0) - 0.05 ? 'Menos que la semana pasada' : 'Igual que la semana pasada',
+      line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none'
+    }));
+
+    // récords por ejercicio
+    const xn = this.exerciseNames();
+    const recs = Object.keys(st.xlog || {}).map((k) => {
+      const h = st.xlog[k];
+      let best = null, bestD = null;
+      h.forEach((e) => e.r.forEach((v) => { if (v != null && (best === null || v > best)) { best = v; bestD = e.d; } }));
+      const last = h[h.length - 1];
+      return { k: k, name: xn[k] || k, best: best, unit: last ? last.u : 'r', d: bestD, lastD: last ? last.d : '' };
+    }).filter((x) => x.best != null).sort((a, b) => (a.lastD < b.lastD ? 1 : -1)).slice(0, 8)
+      .map((x, i) => ({ name: x.name, val: x.best, unit: this.repUnit(x.unit, x.best), when: x.d ? this.agoText(this.dateOf(x.d).getTime()) : '', line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' }));
+
+    // escalera de progresión
+    const P = this.programData();
+    const ladder = (P.ladder || []).map((g, i) => ({
+      group: g[0], line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none',
+      steps: [g[1], g[2], g[3]].map((t, j) => ({ text: t, n: j + 1, on: j + 1 === phase, bg: j + 1 === phase ? th.inv : 'transparent', fg: j + 1 === phase ? th.onInv : (j + 1 < phase ? th.sub : th.tertiary), tc: j + 1 === phase ? th.text : (j + 1 < phase ? th.sub : th.tertiary), tw: j + 1 === phase ? 500 : 400 }))
+    }));
+    const later = (P.later || []).map((x, i) => {
+      const m = /semana (\d+)/.exec(x[1]);
+      const from = m ? +m[1] : null;
+      return { name: x[0], text: x[1].charAt(0).toUpperCase() + x[1].slice(1), lock: from && week < from ? 'Desde la semana ' + from : '', hasLock: !!(from && week < from), line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' };
+    });
+
+    // esta semana y la anterior
+    const w0 = this.weekSummary(0), w1 = this.weekSummary(1);
+    const wkItems = (w) => [
+      { label: 'Sesiones', val: w.sessions + ' de ' + w.meta },
+      { label: 'Hábitos', val: w.habits == null ? '—' : w.habits + ' %' },
+      { label: 'Días con comida', val: w.foodDays + ' de 7' },
+      { label: 'Proteína promedio', val: w.prot == null ? '—' : w.prot + ' g' }
+    ];
+    const dow = (now.getDay() + 6) % 7;   // 0 lunes … 6 domingo
+    const wkShow = dow === 6 ? w0 : dow === 0 ? w1 : null;
+    const wkTitle = dow === 6 ? 'Tu semana' : 'Tu semana pasada';
+    const wkLine = (w) => w.sessions >= w.meta ? 'Cumpliste tu meta de sesiones.' : (w.meta - w.sessions === 1 ? 'Te faltó una sesión para tu meta.' : 'Te faltaron ' + (w.meta - w.sessions) + ' sesiones para tu meta.');
+
+    return {
+      week: week, phase: phase, weekLabel: 'Semana ' + week + ' del programa · fase ' + phase,
+      bars: bars, metaLine: metaLine, meta: meta, done12: done12, avg: this.fmtNum(Math.round((done12 / 12) * 10) / 10),
+      firstWeek: weeks[0].label, lastWeek: 'Esta semana',
+      hasScore: curScore != null, noScore: curScore == null, score: curScore == null ? '—' : curScore, hasScoreLine: scoreVals.length >= 2,
+      scorePath: scoreSpark.path, scoreX: scoreSpark.x, scoreY: scoreSpark.y, scoreColor: this.healthColor(curScore, dark),
+      scoreNote: curScore == null ? 'Haz la evaluación de salud para empezar a seguir tu puntaje.' : scoreVals.length >= 2 ? (hh.length + ' evaluaciones') : 'Repite la evaluación en unas semanas para ver cómo cambia.',
+      hasPeso: pesoV.length > 0, peso: pesoV.length ? this.fmtNum(pesoV[pesoV.length - 1]) : '—', pesoDelta: this.deltaText(pesoV[0], pesoV[pesoV.length - 1], 'kg'),
+      hasPesoLine: pesoV.length >= 2, pesoPath: pesoS.path, pesoX: pesoS.x, pesoY: pesoS.y,
+      hasCin: cinV.length > 0, cin: cinV.length ? this.fmtNum(cinV[cinV.length - 1]) : '—', cinDelta: this.deltaText(cinV[0], cinV[cinV.length - 1], 'cm'),
+      hasCinLine: cinV.length >= 2, cinPath: cinS.path, cinX: cinS.x, cinY: cinS.y,
+      measNote: pesoV.length < 2 ? 'Registra tu peso cada semana en Salud para ver la tendencia.' : '',
+      hasMeasNote: pesoV.length < 2,
+      hasMuscles: muscles.length > 0, muscles: muscles, noMuscles: muscles.length === 0,
+      hasRecs: recs.length > 0, recs: recs, noRecs: recs.length === 0,
+      ladder: ladder, later: later, hasLater: later.length > 0,
+      wk: { show: !!wkShow, title: wkTitle, items: wkShow ? wkItems(wkShow) : [], line: wkShow ? wkLine(wkShow) : '', hasPrs: !!(wkShow && wkShow.prs), prs: wkShow ? (wkShow.prs === 1 ? '1 récord nuevo' : wkShow.prs + ' récords nuevos') : '' },
+      now: { items: wkItems(w0), line: wkLine(w0) },
+      open: () => { this.sfx('open'); this.setState({ prog: true }); },
+      close: () => { this.sfx('tap'); this.setState({ prog: false }); }
+    };
+  }
+
+  programData() { return %%PROGRAM%%; }
+
+  /* ================================================================ versión 28 ================================================================
+     Rutina adaptativa, check-in diario, fotos de progreso con análisis de IA, aspecto, chat con el entrenador e informe mensual. */
+
+  /* ---------- IA: varias imágenes o texto libre (la de Comida acepta una sola imagen) ---------- */
+
+  async aiCallN(prompt, imgs, json, maxTokens) {
+    const cfg = this.aiCfg();
+    if (!cfg.key) throw new Error('nokey');
+    imgs = imgs || [];
+    if (cfg.provider === 'claude') {
+      const content = imgs.map((b) => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }));
+      content.push({ type: 'text', text: prompt });
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+        body: JSON.stringify({ model: cfg.model || 'claude-haiku-5-5', max_tokens: maxTokens || 2000, messages: [{ role: 'user', content: content }] })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw this.aiError(r.status);
+      const t = (d.content || []).map((x) => x.text || '').join('');
+      if (!t) throw new Error('vacio');
+      return json ? this.parseJSON(t) : t.trim();
+    }
+    const models = cfg.model ? [cfg.model] : ['gemini-flash-latest', 'gemini-3-flash-preview', 'gemini-3.1-flash-lite'];
+    const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
+    const gen = { temperature: json ? 0.2 : 0.6 };
+    if (json) gen.responseMimeType = 'application/json';
+    const body = JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: gen });
+    let last = new Error('modelo');
+    for (let i = 0; i < models.length; i++) {
+      const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key);
+      const r = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: body });
+      if (r.status === 404) { last = new Error('modelo'); continue; }
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) throw this.aiError(r.status);
+      const c = d.candidates && d.candidates[0];
+      const t = c && c.content && c.content.parts ? c.content.parts.map((p) => p.text || '').join('') : '';
+      if (!t) throw new Error('vacio');
+      return json ? this.parseJSON(t) : t.trim();
+    }
+    throw last;
+  }
+
+  aiProviderName() { return this.aiCfg().provider === 'claude' ? 'Claude (Anthropic)' : 'Gemini (Google)'; }
+
+  aiPhotoNote() {
+    return this.aiCfg().provider === 'claude'
+      ? 'Las fotos viajan a Anthropic con tu clave solo para este análisis. Anthropic no usa lo que se envía por su API para entrenar sus modelos.'
+      : 'Las fotos viajan a Google con tu clave solo para este análisis. Con el plan gratis de Gemini, Google puede usarlas para mejorar sus modelos: para fotos del cuerpo conviene el plan pagado o Claude.';
+  }
+
+  /* ---------- contexto para la IA: un resumen corto de tus datos ---------- */
+
+  aiContext() {
+    const st = this.state;
+    const hp = st.hp || {};
+    const T = this.targets();
+    const xn = this.exerciseNames();
+    const lines = [];
+    lines.push('Perfil: ' + [hp.sexo, hp.edad ? hp.edad + ' años' : '', hp.altura ? hp.altura + ' cm' : '', this.peso() + ' kg'].filter(Boolean).join(', ') + '.');
+    lines.push('Objetivo: ' + this.goalLabel() + '. Semana ' + this.programWeek() + ' del programa (fase ' + this.programPhase(this.programWeek()) + ').');
+    lines.push('Entrena en casa sin equipamiento, salvo una mancuerna de 3 kg y lo que hay en la casa (pared, mesón, silla, sofá, escalón, marco de la puerta).');
+    const w0 = this.weekSummary(0), w1 = this.weekSummary(1);
+    lines.push('Esta semana: ' + w0.sessions + ' de ' + w0.meta + ' sesiones; la anterior: ' + w1.sessions + '. Hábitos: ' + (w0.habits == null ? 's/d' : w0.habits + ' %') + '. Proteína promedio: ' + (w0.prot == null ? 's/d' : w0.prot + ' g de ' + T.prot + ' g') + '.');
+    const xs = Object.keys(st.xlog || {}).map((k) => { const h = st.xlog[k]; const l = h[h.length - 1]; return (xn[k] || k) + ': ' + l.r.join('/') + (l.u === 's' ? ' s' : '') + ' (' + l.d + ')'; });
+    if (xs.length) lines.push('Últimas series registradas: ' + xs.slice(0, 14).join('; ') + '.');
+    const meas = (st.meas || []).slice(-4).map((m) => m.d + ' ' + ['peso', 'cintura', 'pecho', 'brazo', 'cadera', 'hombros'].filter((f) => m[f] != null).map((f) => f + ' ' + m[f]).join(' '));
+    if (meas.length) lines.push('Medidas: ' + meas.join(' | ') + '.');
+    const ck = this.checkinAvg(7);
+    if (ck) lines.push('Check-in 7 días (1 a 5): sueño ' + ck.sleep + ', energía ' + ck.energy + ', ánimo ' + ck.mood + ', dolor muscular ' + ck.sore + '.');
+    const an = this.lastAnalysis();
+    if (an) lines.push('Último análisis de fotos (' + an.d + '): ' + an.resumen + (an.grasa ? ' Grasa estimada ' + an.grasa.min + '–' + an.grasa.max + ' %.' : ''));
+    if (st.hp) { const ar = this.healthAreas().map((a) => a.name + ' ' + (a.score == null ? 's/d' : a.score)).join(', '); lines.push('Perfil de salud por área (0–100): ' + ar + '.'); }
+    return lines.join('\n');
+  }
+
+  /* ================================================================ rutina adaptativa ================================================================ */
+
+  goals() {
+    return [
+      { id: 'general', label: 'General' }, { id: 'grasa', label: 'Bajar grasa' }, { id: 'musculo', label: 'Ganar músculo' },
+      { id: 'postura', label: 'Postura' }, { id: 'estetica', label: 'Estética' }
+    ];
+  }
+
+  goalLabel() { const g = this.state.prefs.goal || 'general'; return (this.goals().find((x) => x.id === g) || this.goals()[0]).label; }
+
+  cycleGoal() {
+    const G = this.goals();
+    const i = G.findIndex((x) => x.id === (this.state.prefs.goal || 'general'));
+    this.sfx('tap');
+    this.setPref('goal', G[(i + 1) % G.length].id);
+  }
+
+  adapt() {
+    const a = this.state.adapt || {};
+    return { swaps: a.swaps || {}, sets: a.sets || {}, extras: a.extras || {}, dismissed: a.dismissed || {}, log: a.log || [], skipDeload: a.skipDeload || {}, ai: a.ai || null };
+  }
+
+  /* Semana de descarga cada 6 semanas: una serie menos en cada ejercicio, para recuperarse */
+  isDeload(week) { return week >= 6 && week % 6 === 0 && !this.adapt().skipDeload[week]; }
+
+  catalog() { return (this.programData().catalog) || {}; }
+
+  /* Los pasos de una rutina con tus cambios: ejercicios reemplazados, series de más o de menos, extras y la semana de descarga */
+  adaptedSteps(rid) {
+    const base = this.sessionData()[rid] || [];
+    const A = this.adapt();
+    const week = this.programWeek();
+    const deload = this.isDeload(week);
+    const memo = rid + '|' + week + '|' + deload + '|' + JSON.stringify([A.swaps[rid], A.sets[rid], A.extras[rid]]);
+    this._steps = this._steps || {};
+    if (this._steps[rid] && this._steps[rid].memo === memo) return this._steps[rid].steps;
+    const cat = this.catalog();
+    const sw = A.swaps[rid] || {}, sd = A.sets[rid] || {}, ex = A.extras[rid] || [];
+    const fix = (p, delta) => {
+      if (!p.sets) return p;
+      let n = p.sets + (delta || 0) - (deload ? 1 : 0);
+      n = Math.max(1, Math.min(6, n));
+      return n === p.sets ? p : Object.assign({}, p, { sets: n, dose: String(p.dose).replace(/^\d+\s*×/, n + ' ×') });
+    };
+    const out = [];
+    let lastMain = -1;
+    base.forEach((p) => {
+      let q = p;
+      if (p.sets && sw[p.k] && cat[sw[p.k]]) q = Object.assign({}, cat[sw[p.k]], { phase: p.phase, from: p.k });
+      out.push(fix(q, sd[p.k]));
+      if (p.sets) lastMain = out.length - 1;
+    });
+    if (ex.length && lastMain >= 0) {
+      const add = ex.filter((e) => cat[e.k]).map((e) => fix(Object.assign({}, cat[e.k], { phase: 'Ejercicios', added: true }), (e.sets || cat[e.k].sets) - cat[e.k].sets));
+      out.splice.apply(out, [lastMain + 1, 0].concat(add));
+    }
+    this._steps[rid] = { memo: memo, steps: out };
+    return out;
+  }
+
+  planRids() {
+    const p = this.state.plan || {};
+    const out = [];
+    Object.keys(p).forEach((d) => { if (p[d] && out.indexOf(p[d]) < 0 && p[d] !== 'caminata' && p[d] !== 'cardio') out.push(p[d]); });
+    return out;
+  }
+
+  adaptPropose() {
+    const st = this.state;
+    const A = this.adapt();
+    const cat = this.catalog();
+    const G = this.programData().groups || {};
+    const where = {};
+    Object.keys(G).forEach((g) => G[g].forEach((k, i) => { where[k] = { g: g, i: i }; }));
+    const R = this.routinesById();
+    const out = [];
+    const seen = {};
+    const push = (x) => { if (!A.dismissed[x.id] && !seen[x.id]) { seen[x.id] = 1; out.push(x); } };
+    this.planRids().forEach((rid) => {
+      const steps = this.adaptedSteps(rid);
+      const used = steps.map((p) => p.k);
+      steps.forEach((p) => {
+        if (!p.sets || p.added) return;
+        const info = this.doseInfo(p);
+        const h = this.xHist(p.k);
+        if (!info || h.length < 2) return;
+        const top = (e) => e.r.length >= p.sets && e.r.every((v) => v >= info.hi);
+        const w = where[p.k];
+        const slot = p.from || p.k;
+        if (top(h[h.length - 1]) && top(h[h.length - 2]) && w && G[w.g][w.i + 1] && used.indexOf(G[w.g][w.i + 1]) < 0) {
+          const nk = G[w.g][w.i + 1];
+          push({ id: 'sube:' + rid + ':' + slot + ':' + nk, kind: 'swap', rid: rid, slot: slot, to: nk,
+            title: 'Sube de nivel en ' + (R[rid] || {}).name, text: p.name + ' → ' + cat[nk].name,
+            why: 'Llegaste al tope del rango (' + info.hi + ') dos sesiones seguidas.' });
+        } else if (h.length >= 3) {
+          const tot = h.slice(-3).map((e) => e.r.reduce((a, b) => a + b, 0));
+          if (tot[2] <= tot[0] && !top(h[h.length - 1]) && p.sets < 5) {
+            push({ id: 'serie:' + rid + ':' + slot + ':' + h[h.length - 1].d, kind: 'sets', rid: rid, slot: slot, delta: 1,
+              title: '+1 serie en ' + (R[rid] || {}).name, text: p.name + ': ' + p.sets + ' → ' + (p.sets + 1) + ' series',
+              why: 'Tres sesiones sin mejorar: un poco más de volumen suele destrabar.' });
+          }
+        }
+      });
+    });
+    const goal = st.prefs.goal || 'general';
+    const has = (rid, k) => this.adaptedSteps(rid).some((p) => p.k === k);
+    const rids = this.planRids();
+    const sup = rids.filter((r) => /superior/.test(r)), leg = rids.filter((r) => /piernas/.test(r));
+    const setUp = (rid, k, why) => {
+      const p = this.adaptedSteps(rid).find((x) => (x.from || x.k) === k);
+      if (p && p.sets < 5) push({ id: 'obj:' + goal + ':' + rid + ':' + k, kind: 'sets', rid: rid, slot: k, delta: 1, title: 'Para tu objetivo (' + this.goalLabel().toLowerCase() + ')', text: p.name + ': ' + p.sets + ' → ' + (p.sets + 1) + ' series en ' + (R[rid] || {}).name, why: why });
+    };
+    const extra = (rid, k, why) => { if (!has(rid, k) && cat[k]) push({ id: 'obj:' + goal + ':' + rid + ':+' + k, kind: 'extra', rid: rid, k: k, title: 'Para tu objetivo (' + this.goalLabel().toLowerCase() + ')', text: 'Suma ' + cat[k].name.toLowerCase() + ' a ' + (R[rid] || {}).name, why: why }); };
+    if (goal === 'estetica') sup.forEach((rid) => { setUp(rid, 'laterales', 'Hombros más anchos marcan la forma en V.'); setUp(rid, 'remo_marco', 'Una espalda más ancha también marca la V.'); });
+    if (goal === 'musculo') { sup.forEach((rid) => { setUp(rid, 'flex_rodillas', 'Más volumen en los ejercicios grandes es lo que más hace crecer.'); setUp(rid, 'flex_suelo', 'Más volumen en los ejercicios grandes es lo que más hace crecer.'); }); leg.forEach((rid) => { setUp(rid, 'sentadilla', 'Más volumen en los ejercicios grandes es lo que más hace crecer.'); setUp(rid, 'sumo', 'Más volumen en los ejercicios grandes es lo que más hace crecer.'); }); }
+    if (goal === 'postura') sup.forEach((rid) => extra(rid, 'ytw', 'La espalda alta fuerte ayuda a no ir con los hombros hacia adelante.'));
+    if (goal === 'grasa') rids.forEach((rid) => extra(rid, 'escalador', 'Un final corto e intenso suma gasto sin alargar la sesión.'));
+    return out.slice(0, 6);
+  }
+
+  adaptApply(p) { this.adaptApplyMany([p]); }
+
+  adaptApplyMany(list) {
+    const A = this.adapt();
+    const n = { swaps: Object.assign({}, A.swaps), sets: Object.assign({}, A.sets), extras: Object.assign({}, A.extras), dismissed: Object.assign({}, A.dismissed), log: A.log.slice(), skipDeload: A.skipDeload, ai: A.ai };
+    list.forEach((p) => {
+      if (p.kind === 'swap') { n.swaps[p.rid] = Object.assign({}, n.swaps[p.rid], { [p.slot]: p.to }); }
+      if (p.kind === 'sets') { const s = Object.assign({}, n.sets[p.rid]); s[p.slot] = (s[p.slot] || 0) + p.delta; n.sets[p.rid] = s; }
+      if (p.kind === 'extra') { n.extras[p.rid] = (n.extras[p.rid] || []).concat([{ k: p.k }]); }
+      n.dismissed[p.id] = Date.now();
+      n.log.push({ at: Date.now(), text: p.text });
+      if (n.ai && n.ai.props) n.ai = Object.assign({}, n.ai, { props: n.ai.props.filter((x) => x.id !== p.id) });
+    });
+    n.log = n.log.slice(-30);
+    this.sfx('yes');
+    this.setState({ adapt: n }, () => this.persist());
+  }
+
+  adaptDismiss(p) {
+    const A = this.adapt();
+    const d = Object.assign({}, A.dismissed, { [p.id]: Date.now() });
+    const ai = A.ai && A.ai.props ? Object.assign({}, A.ai, { props: A.ai.props.filter((x) => x.id !== p.id) }) : A.ai;
+    this.sfx('tap');
+    this.setState({ adapt: Object.assign({}, this.state.adapt, { dismissed: d, ai: ai }) }, () => this.persist());
+  }
+
+  adaptReset() {
+    this.sfx('no');
+    this.setState({ adapt: { dismissed: this.adapt().dismissed, log: this.adapt().log.concat([{ at: Date.now(), text: 'Volviste a la rutina original' }]).slice(-30) } }, () => this.persist());
+  }
+
+  skipDeload() {
+    const A = this.adapt();
+    const w = this.programWeek();
+    this.sfx('tap');
+    this.setState({ adapt: Object.assign({}, this.state.adapt, { skipDeload: Object.assign({}, A.skipDeload, { [w]: true }) }) }, () => this.persist());
+  }
+
+  /* Revisión de la rutina con IA: propone cambios dentro del catálogo; nada se aplica sin tu sí */
+  async adaptAskAI() {
+    if (this.state.adaptBusy) return;
+    this.sfx('open');
+    this.setState({ adaptBusy: true, adaptErr: '' });
+    try {
+      const cat = this.catalog();
+      const R = this.routinesById();
+      const rids = this.planRids();
+      const rut = rids.map((rid) => rid + ' (' + (R[rid] || {}).name + '): ' + this.adaptedSteps(rid).filter((p) => p.sets).map((p) => p.k + ' ' + p.dose).join(', ')).join('\n');
+      const catTxt = Object.keys(cat).map((k) => k + ' = ' + cat[k].name + ' (' + cat[k].dose + ')').join('\n');
+      const prompt = [
+        'Eres el entrenador de la app keystone. Revisa la rutina de esta persona y propone como máximo 4 cambios concretos para la próxima semana.',
+        this.aiContext(),
+        'Rutinas actuales (clave: ejercicio y dosis):', rut,
+        'Solo puedes usar ejercicios de este catálogo (clave = nombre):', catTxt,
+        'Escaleras de progresión (de fácil a difícil): ' + JSON.stringify(this.programData().groups || {}),
+        'Tipos de cambio: "cambiar" (reemplazar un ejercicio de una rutina por otro del catálogo), "series" (sumar o restar 1 serie a un ejercicio), "agregar" (sumar un ejercicio del catálogo a una rutina).',
+        'Responde SOLO con JSON válido: {"resumen":"dos frases en español de Chile","cambios":[{"tipo":"cambiar|series|agregar","rutina":"clave de rutina","ejercicio":"clave actual","por":"clave nueva (solo en cambiar o agregar)","delta":1,"motivo":"una frase"}]}',
+        'Reglas: nada que requiera equipamiento fuera de la mancuerna de 3 kg y la casa; progresión gradual; si el dolor muscular o el sueño están mal, prioriza recuperación; no propongas lo mismo que ya está.'
+      ].join('\n\n');
+      const j = await this.aiCallN(prompt, [], true, 1500);
+      const props = [];
+      (Array.isArray(j.cambios) ? j.cambios : []).slice(0, 4).forEach((c, i) => {
+        const rid = String(c.rutina || ''), k = String(c.ejercicio || ''), to = String(c.por || '');
+        if (rids.indexOf(rid) < 0) return;
+        const steps = this.adaptedSteps(rid);
+        const cur = steps.find((p) => p.k === k || p.from === k);
+        const base = { id: 'ia:' + Date.now().toString(36) + ':' + i, rid: rid, title: 'Propuesta de la IA', why: String(c.motivo || '').slice(0, 200) };
+        if (c.tipo === 'cambiar' && cur && cat[to] && !cur.added) props.push(Object.assign(base, { kind: 'swap', slot: cur.from || cur.k, to: to, text: cur.name + ' → ' + cat[to].name + ' en ' + (R[rid] || {}).name }));
+        else if (c.tipo === 'series' && cur && !cur.added) { const dl = Number(c.delta) < 0 ? -1 : 1; props.push(Object.assign(base, { kind: 'sets', slot: cur.from || cur.k, delta: dl, text: cur.name + ': ' + cur.sets + ' → ' + (cur.sets + dl) + ' series en ' + (R[rid] || {}).name })); }
+        else if (c.tipo === 'agregar' && cat[to] && !steps.some((p) => p.k === to)) props.push(Object.assign(base, { kind: 'extra', k: to, text: 'Suma ' + cat[to].name.toLowerCase() + ' a ' + (R[rid] || {}).name }));
+      });
+      const A = this.adapt();
+      this.setState({ adaptBusy: false, adapt: Object.assign({}, this.state.adapt, { ai: { at: Date.now(), resumen: String(j.resumen || '').slice(0, 400), props: props } }) }, () => this.persist());
+      this.sfx(props.length ? 'done' : 'tap');
+    } catch (e) {
+      this.setState({ adaptBusy: false, adaptErr: this.aiErrorText(e).replace('analizar tus comidas', 'revisar tu rutina') });
+      this.sfx('no');
+    }
+  }
+
+  /* ================================================================ check-in diario ================================================================ */
+
+  daily(key) { return ((this.state.daily || {})[key || this.keyOf(new Date())]) || {}; }
+
+  dailySet(patch, key) {
+    const k = key || this.keyOf(new Date());
+    const all = Object.assign({}, this.state.daily || {});
+    all[k] = Object.assign({}, all[k] || {}, patch, { at: Date.now() });
+    this.setState({ daily: all }, () => this.persist());
+  }
+
+  checkinAvg(days) {
+    const st = this.state;
+    const now = new Date();
+    const acc = { sleep: [], energy: [], mood: [], sore: [] };
+    for (let i = 0; i < days; i++) {
+      const d = st.daily && st.daily[this.keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i))];
+      if (d) Object.keys(acc).forEach((f) => { if (d[f]) acc[f].push(d[f]); });
+    }
+    if (!acc.sleep.length && !acc.energy.length) return null;
+    const avg = (a) => (a.length ? this.fmtNum(Math.round((a.reduce((x, y) => x + y, 0) / a.length) * 10) / 10) : 's/d');
+    return { sleep: avg(acc.sleep), energy: avg(acc.energy), mood: avg(acc.mood), sore: avg(acc.sore) };
+  }
+
+  /* Informe del día: reglas simples y explicables con tu check-in, la recuperación, la comida de ayer y tus hábitos */
+  briefing() {
+    const st = this.state;
+    const now = new Date();
+    const today = this.keyOf(now);
+    const yd = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const y = this.keyOf(yd);
+    const d = this.daily(today);
+    const r = this.routineAt(this.todayIdx());
+    const out = [];
+    const prev = this.daily(y);
+    if (prev.better) out.push({ k: 'mejora', text: 'Tu mejora para hoy: ' + prev.better.charAt(0).toLowerCase() + prev.better.slice(1) + '.' });
+    const low = (d.sleep && d.sleep <= 2) || (d.energy && d.energy <= 2);
+    if (!r || r.id === 'caminata') out.push({ k: 'plan', text: r ? 'Hoy toca caminata: 45 a 60 min a paso firme.' : 'Hoy es descanso: camina 20 a 30 min y estira 5. Recuperar también es parte del plan.' });
+    else if (low) out.push({ k: 'plan', text: 'Dormiste mal o estás con poca energía: haz ' + r.name.toLowerCase() + ' con una serie menos por ejercicio, o cámbiala por una caminata.' });
+    else if (d.sore >= 4) out.push({ k: 'plan', text: 'Tienes harto dolor muscular: calienta el doble y baja la intensidad. Si duele una articulación, descansa.' });
+    else {
+      const ready = this.adaptedSteps(r.id).find((p) => p.sets && this.repReady(p, today));
+      out.push({ k: 'plan', text: 'Todo en orden: hoy toca ' + r.name.toLowerCase() + '.' + (ready ? ' Llegaste al tope en ' + ready.name.toLowerCase() + ': prueba subir de nivel.' : ' Busca una repetición más que la última vez.') });
+    }
+    const fat = this.fatigue(st);
+    const tired = Object.keys(fat).filter((m) => fat[m].load >= 0.6).sort((a, b) => fat[b].load - fat[a].load)[0];
+    if (tired && r && r.id !== 'caminata') out.push({ k: 'recup', text: tired + ' siguen recuperándose (' + Math.round(fat[tired].load * 100) + ' %): cuida la técnica y no fuerces ahí.' });
+    const T = this.targets();
+    const yt = this.dayTotals(y);
+    const ylog = (st.flog || {})[y];
+    const hadFood = ylog && Object.keys(ylog).some((m) => (ylog[m] || []).length);
+    if (!hadFood) out.push({ k: 'comida', text: 'Ayer no registraste comidas: una foto por comida basta para ver tu proteína.' });
+    else if (yt.p < T.prot * 0.8) out.push({ k: 'comida', text: 'Ayer comiste ' + Math.round(yt.p) + ' g de proteína de ' + T.prot + ' g: suma 2 huevos o un yogur griego al desayuno.' });
+    const wy = ((st.hlog || {})[y] || {}).agua || 0;
+    const wg = this.waterGoal(yd);
+    if (hadFood && wy && wy < wg * 0.7) out.push({ k: 'agua', text: 'Ayer tomaste ' + wy + ' de ' + wg + ' vasos de agua: deja una botella a la vista.' });
+    return out.slice(0, 3);
+  }
+
+  /* Cierre del día: lo que salió bien y una sola mejora para mañana, sugeridas con tus datos */
+  closingChips() {
+    const st = this.state;
+    const now = new Date();
+    const key = this.keyOf(now);
+    const T = this.targets();
+    const t = this.dayTotals(key);
+    const e = st.log[key];
+    const good = [];
+    const better = [];
+    if (e && e.status === 'done') good.push('Entrené'); else if (this.routineAt(this.todayIdx())) better.push('Entrenar aunque sea el calentamiento');
+    if (t.p >= T.prot * 0.9) good.push('Llegué a la proteína'); else better.push('Proteína en el desayuno');
+    const w = ((st.hlog || {})[key] || {}).agua || 0;
+    if (w >= this.waterGoal(now)) good.push('Tomé mi agua'); else better.push('Un vaso de agua al despertar');
+    const sc = this.dayScore(key, now);
+    if (sc != null && sc >= 0.7) good.push('Cumplí mis hábitos');
+    const d = this.daily(key);
+    if (d.sleep && d.sleep <= 3) better.push('Acostarme 30 min antes');
+    better.push('Caminar 10 min después de almorzar');
+    good.push('Me cuidé hoy');
+    return { good: good.slice(0, 4), better: better.slice(0, 4) };
+  }
+
+  async dailyAI() {
+    if (this.state.dailyBusy) return;
+    this.sfx('open');
+    this.setState({ dailyBusy: true, dailyErr: '' });
+    try {
+      const b = this.briefing().map((x) => '- ' + x.text).join('\n');
+      const d = this.daily();
+      const prompt = ['Eres el entrenador de la app keystone. Escribe el análisis de hoy en 3 viñetas cortas (máximo 25 palabras cada una), en español de Chile, tuteo, concretas y accionables. Sin saludos ni relleno.',
+        this.aiContext(), 'Check-in de hoy (1 a 5): sueño ' + (d.sleep || 's/d') + ', energía ' + (d.energy || 's/d') + ', ánimo ' + (d.mood || 's/d') + ', dolor ' + (d.sore || 's/d') + '.',
+        'Lo que ya calculó la app:', b,
+        'Responde SOLO con JSON: {"vinetas":["",""]}'].join('\n\n');
+      const j = await this.aiCallN(prompt, [], true, 600);
+      const v = (Array.isArray(j.vinetas) ? j.vinetas : []).map((x) => String(x).slice(0, 220)).filter(Boolean).slice(0, 4);
+      this.dailySet({ ai: v });
+      this.setState({ dailyBusy: false });
+      this.sfx('done');
+    } catch (e) {
+      this.setState({ dailyBusy: false, dailyErr: this.aiErrorText(e).replace('analizar tus comidas', 'analizar tu día') });
+      this.sfx('no');
+    }
+  }
+
+  /* ================================================================ fotos de progreso ================================================================ */
+
+  poseDefs() {
+    return {
+      frente: { label: 'Frente', tip: 'De frente, brazos sueltos a los lados y pies al ancho de la cadera.' },
+      perfil: { label: 'Perfil', tip: 'De lado, con el hombro derecho hacia la cámara, brazos sueltos y mirada al frente.' },
+      espalda: { label: 'Espalda', tip: 'De espaldas, brazos sueltos y pies al ancho de la cadera.' },
+      cara: { label: 'Cara', tip: 'La cara de frente, sin sonreír, con luz pareja y sin flash.' }
+    };
+  }
+
+  bodySets() { return (this.state.bodyPhotos || []).slice().sort((a, b) => a.at - b.at); }
+
+  lastAnalysis() {
+    const s = this.bodySets().filter((x) => x.an);
+    return s.length ? Object.assign({ d: s[s.length - 1].d }, s[s.length - 1].an) : null;
+  }
+
+  bodyImg(id, pose, thumb) {
+    const key = (thumb ? 'bodyT:' : 'body:') + id + ':' + pose;
+    this._bp = this._bp || {};
+    if (this._bp[key] !== undefined) return this._bp[key];
+    this._bp[key] = null;
+    this.idbKey('get', key).then((d) => { if (d) { this._bp[key] = d; this.forceUpdate(); } });
+    return null;
+  }
+
+  photoDue() {
+    const s = this.bodySets();
+    if (!s.length) return true;
+    return Date.now() - s[s.length - 1].at > 6.5 * 864e5;
+  }
+
+  openCapture(face) {
+    const poses = ['frente', 'perfil', 'espalda'].concat(face ? ['cara'] : []);
+    this.sfx('open');
+    this.setState({ cap: { i: 0, poses: poses, shots: {}, phase: 'live', count: 0, facing: (this.state.cap && this.state.cap.facing) || 'user', err: '' }, photos: false });
+  }
+
+  closeCapture() {
+    this.sfx('tap');
+    this.stopCam();
+    this.setState({ cap: null });
+  }
+
+  stopCam() {
+    if (this.camTimer) { clearInterval(this.camTimer); this.camTimer = null; }
+    if (this._stream) { try { this._stream.getTracks().forEach((t) => t.stop()); } catch (e) {} this._stream = null; }
+  }
+
+  /* La cámara se prende cuando la pantalla de captura está abierta y en vivo; se apaga al salir */
+  syncCam() {
+    const cap = this.state.cap;
+    const live = cap && (cap.phase === 'live' || cap.phase === 'count');
+    if (!live) { if (this._stream && !cap) this.stopCam(); return; }
+    const v = document.getElementById('cam');
+    if (this._stream && this._streamFacing !== cap.facing) this.stopCam();
+    if (!this._stream && !this._camPending) {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { if (!cap.err) this.setState({ cap: Object.assign({}, cap, { err: 'nocam' }) }); return; }
+      this._camPending = true;
+      navigator.mediaDevices.getUserMedia({ video: { facingMode: cap.facing, width: { ideal: 1080 }, height: { ideal: 1440 } }, audio: false })
+        .then((s) => { this._camPending = false; if (!this.state.cap) { s.getTracks().forEach((t) => t.stop()); return; } this._stream = s; this._streamFacing = cap.facing; this.forceUpdate(); })
+        .catch(() => { this._camPending = false; if (this.state.cap) this.setState({ cap: Object.assign({}, this.state.cap, { err: 'nocam' }) }); });
+      return;
+    }
+    if (v && this._stream && v.srcObject !== this._stream) { v.srcObject = this._stream; v.play().catch(() => {}); }
+  }
+
+  flipCam() {
+    const cap = this.state.cap;
+    if (!cap) return;
+    this.sfx('tap');
+    this.stopCam();
+    this.setState({ cap: Object.assign({}, cap, { facing: cap.facing === 'user' ? 'environment' : 'user' }) });
+  }
+
+  startCountdown() {
+    const cap = this.state.cap;
+    if (!cap || cap.phase !== 'live') return;
+    this.sfx('tap');
+    this.setState({ cap: Object.assign({}, cap, { phase: 'count', count: 5 }) });
+    if (this.camTimer) clearInterval(this.camTimer);
+    this.camTimer = setInterval(() => {
+      const c = this.state.cap;
+      if (!c || c.phase !== 'count') { clearInterval(this.camTimer); this.camTimer = null; return; }
+      const n = c.count - 1;
+      if (n > 0) { this.tone(n <= 2 ? 990 : 660, 0, 0.08, { type: 'triangle', vol: 0.1 }); this.setState({ cap: Object.assign({}, c, { count: n }) }); return; }
+      clearInterval(this.camTimer); this.camTimer = null;
+      this.snap();
+    }, 1000);
+  }
+
+  snap() {
+    const c = this.state.cap;
+    const v = document.getElementById('cam');
+    if (!c || !v || !v.videoWidth) { if (c) this.setState({ cap: Object.assign({}, c, { phase: 'live', count: 0 }) }); return; }
+    const max = 1280;
+    const s = Math.min(1, max / Math.max(v.videoWidth, v.videoHeight));
+    const cv = document.createElement('canvas');
+    cv.width = Math.round(v.videoWidth * s); cv.height = Math.round(v.videoHeight * s);
+    cv.getContext('2d').drawImage(v, 0, 0, cv.width, cv.height);
+    const shots = Object.assign({}, c.shots, { [c.poses[c.i]]: cv.toDataURL('image/jpeg', 0.86) });
+    this.sfx('pick');
+    this.setState({ cap: Object.assign({}, c, { shots: shots, phase: 'review', count: 0 }) });
+  }
+
+  async capFile(e) {
+    const input = e && e.target;
+    const file = input && input.files && input.files[0];
+    const c = this.state.cap;
+    if (!file || !c) return;
+    try {
+      const r = await this.loadImage(file);
+      const url = this.shrink(r.im, 1280, 0.86);
+      URL.revokeObjectURL(r.url);
+      const shots = Object.assign({}, c.shots, { [c.poses[c.i]]: url });
+      this.setState({ cap: Object.assign({}, this.state.cap, { shots: shots, phase: 'review' }) });
+    } catch (err) {}
+    try { input.value = ''; } catch (err) {}
+  }
+
+  capRetake() { const c = this.state.cap; if (!c) return; this.sfx('tap'); this.setState({ cap: Object.assign({}, c, { phase: 'live' }) }); }
+
+  capNext() {
+    const c = this.state.cap;
+    if (!c) return;
+    if (c.i < c.poses.length - 1) { this.sfx('tap'); this.setState({ cap: Object.assign({}, c, { i: c.i + 1, phase: 'live' }) }); return; }
+    this.saveBodySet();
+  }
+
+  capSkip() { const c = this.state.cap; if (!c) return; if (c.i < c.poses.length - 1) { this.sfx('tap'); this.setState({ cap: Object.assign({}, c, { i: c.i + 1, phase: 'live' }) }); } else this.saveBodySet(); }
+
+  async saveBodySet() {
+    const c = this.state.cap;
+    if (!c) return;
+    const poses = c.poses.filter((p) => c.shots[p]);
+    this.stopCam();
+    if (!poses.length) { this.setState({ cap: null }); return; }
+    const id = 'b' + Date.now().toString(36);
+    for (const p of poses) {
+      const url = c.shots[p];
+      await this.idbKey('put', 'body:' + id + ':' + p, url);
+      const im = await new Promise((res) => { const x = new Image(); x.onload = () => res(x); x.onerror = () => res(null); x.src = url; });
+      const th = im ? this.shrink(im, 360, 0.75) : url;
+      await this.idbKey('put', 'bodyT:' + id + ':' + p, th);
+      this._bp = this._bp || {};
+      this._bp['body:' + id + ':' + p] = url;
+      this._bp['bodyT:' + id + ':' + p] = th;
+    }
+    const set = { id: id, d: this.keyOf(new Date()), at: Date.now(), poses: poses, an: null };
+    this.sfx('done');
+    this.setState({ cap: null, bodyPhotos: (this.state.bodyPhotos || []).concat([set]), photos: true, photoSel: id, photoPose: 'frente' }, () => this.persist());
+  }
+
+  async deleteBodySet(id) {
+    if (this.state.photoDel !== id) { this.sfx('no'); this.setState({ photoDel: id }); return; }
+    const s = (this.state.bodyPhotos || []).find((x) => x.id === id);
+    if (s) for (const p of s.poses) { await this.idbKey('del', 'body:' + id + ':' + p); await this.idbKey('del', 'bodyT:' + id + ':' + p); }
+    this.sfx('tap');
+    this.setState({ bodyPhotos: (this.state.bodyPhotos || []).filter((x) => x.id !== id), photoDel: null, photoSel: null }, () => this.persist());
+  }
+
+  async analyzeBody(id) {
+    const sets = this.bodySets();
+    const k = sets.findIndex((x) => x.id === id);
+    if (k < 0 || this.state.bodyBusy) return;
+    const cur = sets[k];
+    const prev = k > 0 ? sets[k - 1] : null;
+    this.sfx('open');
+    this.setState({ bodyBusy: id, bodyErr: '' });
+    try {
+      const imgs = [];
+      const desc = [];
+      const add = async (set, pose, label) => {
+        const url = this._bp && this._bp['body:' + set.id + ':' + pose] ? this._bp['body:' + set.id + ':' + pose] : await this.idbKey('get', 'body:' + set.id + ':' + pose);
+        if (!url) return;
+        const im = await new Promise((res) => { const x = new Image(); x.onload = () => res(x); x.onerror = () => res(null); x.src = url; });
+        if (!im) return;
+        imgs.push(this.shrink(im, 768, 0.8).split(',')[1]);
+        desc.push('Imagen ' + imgs.length + ': ' + label + ', ' + this.poseDefs()[pose].label.toLowerCase());
+      };
+      for (const p of cur.poses) await add(cur, p, 'hoy (' + cur.d + ')');
+      if (prev) for (const p of prev.poses) if (p !== 'cara') await add(prev, p, 'anterior (' + prev.d + ')');
+      const hasFace = cur.poses.indexOf('cara') >= 0;
+      const prompt = [
+        'Eres un entrenador y especialista en composición corporal. Analiza las fotos de progreso de esta persona con respeto y precisión. No juzgues el atractivo; describe lo observable y da recomendaciones prácticas.',
+        this.aiContext(),
+        desc.join('\n'),
+        prev ? 'Compara hoy con la sesión anterior: describe solo cambios visibles y di cuando no se puede saber por luz o pose.' : 'Es la primera sesión de fotos: describe la línea base.',
+        'Estima la grasa corporal como un rango honesto (de 3 a 5 puntos de ancho). Evalúa la postura en el perfil y la espalda (cabeza adelantada, hombros redondeados, inclinación de la pelvis, asimetrías).',
+        hasFace ? 'Hay una foto de la cara: comenta solo la piel (textura, enrojecimiento, ojeras) con consejos simples de cuidado y hábitos. Nada de cirugías ni prácticas sin evidencia.' : 'No hay foto de la cara: deja "piel" vacío.',
+        'Recomendaciones: la rutina se hace en casa sin equipamiento, salvo una mancuerna de 3 kg; la comida es chilena. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Responde SOLO con JSON válido, en español de Chile y tuteo: {"resumen":"2 frases","grasa":{"min":0,"max":0},"cambios":[{"zona":"","nota":""}],"postura":[{"punto":"","estado":"bien|mejorable","consejo":""}],"simetria":"","piel":"","recomendaciones":{"rutina":[""],"comida":[""],"habitos":[""]},"confianza":"alta|media|baja"}'
+      ].join('\n\n');
+      const j = await this.aiCallN(prompt, imgs, true, 2500);
+      const S = (v, n) => String(v == null ? '' : v).slice(0, n || 240);
+      const L = (a, n) => (Array.isArray(a) ? a : []).slice(0, n || 4);
+      const g = j.grasa || {};
+      const an = {
+        at: Date.now(), via: this.aiCfg().provider, vs: prev ? prev.d : null,
+        resumen: S(j.resumen, 400),
+        grasa: isFinite(+g.min) && isFinite(+g.max) && +g.max > 0 ? { min: Math.round(+g.min), max: Math.round(+g.max) } : null,
+        cambios: L(j.cambios, 6).map((x) => ({ zona: S(x.zona, 40), nota: S(x.nota) })).filter((x) => x.nota),
+        postura: L(j.postura, 5).map((x) => ({ punto: S(x.punto, 60), ok: /bien/i.test(x.estado), consejo: S(x.consejo) })).filter((x) => x.punto),
+        simetria: S(j.simetria), piel: S(j.piel),
+        rec: { rutina: L((j.recomendaciones || {}).rutina, 3).map((x) => S(x)), comida: L((j.recomendaciones || {}).comida, 3).map((x) => S(x)), habitos: L((j.recomendaciones || {}).habitos, 3).map((x) => S(x)) },
+        conf: S(j.confianza, 10)
+      };
+      this.setState({ bodyBusy: null, bodyPhotos: (this.state.bodyPhotos || []).map((x) => (x.id === id ? Object.assign({}, x, { an: an }) : x)) }, () => this.persist());
+      this.sfx('done');
+    } catch (e) {
+      this.setState({ bodyBusy: null, bodyErr: this.aiErrorText(e).replace('analizar tus comidas', 'analizar tus fotos').replace('Prueba con otra foto o descríbelo con palabras.', 'Intenta otra vez.') });
+      this.sfx('no');
+    }
+  }
+
+  /* ================================================================ chat con el entrenador ================================================================ */
+
+  async chatSend(text) {
+    const t = String(text || '').trim();
+    if (!t || this.state.chatBusy) return;
+    const msgs = (this.state.chat || []).concat([{ r: 'u', t: t.slice(0, 1200), at: Date.now() }]).slice(-40);
+    this.sfx('tap');
+    this.setState({ chat: msgs, chatBusy: true, chatDraft: '' });
+    try { const el = document.getElementById('chat-in'); if (el) el.value = ''; } catch (e) {}
+    try {
+      const hist = msgs.slice(-10).map((m) => (m.r === 'u' ? 'Persona: ' : 'Entrenador: ') + m.t).join('\n');
+      const prompt = [
+        'Eres el entrenador personal de la app keystone: directo, cálido y concreto, en español de Chile y tuteo. Respuestas cortas (máximo 120 palabras), con pasos accionables. Nada de diagnósticos médicos: si hay dolor fuerte, síntomas o algo médico, sugiere consultar a un profesional.',
+        'Entrena en casa sin equipamiento, salvo una mancuerna de 3 kg. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Datos de la persona:\n' + this.aiContext(),
+        'Conversación:\n' + hist,
+        'Responde al último mensaje de la persona.'
+      ].join('\n\n');
+      const a = await this.aiCallN(prompt, [], false, 700);
+      this.setState({ chat: (this.state.chat || []).concat([{ r: 'a', t: String(a).slice(0, 2000), at: Date.now() }]).slice(-40), chatBusy: false }, () => this.persist());
+      this.sfx('pick');
+    } catch (e) {
+      this.setState({ chat: (this.state.chat || []).concat([{ r: 'e', t: this.aiErrorText(e).replace('analizar tus comidas', 'conversar con tu entrenador'), at: Date.now() }]).slice(-40), chatBusy: false });
+      this.sfx('no');
+    }
+  }
+
+  /* ================================================================ informe mensual ================================================================ */
+
+  async printReport() {
+    this.sfx('open');
+    const st = this.state;
+    const now = new Date();
+    const from = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 30);
+    const fk = this.keyOf(from);
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    const logs = Object.keys(st.log).filter((k) => k >= fk && st.log[k] && st.log[k].status === 'done').map((k) => st.log[k].summary).filter(Boolean);
+    const mins = logs.reduce((a, s) => a + (s.minutes || 0), 0);
+    const prs = [];
+    logs.forEach((s) => (s.prs || []).forEach((p) => prs.push(p.name + ': ' + p.val + (p.unit === 's' ? ' s' : '') + ' (antes ' + p.prev + ')')));
+    const meas = (st.meas || []).filter((m) => m.d >= fk).sort((a, b) => (a.d < b.d ? -1 : 1));
+    const mrow = (f, u) => { const v = meas.filter((m) => m[f] != null); if (!v.length) return ''; const a = v[0][f], b = v[v.length - 1][f]; return '<tr><td>' + f.charAt(0).toUpperCase() + f.slice(1) + '</td><td>' + this.fmtNum(a) + ' ' + u + '</td><td>' + this.fmtNum(b) + ' ' + u + '</td><td>' + this.deltaText(a, b, u) + '</td></tr>'; };
+    const sets = this.bodySets().filter((s) => s.d >= fk);
+    let imgs = '';
+    if (sets.length) {
+      const pick = sets.length > 1 ? [sets[0], sets[sets.length - 1]] : [sets[0]];
+      for (const s of pick) { const u = await this.idbKey('get', 'bodyT:' + s.id + ':frente'); if (u) imgs += '<figure><img src="' + u + '"><figcaption>' + esc(s.d) + '</figcaption></figure>'; }
+    }
+    const an = this.lastAnalysis();
+    const ov = st.hp ? this.healthOverall(this.healthAreas()) : null;
+    const html = '<!doctype html><html lang="es"><meta charset="utf-8"><title>keystone · informe</title><style>body{font:14px/1.45 -apple-system,Helvetica,sans-serif;color:#18181B;margin:32px}h1{font-weight:400;font-size:30px;margin:0 0 4px}h2{font-weight:500;font-size:18px;margin:28px 0 8px}.m{color:#57575F}.k{display:flex;gap:28px}.k b{display:block;font-size:26px;font-weight:400}table{border-collapse:collapse;width:100%}td{border-top:1px solid #E4E4E7;padding:6px 4px}figure{display:inline-block;margin:0 16px 0 0}img{height:220px;border-radius:12px}figcaption{color:#57575F;font-size:12px}li{margin:4px 0}</style>'
+      + '<h1>keystone · informe del mes</h1><div class="m">' + esc(this.longDate(from)) + ' al ' + esc(this.longDate(now)) + ' · ' + esc(st.prefs.nombre || '') + '</div>'
+      + '<h2>Resumen</h2><div class="k"><div><b>' + logs.length + '</b>sesiones</div><div><b>' + mins + '</b>minutos</div><div><b>' + prs.length + '</b>récords</div><div><b>' + (ov == null ? '—' : ov) + '</b>puntaje de salud</div></div>'
+      + (prs.length ? '<h2>Récords</h2><ul>' + prs.slice(0, 12).map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>' : '')
+      + (meas.length ? '<h2>Medidas</h2><table><tr class="m"><td></td><td>Inicio</td><td>Ahora</td><td>Cambio</td></tr>' + mrow('peso', 'kg') + mrow('cintura', 'cm') + mrow('pecho', 'cm') + mrow('brazo', 'cm') + mrow('cadera', 'cm') + mrow('hombros', 'cm') + '</table>' : '')
+      + (imgs ? '<h2>Fotos</h2>' + imgs : '')
+      + (an ? '<h2>Último análisis de fotos (' + esc(an.d) + ')</h2><p>' + esc(an.resumen) + (an.grasa ? ' Grasa estimada: ' + an.grasa.min + '–' + an.grasa.max + ' %.' : '') + '</p>' : '')
+      + '<p class="m" style="margin-top:32px">Hecho con keystone. Las estimaciones por foto son aproximadas y sirven para ver la tendencia.</p></html>';
+    try {
+      const f = document.createElement('iframe');
+      f.setAttribute('aria-hidden', 'true');
+      f.style.cssText = 'position:fixed;right:0;bottom:0;width:1px;height:1px;border:0;opacity:0';
+      document.body.appendChild(f);
+      f.onload = () => { setTimeout(() => { try { f.contentWindow.focus(); f.contentWindow.print(); } catch (e) {} setTimeout(() => f.remove(), 60000); }, 300); };
+      f.srcdoc = html;
+    } catch (e) {}
+  }
+
+  /* ================================================================ valores para las pantallas ================================================================ */
+
+  cuerpoVals(th, c, dark, primary, onPrimary) {
+    const st = this.state;
+    const now = new Date();
+    const key = this.keyOf(now);
+    const hasKey = !!this.aiCfg().key;
+
+    /* ---------- check-in, informe y cierre del día ---------- */
+    const d = this.daily(key);
+    const rowsDef = [
+      ['sleep', 'Sueño', 'Mal', 'Muy bien'], ['energy', 'Energía', 'Baja', 'Alta'],
+      ['mood', 'Ánimo', 'Bajo', 'Muy bueno'], ['sore', 'Dolor muscular', 'Nada', 'Mucho']
+    ];
+    const filled = rowsDef.every((r) => !!d[r[0]]);
+    const editing = !!st.ckEdit;
+    const rows = rowsDef.map((r) => ({
+      label: r[1], lo: r[2], hi: r[3],
+      opts: [1, 2, 3, 4, 5].map((n) => ({ n: n, on: d[r[0]] === n, bg: d[r[0]] === n ? primary : th.fill, fg: d[r[0]] === n ? onPrimary : th.sub, aria: r[1] + ': ' + n + ' de 5', pick: () => { this.sfx('tap'); this.dailySet({ [r[0]]: n }); } }))
+    }));
+    const hour = now.getHours();
+    const ch = this.closingChips();
+    const dy = {
+      showCheckin: !filled || editing, showBrief: filled && !editing,
+      rows: rows, editDone: () => { this.sfx('tap'); this.setState({ ckEdit: false }); }, edit: () => { this.sfx('tap'); this.setState({ ckEdit: true }); },
+      hasEditDone: editing && filled,
+      brief: this.briefing().map((x) => ({ text: x.text })),
+      ai: (d.ai || []).map((t) => ({ text: t })), hasAi: !!(d.ai && d.ai.length), canAi: hasKey && !(d.ai && d.ai.length),
+      aiBusy: !!st.dailyBusy, aiIdle: !st.dailyBusy, aiErr: st.dailyErr || '', hasAiErr: !!st.dailyErr, askAi: () => this.dailyAI(),
+      showClose: filled && !editing && hour >= 18 && !(d.good && d.better),
+      closed: !!(d.good && d.better), closedText: d.better ? 'Mañana: ' + d.better.charAt(0).toLowerCase() + d.better.slice(1) + '.' : '',
+      good: ch.good.map((t) => ({ t: t, bg: d.good === t ? primary : th.fill, fg: d.good === t ? onPrimary : th.text, pick: () => { this.sfx('tap'); this.dailySet({ good: t }); } })),
+      better: ch.better.map((t) => ({ t: t, bg: d.better === t ? primary : th.fill, fg: d.better === t ? onPrimary : th.text, pick: () => { this.sfx('tap'); this.dailySet({ better: t }); } }))
+    };
+
+    /* ---------- fotos de progreso ---------- */
+    const sets = this.bodySets();
+    const P = this.poseDefs();
+    const pose = st.photoPose || 'frente';
+    const withPose = sets.filter((s) => s.poses.indexOf(pose) >= 0);
+    const selId = st.photoSel && sets.some((s) => s.id === st.photoSel) ? st.photoSel : (sets.length ? sets[sets.length - 1].id : null);
+    const sel = sets.find((s) => s.id === selId) || null;
+    const bIdx = withPose.findIndex((s) => s.id === selId);
+    const aMode = st.photoA || 'primera';
+    const aSet = bIdx > 0 ? (aMode === 'anterior' ? withPose[bIdx - 1] : withPose[0]) : null;
+    const lastAt = sets.length ? sets[sets.length - 1].at : null;
+    const an = sel && sel.an;
+    const fmtL = (a) => a.map((t) => ({ text: t }));
+    const ph = {
+      open: () => { this.sfx('open'); this.setState({ photos: true }); }, close: () => { this.sfx('tap'); this.setState({ photos: false, photoDel: null }); },
+      due: this.photoDue(), count: sets.length, has: sets.length > 0, none: sets.length === 0,
+      last: lastAt ? this.agoText(lastAt) : 'Nunca',
+      dueText: lastAt ? 'Tu última foto fue ' + this.agoText(lastAt).toLowerCase() + '. Toca la semanal.' : 'Tu primera foto es la línea base: con ella se comparan todas las demás.',
+      face: !!st.photoFace, faceTrack: st.photoFace ? th.text : th.segBg, faceKnob: st.photoFace ? 20 : 0,
+      toggleFace: () => { this.sfx('tap'); this.setState({ photoFace: !st.photoFace }); },
+      take: () => this.openCapture(!!st.photoFace),
+      poses: Object.keys(P).filter((p) => sets.some((s) => s.poses.indexOf(p) >= 0)).map((p) => ({ label: P[p].label, bg: p === pose ? th.segSel : 'transparent', weight: p === pose ? 500 : 400, pick: () => { this.sfx('tap'); this.setState({ photoPose: p }); } })),
+      timeline: sets.slice().reverse().map((s) => ({ d: this.shortDate(s.d), thumb: s.poses.indexOf(pose) >= 0 ? (this.bodyImg(s.id, pose, true) || '') : (this.bodyImg(s.id, s.poses[0], true) || ''), ring: s.id === selId ? ('inset 0 0 0 2px ' + th.text) : 'none', hasAn: !!s.an, pick: () => { this.sfx('tap'); this.setState({ photoSel: s.id, photoDel: null }); } })),
+      hasCompare: !!(aSet && sel && sel.poses.indexOf(pose) >= 0),
+      aImg: aSet ? (this.bodyImg(aSet.id, pose) || this.bodyImg(aSet.id, pose, true) || '') : '', bImg: sel && sel.poses.indexOf(pose) >= 0 ? (this.bodyImg(sel.id, pose) || this.bodyImg(sel.id, pose, true) || '') : '',
+      aLabel: aSet ? this.shortDate(aSet.d) : '', bLabel: sel ? this.shortDate(sel.d) : '',
+      x: st.photoX == null ? 50 : st.photoX, onX: (e) => { const v = Number(e && e.target ? e.target.value : 50); this.setState({ photoX: v }); },
+      single: !!(sel && !aSet && sel.poses.indexOf(pose) >= 0),
+      aPrimera: { bg: aMode === 'primera' ? th.segSel : 'transparent', pick: () => { this.sfx('tap'); this.setState({ photoA: 'primera' }); } },
+      aAnterior: { bg: aMode === 'anterior' ? th.segSel : 'transparent', pick: () => { this.sfx('tap'); this.setState({ photoA: 'anterior' }); } },
+      selLabel: sel ? this.longDate(this.dateOf(sel.d)) : '',
+      hasAn: !!an, noAn: !!sel && !an, canAn: !!sel && !an && hasKey, needKey: !!sel && !an && !hasKey,
+      busy: !!st.bodyBusy && st.bodyBusy === selId, idle: !st.bodyBusy, err: st.bodyErr || '', hasErr: !!st.bodyErr,
+      note: this.aiPhotoNote(), provider: this.aiProviderName(), analyze: () => selId && this.analyzeBody(selId), reAnalyze: () => selId && this.analyzeBody(selId),
+      an: an ? {
+        resumen: an.resumen, hasGrasa: !!an.grasa, grasa: an.grasa ? an.grasa.min + '–' + an.grasa.max + ' %' : '',
+        vs: an.vs ? 'Comparado con ' + this.shortDate(an.vs) : 'Línea base', conf: an.conf ? 'Confianza ' + an.conf : '',
+        cambios: an.cambios.map((x, i) => ({ zona: x.zona, nota: x.nota, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })), hasCambios: an.cambios.length > 0,
+        postura: an.postura.map((x, i) => ({ punto: x.punto, consejo: x.consejo, estado: x.ok ? 'Bien' : 'Mejorable', color: x.ok ? c.constanciaText : c.heatText, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })), hasPostura: an.postura.length > 0,
+        simetria: an.simetria, hasSimetria: !!an.simetria, piel: an.piel, hasPiel: !!an.piel,
+        rutina: fmtL(an.rec.rutina), comida: fmtL(an.rec.comida), habitos: fmtL(an.rec.habitos),
+        hasRutina: an.rec.rutina.length > 0, hasComida: an.rec.comida.length > 0, hasHabitos: an.rec.habitos.length > 0
+      } : {},
+      del: () => selId && this.deleteBodySet(selId), delLabel: st.photoDel && st.photoDel === selId ? 'Toca otra vez para borrar' : 'Borrar estas fotos',
+      thumbLast: sets.length ? (this.bodyImg(sets[sets.length - 1].id, 'frente', true) || '') : '', hasThumbLast: !!(sets.length && sets[sets.length - 1].poses.indexOf('frente') >= 0)
+    };
+
+    /* ---------- cámara con guía ---------- */
+    const cp = st.cap;
+    let cap = { open: false };
+    if (cp) {
+      const p = cp.poses[cp.i];
+      const prevSet = sets.slice().reverse().find((s) => s.poses.indexOf(p) >= 0);
+      const shot = cp.shots[p];
+      cap = {
+        open: true, label: P[p].label, tip: P[p].tip, step: (cp.i + 1) + ' de ' + cp.poses.length,
+        live: cp.phase === 'live' && !cp.err, count: cp.phase === 'count', n: cp.count, review: cp.phase === 'review', shot: shot || '',
+        camOn: (cp.phase === 'live' || cp.phase === 'count') && !cp.err, noFlip: !((cp.phase === 'live' || cp.phase === 'count') && !cp.err), noCam: cp.err === 'nocam' && cp.phase !== 'review',
+        mirror: cp.facing === 'user' ? 'scaleX(-1)' : 'none',
+        hasGhost: !!prevSet, ghost: prevSet ? (this.bodyImg(prevSet.id, p) || this.bodyImg(prevSet.id, p, true) || '') : '',
+        ghostLabel: prevSet ? 'Tu foto del ' + this.shortDate(prevSet.d) + ' de guía' : '',
+        start: () => this.startCountdown(), flip: () => this.flipCam(), retake: () => this.capRetake(), next: () => this.capNext(), skip: () => this.capSkip(),
+        nextLabel: cp.i < cp.poses.length - 1 ? 'Usar y seguir' : 'Usar y guardar', close: () => this.closeCapture(), file: (e) => this.capFile(e)
+      };
+    }
+
+    /* ---------- aspecto ---------- */
+    const meas = (st.meas || []).slice().sort((a, b) => (a.d < b.d ? -1 : 1));
+    const lastOf = (f) => { for (let i = meas.length - 1; i >= 0; i--) if (meas[i][f] != null) return meas[i][f]; return null; };
+    const hom = lastOf('hombros'), cin = lastOf('cintura') || (st.hp && st.hp.cintura) || null;
+    const alt = st.hp && st.hp.altura;
+    const ans = sets.filter((s) => s.an && s.an.grasa);
+    const fat = ans.length ? ans[ans.length - 1].an.grasa : null;
+    const fat0 = ans.length > 1 ? ans[0].an.grasa : null;
+    const la = this.lastAnalysis();
+    const cat = this.habitCatalog();
+    const hcfg = this.habitCfg();
+    const skin = ['protector', 'piel'].map((id) => { const h = cat.find((x) => x.id === id) || { name: id, desc: '' }; const on = hcfg.on.indexOf(id) >= 0; return { label: h.name, desc: h.desc, on: on, track: on ? th.text : th.segBg, knob: on ? 20 : 0, toggle: () => { this.sfx('tap'); const l = hcfg.on.slice(); const k = l.indexOf(id); if (k >= 0) l.splice(k, 1); else l.push(id); this.setHabitCfg({ on: l }); } }; });
+    const sleepAvg = (() => { let s = 0, n = 0; for (let i = 0; i < 7; i++) { const k2 = this.keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)); const v = ((st.hlog || {})[k2] || {}).sueno; if (v) { s += v; n++; } } return n ? Math.round((s / n) * 10) / 10 : null; })();
+    const ck = this.checkinAvg(7);
+    const supRids = this.planRids().filter((r) => /superior/.test(r));
+    const needYtw = supRids.filter((rid) => !this.adaptedSteps(rid).some((p) => p.k === 'ytw'));
+    const asp = {
+      open: () => { this.sfx('open'); this.setState({ aspecto: true }); }, close: () => { this.sfx('tap'); this.setState({ aspecto: false }); },
+      hasFat: !!fat, fat: fat ? fat.min + '–' + fat.max + ' %' : '—', fatTrend: fat && fat0 ? 'Al empezar: ' + fat0.min + '–' + fat0.max + ' %' : (fat ? 'Según tu último análisis de fotos' : 'Analiza tus fotos para estimarla'),
+      hasRatio: !!(hom && cin), ratio: hom && cin ? this.fmtNum(Math.round((hom / cin) * 100) / 100) : '—',
+      ratioNote: hom && cin ? 'Hombros ' + this.fmtNum(hom) + ' cm y cintura ' + this.fmtNum(cin) + ' cm. La referencia estética clásica ronda 1,6.' : 'Registra el contorno de hombros y la cintura en Salud → Registrar medición.',
+      hasWh: !!(alt && cin), wh: alt && cin ? this.fmtNum(Math.round((cin / alt) * 100) / 100) : '—', whNote: alt && cin ? (cin / alt < 0.5 ? 'Bajo 0,5: zona saludable.' : 'Sobre 0,5: bajar cintura mejora salud y aspecto.') : '',
+      hasPost: !!(la && la.postura && la.postura.length), post: la && la.postura ? la.postura.map((x, i) => ({ punto: x.punto, consejo: x.consejo, estado: x.ok ? 'Bien' : 'Mejorable', color: x.ok ? c.constanciaText : c.heatText, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })) : [],
+      noPost: !(la && la.postura && la.postura.length),
+      canYtw: needYtw.length > 0, addYtw: () => this.adaptApplyMany(needYtw.map((rid) => ({ id: 'asp:ytw:' + rid + ':' + Date.now(), kind: 'extra', rid: rid, k: 'ytw', text: 'Suma Y-T-W a ' + ((this.routinesById()[rid] || {}).name || rid) }))),
+      skin: skin, hasPiel: !!(la && la.piel), piel: la ? la.piel : '',
+      sleep: sleepAvg != null ? this.fmtNum(sleepAvg) + ' h' : (ck ? ck.sleep + ' de 5' : '—'), water: (() => { let s = 0, n = 0; for (let i = 1; i <= 7; i++) { const k2 = this.keyOf(new Date(now.getFullYear(), now.getMonth(), now.getDate() - i)); const v = ((st.hlog || {})[k2] || {}).agua; if (v) { s += v; n++; } } return n ? this.fmtNum(Math.round((s / n) * 0.25 * 10) / 10) + ' L' : '—'; })()
+    };
+
+    /* ---------- chat ---------- */
+    const msgs = st.chat || [];
+    const chat = {
+      open: () => { this.sfx('open'); this.setState({ chatOpen: true }, () => { try { const s = document.getElementById('chat-scroll'); if (s) s.scrollTop = s.scrollHeight; } catch (e) {} }); },
+      close: () => { this.sfx('tap'); this.setState({ chatOpen: false }); },
+      msgs: msgs.map((m) => ({ t: m.t, mine: m.r === 'u', bg: m.r === 'u' ? primary : (m.r === 'e' ? th.fill : th.card), fg: m.r === 'u' ? onPrimary : (m.r === 'e' ? th.sub : th.text), align: m.r === 'u' ? 'flex-end' : 'flex-start', shadow: m.r === 'a' ? th.cardShadow : 'none' })),
+      empty: msgs.length === 0, busy: !!st.chatBusy, hasKey: hasKey, noKey: !hasKey, draft: st.chatDraft || '',
+      chips: ['¿Cómo voy esta semana?', '¿Qué cambio en mi rutina?', 'Ideas de cena con proteína', 'Me duele un poco la rodilla'].map((t) => ({ t: t, pick: () => this.chatSend(t) })),
+      send: () => { const el = document.getElementById('chat-in'); this.chatSend(el ? el.value : st.chatDraft); },
+      onDraft: (e) => this.setState({ chatDraft: e && e.target ? e.target.value : '' }),
+      clear: () => { this.sfx('tap'); this.setState({ chat: [] }, () => this.persist()); }
+    };
+
+    /* ---------- rutina adaptativa (Progreso) ---------- */
+    const A = this.adapt();
+    const week = this.programWeek();
+    const props = this.adaptPropose().concat(A.ai && A.ai.props ? A.ai.props : []);
+    const changed = Object.keys(A.swaps).some((r) => Object.keys(A.swaps[r] || {}).length) || Object.keys(A.sets).some((r) => Object.keys(A.sets[r] || {}).length) || Object.keys(A.extras).some((r) => (A.extras[r] || []).length);
+    const ad = {
+      goal: this.goalLabel(), cycleGoal: () => this.cycleGoal(),
+      deload: this.isDeload(week), noDeload: !this.isDeload(week), deloadText: 'Semana ' + week + ': semana de descarga, con una serie menos en cada ejercicio para que el cuerpo se recupere y vuelva más fuerte.',
+      skipDeload: () => this.skipDeload(), nextDeload: 'Próxima semana de descarga: la ' + (Math.floor(week / 6) + 1) * 6 + '.',
+      props: props.map((p, i) => ({ title: p.title, text: p.text, why: p.why, line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none', apply: () => this.adaptApply(p), dismiss: () => this.adaptDismiss(p) })),
+      hasProps: props.length > 0, noProps: props.length === 0,
+      canAi: hasKey, aiBusy: !!st.adaptBusy, aiIdle: !st.adaptBusy, aiErr: st.adaptErr || '', hasAiErr: !!st.adaptErr, ask: () => this.adaptAskAI(),
+      hasAiRes: !!(A.ai && A.ai.resumen), aiRes: A.ai ? A.ai.resumen : '',
+      log: A.log.slice(-5).reverse().map((x, i) => ({ text: x.text, when: this.agoText(x.at), line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none' })), hasLog: A.log.length > 0,
+      changed: changed, reset: () => this.adaptReset(), report: () => this.printReport()
+    };
+
+    return { dy: dy, ph: ph, cap: cap, asp: asp, chat: chat, ad: ad };
+  }
+
+  shortDate(key) {
+    const d = this.dateOf(key);
+    const m = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic'];
+    return d.getDate() + ' ' + m[d.getMonth()];
   }
 
 
@@ -2494,7 +3711,14 @@ class Component extends DCLogic {
           line: i ? ('inset 0 0.5px 0 ' + th.sep) : 'none'
         }))
       },
-      vb: vb
+      vb: vb,
+      cele: {
+        has: !!((s.prs && s.prs.length) || s.milestone),
+        hasPrs: !!(s.prs && s.prs.length),
+        prs: (s.prs || []).map((x, i) => ({ name: x.name, val: x.val, unit: this.repUnit(x.unit, x.val) + (x.each ? ' ' + x.each : ''), prev: 'Antes ' + x.prev, line: i ? 'inset 0 0.5px 0 rgba(255, 255, 255, 0.1)' : 'none' })),
+        hasMs: !!s.milestone, ms: s.milestone || '', msLabel: s.milestone === 1 ? 'Tu primera sesión' : 'Sesión número ' + s.milestone,
+        halo: this.haloCss(c.constancia)
+      }
     };
   }
 
@@ -2597,9 +3821,14 @@ class Component extends DCLogic {
     const isDone = !!(r0 && entry && entry.status === 'done');
     const isMissed = !!(r0 && entry && entry.status === 'missed');
     const isFuture = !!r0 && si > ti && !isDone && !isMissed;
+    // la lista sale de la rutina adaptada (con tus cambios y la semana de descarga) cuando la rutina tiene series
+    const adSteps = r0 ? this.adaptedSteps(r0.id).filter((p) => p.sets) : [];
+    const restTxt = (sec) => (sec >= 60 && sec % 60 === 0 ? (sec / 60) + ' min' : sec + ' s');
+    const exList = adSteps.length ? adSteps.map((p) => ({ name: p.name + (p.added ? ' · extra' : ''), sets: p.dose, rest: p.rest ? restTxt(p.rest) : null })) : (r0 ? r0.exercises : []);
+    const deloadNow = this.isDeload(this.programWeek());
     const r = r0 ? Object.assign({}, r0, {
-      note: r0.exercises.length + ' ejercicios, unos ' + r0.minutes + ' minutos. ' + (r0.note || ''),
-      exercises: r0.exercises.map((e, i) => ({ n: (i < 9 ? '0' : '') + (i + 1), name: e.name, sub: e.rest ? e.sets + ' · descanso ' + e.rest : e.sets }))
+      note: (deloadNow && adSteps.length ? 'Semana de descarga: una serie menos en cada ejercicio. ' : '') + exList.length + ' ejercicios, unos ' + r0.minutes + ' minutos. ' + (r0.note || ''),
+      exercises: exList.map((e, i) => ({ n: (i < 9 ? '0' : '') + (i + 1), name: e.name, sub: e.rest ? e.sets + ' · descanso ' + e.rest : e.sets }))
     }) : { name: '', title: '', minutes: 0, note: '', exercises: [] };
     const rc = r0 || this.routinesById().superiorA;
 
@@ -2656,7 +3885,7 @@ class Component extends DCLogic {
 
     /* orden de inicio */
     const edit = !!st.editHome;
-    const HL = { salud: 'Perfil de salud', hist: 'Historial', habitos: 'Hábitos de hoy', comida: 'Comida de hoy', agua: 'Agua', recup: 'Recuperación muscular', semana: 'Días de la semana', rutina: 'Rutina del día' };
+    const HL = { diario: 'Check-in del día', salud: 'Perfil de salud', hoy: 'Hoy', rutina: 'Rutina del día', fotos: 'Foto semanal', recup: 'Recuperación muscular', semanal: 'Resumen de la semana', progreso: 'Progreso' };
     const ordH = st.prefs.homeOrder;
     const hidH = st.prefs.homeHidden || {};
     const ho = { pad: edit ? '10px' : '0', frame: edit ? ('inset 0 0 0 1px ' + th.sep) : 'none', pe: edit ? 'none' : 'auto', maxH: edit ? '132px' : 'none', ov: edit ? 'hidden' : 'visible' };
@@ -2688,6 +3917,19 @@ class Component extends DCLogic {
       macros: [['Proteína', tt.p, T.prot, c.prot], ['Carbos', tt.c, T.carb, c.carb], ['Grasa', tt.f, T.fat, c.fat], ['Fibra', tt.fib, T.fib, c.fib]].map((m) => ({ label: m[0], val: Math.round(m[1]), goal: m[2], pct: pc(m[1], m[2]), color: m[3] })),
       add: () => { this.go({ tab: 'comida', screen: 'inicio', menu: false, fday: 0 }); this.openFoodAdd(this.mealNow()); }
     };
+
+    /* «Hoy» en Inicio: tres anillos (hábitos, comida, agua) que llevan a su pestaña */
+    const RC = 188.5;
+    const ring3 = (f) => (RC * (1 - Math.max(0, Math.min(1, f)))).toFixed(1);
+    const wv = hdv.water;
+    const kf = T.kcal ? tt.kcal / T.kcal : 0;
+    const ty = {
+      habits: { off: ring3(score), center: hdv.done + '/' + hdv.total, label: 'Hábitos', sub: hdv.total ? (hdv.done === hdv.total ? 'Día completo' : 'Te faltan ' + (hdv.total - hdv.done)) : 'Sin hábitos', color: c.constancia },
+      food: { off: ring3(kf), center: Math.round(Math.min(9.99, kf) * 100) + ' %', label: 'Comida', sub: this.fmt(tt.kcal) + ' kcal', color: c.carb },
+      water: { on: !!wv.on, off: ring3(wv.goal ? wv.count / wv.goal : 0), center: wv.liters + ' L', label: 'Agua', sub: 'de ' + wv.goalL + ' L', color: c.resistencia, add: wv.add }
+    };
+    const pgv = this.progressVals(th, c, dark);
+    const cv = this.cuerpoVals(th, c, dark, th.inv, th.onInv);
 
 
     /* sesión */
@@ -2748,7 +3990,9 @@ class Component extends DCLogic {
       isEval: n.screen === 'eval',
       ev: n.screen === 'eval' ? this.evalVals(th, c) : {},
       hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
-      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv,
+      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
+      dy: cv.dy, ph: cv.ph, cap: cv.cap, asp: cv.asp, chat: cv.chat, ad: cv.ad,
+      isPhotos: !!st.photos && !st.cap, isCap: !!st.cap, isAspecto: !!st.aspecto, isChat: !!st.chatOpen,
       openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },
       closeHabEditor: () => { this.sfx('tap'); this.setState({ habEdit: false }); },
       goHabitos: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: 0 }); },
@@ -2756,7 +4000,7 @@ class Component extends DCLogic {
       goSalud: () => { this.sfx('tap'); this.go({ tab: 'salud', screen: 'inicio', menu: false, area: null }); },
       goAiSettings: () => { this.sfx('tap'); this.go({ tab: 'ajustes', screen: 'inicio', menu: false }, () => { try { const el = document.getElementById('ia'); const sc = el && el.closest('.scroll'); const t = el && el.firstElementChild; if (sc && t) sc.scrollTop = t.offsetTop - 70; } catch (e) {} }); },
       closeArea: () => { this.sfx('tap'); this.go({ screen: 'inicio', area: null }); },
-      showTabs: (main && n.screen !== 'area') && !st.habEdit,
+      showTabs: (main && n.screen !== 'area') && !st.habEdit && !st.prog && !st.photos && !st.cap && !st.aspecto && !st.chatOpen,
       menuOpen: main && n.menu,
       isConfirm: n.screen === 'confirmar',
       isTest: n.screen === 'test',
@@ -2785,14 +4029,14 @@ class Component extends DCLogic {
       persistLabel: st.persisted ? 'Protegido' : 'Activo',
       backupLabel: st.prefs.lastBackup ? this.agoText(st.prefs.lastBackup) : 'Nunca',
       hasBackupMsg: !!st.backupMsg, backupMsg: st.backupMsg || '',
-      showBackupNudge: m.sessions >= 3 && Date.now() - (st.prefs.lastBackup || 0) > 14 * 864e5 && Date.now() > (st.prefs.backupSnooze || 0),
+      showBackupNudge: (m.sessions >= 1 || !!st.hp || Object.keys(st.flog || {}).length > 0 || Object.keys(st.hlog || {}).length > 0) && Date.now() - (st.prefs.lastBackup || 0) > 7 * 864e5 && Date.now() > (st.prefs.backupSnooze || 0),
       exportBackup: () => this.exportBackup(),
       importBackup: (e) => this.importBackup(e),
-      snoozeBackup: () => { this.sfx('tap'); this.setPref('backupSnooze', Date.now() + 7 * 864e5); },
+      snoozeBackup: () => { this.sfx('tap'); this.setPref('backupSnooze', Date.now() + 3 * 864e5); },
 
       q: this.quizVals(th.inv, th.onInv, th),
       pesoActual: String(this.peso()).replace('.', ','),
-      v: vv.v, vb: vv.vb,
+      v: vv.v, vb: vv.vb, cele: vv.cele,
       evalLabel: hv.has ? 'Hecha ' + hv.evalAgo : 'Pendiente',
 
       temaOpts: temas.map((x) => {

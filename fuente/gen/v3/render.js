@@ -60,9 +60,14 @@
     const isDone = !!(r0 && entry && entry.status === 'done');
     const isMissed = !!(r0 && entry && entry.status === 'missed');
     const isFuture = !!r0 && si > ti && !isDone && !isMissed;
+    // la lista sale de la rutina adaptada (con tus cambios y la semana de descarga) cuando la rutina tiene series
+    const adSteps = r0 ? this.adaptedSteps(r0.id).filter((p) => p.sets) : [];
+    const restTxt = (sec) => (sec >= 60 && sec % 60 === 0 ? (sec / 60) + ' min' : sec + ' s');
+    const exList = adSteps.length ? adSteps.map((p) => ({ name: p.name + (p.added ? ' · extra' : ''), sets: p.dose, rest: p.rest ? restTxt(p.rest) : null })) : (r0 ? r0.exercises : []);
+    const deloadNow = this.isDeload(this.programWeek());
     const r = r0 ? Object.assign({}, r0, {
-      note: r0.exercises.length + ' ejercicios, unos ' + r0.minutes + ' minutos. ' + (r0.note || ''),
-      exercises: r0.exercises.map((e, i) => ({ n: (i < 9 ? '0' : '') + (i + 1), name: e.name, sub: e.rest ? e.sets + ' · descanso ' + e.rest : e.sets }))
+      note: (deloadNow && adSteps.length ? 'Semana de descarga: una serie menos en cada ejercicio. ' : '') + exList.length + ' ejercicios, unos ' + r0.minutes + ' minutos. ' + (r0.note || ''),
+      exercises: exList.map((e, i) => ({ n: (i < 9 ? '0' : '') + (i + 1), name: e.name, sub: e.rest ? e.sets + ' · descanso ' + e.rest : e.sets }))
     }) : { name: '', title: '', minutes: 0, note: '', exercises: [] };
     const rc = r0 || this.routinesById().superiorA;
 
@@ -119,7 +124,7 @@
 
     /* orden de inicio */
     const edit = !!st.editHome;
-    const HL = { salud: 'Perfil de salud', hist: 'Historial', habitos: 'Hábitos de hoy', comida: 'Comida de hoy', agua: 'Agua', recup: 'Recuperación muscular', semana: 'Días de la semana', rutina: 'Rutina del día' };
+    const HL = { diario: 'Check-in del día', salud: 'Perfil de salud', hoy: 'Hoy', rutina: 'Rutina del día', fotos: 'Foto semanal', recup: 'Recuperación muscular', semanal: 'Resumen de la semana', progreso: 'Progreso' };
     const ordH = st.prefs.homeOrder;
     const hidH = st.prefs.homeHidden || {};
     const ho = { pad: edit ? '10px' : '0', frame: edit ? ('inset 0 0 0 1px ' + th.sep) : 'none', pe: edit ? 'none' : 'auto', maxH: edit ? '132px' : 'none', ov: edit ? 'hidden' : 'visible' };
@@ -151,6 +156,19 @@
       macros: [['Proteína', tt.p, T.prot, c.prot], ['Carbos', tt.c, T.carb, c.carb], ['Grasa', tt.f, T.fat, c.fat], ['Fibra', tt.fib, T.fib, c.fib]].map((m) => ({ label: m[0], val: Math.round(m[1]), goal: m[2], pct: pc(m[1], m[2]), color: m[3] })),
       add: () => { this.go({ tab: 'comida', screen: 'inicio', menu: false, fday: 0 }); this.openFoodAdd(this.mealNow()); }
     };
+
+    /* «Hoy» en Inicio: tres anillos (hábitos, comida, agua) que llevan a su pestaña */
+    const RC = 188.5;
+    const ring3 = (f) => (RC * (1 - Math.max(0, Math.min(1, f)))).toFixed(1);
+    const wv = hdv.water;
+    const kf = T.kcal ? tt.kcal / T.kcal : 0;
+    const ty = {
+      habits: { off: ring3(score), center: hdv.done + '/' + hdv.total, label: 'Hábitos', sub: hdv.total ? (hdv.done === hdv.total ? 'Día completo' : 'Te faltan ' + (hdv.total - hdv.done)) : 'Sin hábitos', color: c.constancia },
+      food: { off: ring3(kf), center: Math.round(Math.min(9.99, kf) * 100) + ' %', label: 'Comida', sub: this.fmt(tt.kcal) + ' kcal', color: c.carb },
+      water: { on: !!wv.on, off: ring3(wv.goal ? wv.count / wv.goal : 0), center: wv.liters + ' L', label: 'Agua', sub: 'de ' + wv.goalL + ' L', color: c.resistencia, add: wv.add }
+    };
+    const pgv = this.progressVals(th, c, dark);
+    const cv = this.cuerpoVals(th, c, dark, th.inv, th.onInv);
 
 
     /* sesión */
@@ -211,7 +229,9 @@
       isEval: n.screen === 'eval',
       ev: n.screen === 'eval' ? this.evalVals(th, c) : {},
       hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
-      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv,
+      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
+      dy: cv.dy, ph: cv.ph, cap: cv.cap, asp: cv.asp, chat: cv.chat, ad: cv.ad,
+      isPhotos: !!st.photos && !st.cap, isCap: !!st.cap, isAspecto: !!st.aspecto, isChat: !!st.chatOpen,
       openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },
       closeHabEditor: () => { this.sfx('tap'); this.setState({ habEdit: false }); },
       goHabitos: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: 0 }); },
@@ -219,7 +239,7 @@
       goSalud: () => { this.sfx('tap'); this.go({ tab: 'salud', screen: 'inicio', menu: false, area: null }); },
       goAiSettings: () => { this.sfx('tap'); this.go({ tab: 'ajustes', screen: 'inicio', menu: false }, () => { try { const el = document.getElementById('ia'); const sc = el && el.closest('.scroll'); const t = el && el.firstElementChild; if (sc && t) sc.scrollTop = t.offsetTop - 70; } catch (e) {} }); },
       closeArea: () => { this.sfx('tap'); this.go({ screen: 'inicio', area: null }); },
-      showTabs: (main && n.screen !== 'area') && !st.habEdit,
+      showTabs: (main && n.screen !== 'area') && !st.habEdit && !st.prog && !st.photos && !st.cap && !st.aspecto && !st.chatOpen,
       menuOpen: main && n.menu,
       isConfirm: n.screen === 'confirmar',
       isTest: n.screen === 'test',
@@ -248,14 +268,14 @@
       persistLabel: st.persisted ? 'Protegido' : 'Activo',
       backupLabel: st.prefs.lastBackup ? this.agoText(st.prefs.lastBackup) : 'Nunca',
       hasBackupMsg: !!st.backupMsg, backupMsg: st.backupMsg || '',
-      showBackupNudge: m.sessions >= 3 && Date.now() - (st.prefs.lastBackup || 0) > 14 * 864e5 && Date.now() > (st.prefs.backupSnooze || 0),
+      showBackupNudge: (m.sessions >= 1 || !!st.hp || Object.keys(st.flog || {}).length > 0 || Object.keys(st.hlog || {}).length > 0) && Date.now() - (st.prefs.lastBackup || 0) > 7 * 864e5 && Date.now() > (st.prefs.backupSnooze || 0),
       exportBackup: () => this.exportBackup(),
       importBackup: (e) => this.importBackup(e),
-      snoozeBackup: () => { this.sfx('tap'); this.setPref('backupSnooze', Date.now() + 7 * 864e5); },
+      snoozeBackup: () => { this.sfx('tap'); this.setPref('backupSnooze', Date.now() + 3 * 864e5); },
 
       q: this.quizVals(th.inv, th.onInv, th),
       pesoActual: String(this.peso()).replace('.', ','),
-      v: vv.v, vb: vv.vb,
+      v: vv.v, vb: vv.vb, cele: vv.cele,
       evalLabel: hv.has ? 'Hecha ' + hv.evalAgo : 'Pendiente',
 
       temaOpts: temas.map((x) => {

@@ -65,7 +65,8 @@ M = {'MOUNT': 'mount', 'DERIVED': 'derived', 'IDB': 'idb', 'PERSIST': 'persist',
 for k, v in M.items():
     core = rep(core, '%%' + k + '%%', P[v])
 for k, f in (('FOOD', 'food.js'), ('HEALTH', 'health.js'), ('RENDER', 'render.js')):
-    core = rep(core, '%%' + k + '%%', open(os.path.join(H, f)).read() + (open(os.path.join(H, 'native.js')).read() if k == 'RENDER' else ''))
+    extra = open(os.path.join(H, 'native.js')).read() if k == 'RENDER' else (open(os.path.join(H, 'progreso.js')).read() + open(os.path.join(H, 'cuerpo.js')).read()) if k == 'HEALTH' else ''
+    core = rep(core, '%%' + k + '%%', open(os.path.join(H, f)).read() + extra)
 assert '%%' not in core.replace('%%SESSION%%', '') or True
 core = core.replace('Respaldo de sprout', 'Respaldo de keystone').replace('respaldo de sprout', 'respaldo de keystone').replace('Notificaciones, sprout.', 'Notificaciones, keystone.').replace("'rutina-respaldo-'", "'keystone-respaldo-'")
 open(os.path.join(H, '..', 'script3.js'), 'w').write(core)
