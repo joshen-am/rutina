@@ -22,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 31        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 30
+python3 build_pwa3.py 32        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 31
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -67,15 +67,21 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - **`exfit.js` se genera**: después de cambiar `exercises.js` o el solver, corre `python3 b3d/preparar.py`, vacía `b3d/t/exfit.js` (`echo "window.KS_FIT={};" > b3d/t/exfit.js`) y luego `node b3d/bake.js`. Si el ajuste de un ejercicio no coincide con su definición, la app lo recalcula al abrirlo (más lento, pero correcto).
 - `edit_ex.py <script.py>` trae `setb(clave, texto)` para reemplazar el bloque entero de un ejercicio.
 
-## Conexión con la IA (`v3/food.js`, versiones 29 y 30)
+## Conexión con la IA (`v3/food.js`, versiones 29 a 31)
 
 - La clave la pone el usuario en Ajustes → «Inteligencia artificial». `cleanKey` deja solo la clave aunque se pegue con espacios, comillas o texto alrededor. Google tiene dos formatos de clave: el clásico `AIza…` y el nuevo `AQ.…` de AI Studio; los dos eligen Gemini, y una `sk-ant-…` elige Claude.
-- Gemini: `geminiModels` pide a Google la lista de modelos de esa clave (`GET /v1beta/models`) y se queda con los dos Flash y los dos Flash-Lite más nuevos (los `-latest` primero). Google retira modelos (`gemini-2.5-flash` ya no se ofrece a usuarios nuevos) y los Flash se saturan seguido: responden 503 o tardan más de 45 s.
-- `geminiRun` ordena según la tarea: el texto (chat, informe del día, revisión de rutina, «Probar conexión») va primero a Flash-Lite, que responde en 1 o 2 s, y las fotos van primero a Flash, que ve mejor. Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo límite (`AbortController`), sigue con el siguiente, y el que respondió queda primero mientras la app siga abierta.
-- Con Gemini 3 y los alias `-latest` no se manda `temperature` y se pide `thinkingConfig: { thinkingLevel: 'low' }`: por defecto razona tanto que tarda 30–45 s en responder `{"ok":true}`, y con «low» unos 6 s. Si un modelo no acepta ese nivel (400), se repite sin él. Todo pasa por `geminiRun` y `claudeRun` (también `aiCallN` de `cuerpo.js`).
+- Gemini: `geminiModels` pide a Google la lista de modelos de esa clave (`GET /v1beta/models`) y se queda con el Pro, los dos Flash y los dos Flash-Lite más nuevos (los `-latest` primero). En el plan gratis los Pro responden 429 al instante. Google retira modelos (`gemini-2.5-flash` ya no se ofrece a usuarios nuevos) y los Flash se saturan seguido: responden 503 o tardan más de 45 s.
+- `geminiRun(cfg, parts, gen, tier)` elige según la tarea (versión 31, porque con Flash-Lite primero el chat respondía flojo):
+  - `hondo` (análisis de las fotos del cuerpo): Pro, después Flash razonando lo normal y Flash-Lite. En Claude usa Sonnet 5.5 (`claude-sonnet-5-5`); lo demás, Haiku 5.5 (`claude-haiku-5-5`). Claude pide `max_tokens` 16000 porque su razonamiento cuenta en ese tope (con 1500 la respuesta salía cortada). La suscripción de claude.ai no sirve para la app: hace falta una clave de la consola de Anthropic con crédito.
+  - `foto` (comida): Flash con razonamiento «low» y Flash-Lite.
+  - `texto` (chat, informe del día, revisión de rutina, «Probar conexión»): Flash con «low» (unos 6 s, tope 25 s) y Flash-Lite.
+  Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo límite (`AbortController`), sigue con el siguiente, y el que respondió queda primero en esa tarea mientras la app siga abierta.
+- Con Gemini 3 y los alias `-latest` no se manda `temperature`. Salvo en `hondo`, se pide `thinkingConfig: { thinkingLevel: 'low' }`: por defecto razona tanto que tarda 30–45 s en responder `{"ok":true}`, y con «low» unos 6 s. Si un modelo no acepta ese nivel (400), se repite sin él.
+- Gemini y Claude responden con Markdown: `aiPlain` lo pasa a texto plano (viñetas «• ») en el chat, incluso en los mensajes ya guardados, y `parseJSON` limpia todos los textos de los JSON. Los prompts también piden texto sin Markdown. Todo pasa por `geminiRun` y `claudeRun` (también `aiCallN` de `cuerpo.js`).
 - `aiErrorFrom` lee el motivo que da Google o Anthropic (clave inválida o vencida, API sin activar, clave con restricciones, región, sin cuota gratis, sin saldo, filtros de contenido) y `aiErrorText` lo explica en español. «Probar conexión» suma el detalle original y, si funciona, nombra el modelo que respondió.
 - Ajustes dice «Conectada» solo después de una respuesta real (`prefs.ai.ok` guarda el modelo que respondió) y vuelve a «Sin probar» si la clave falla.
 - La app registra el service worker solo en https: en `localhost` las pruebas lo registran a mano.
+- **Cámara en iPhone** (versión 31): el video en vivo solo se reproduce solo si `muted` y `playsInline` se ponen por código; el atributo del HTML no basta y el video queda pausado y negro, aunque la foto igual sale. `syncCam` los pone antes de `srcObject` y llama a `play()` (`camPlay`). Si a los 1,5 s sigue sin imagen, aparece «Toca para ver la cámara», que reproduce con el gesto del usuario.
 - iCloud deja copias como `gato_vaca-2 2.svg`. `build_pwa3.py` las salta (`COPIA`) y comprueba que existan todos los archivos de `FILES`, porque si falta uno el service worker no se instala (pasó en la 28).
 
 ## Reglas

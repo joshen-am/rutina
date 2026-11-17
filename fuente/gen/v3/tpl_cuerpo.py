@@ -103,9 +103,10 @@ def make(g):
 <sc-if value="[[ cap.noFlip ]]" hint-placeholder-val="[[ false ]]"><span style="width: 44px"></span></sc-if>
 </div>
 <div style="position: relative; flex: 1; margin: 0 16px; border-radius: 24px; overflow: hidden; background: #0B0B0C">
-<sc-if value="[[ cap.camOn ]]" hint-placeholder-val="[[ true ]]"><video id="cam" autoplay playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: [[ cap.mirror ]]"></video>
+<sc-if value="[[ cap.camOn ]]" hint-placeholder-val="[[ true ]]"><video id="cam" autoplay playsinline webkit-playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: [[ cap.mirror ]]"></video>
 <sc-if value="[[ cap.hasGhost ]]" hint-placeholder-val="[[ false ]]"><img alt="" src="[[ cap.ghost ]]" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; pointer-events: none"></sc-if>
 {GUIDE}</sc-if>
+<sc-if value="[[ cap.tapPlay ]]" hint-placeholder-val="[[ false ]]"><button type="button" onClick="[[ cap.playCam ]]" style="{B} position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 16px">{ico(CAMERA, 28, "currentColor", 1.6)}<span>Toca para ver la cámara</span></button></sc-if>
 <sc-if value="[[ cap.count ]]" hint-placeholder-val="[[ false ]]"><div aria-live="assertive" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 120px; line-height: 1; font-weight: 300; letter-spacing: -0.06em; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6); {NUM}">[[ cap.n ]]</div></sc-if>
 <sc-if value="[[ cap.review ]]" hint-placeholder-val="[[ false ]]"><img alt="Tu foto" src="[[ cap.shot ]]" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></sc-if>
 <sc-if value="[[ cap.noCam ]]" hint-placeholder-val="[[ false ]]"><div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center">

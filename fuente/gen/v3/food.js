@@ -130,7 +130,7 @@
 
   // Google cambia y retira modelos: se le pregunta cuáles acepta esta clave y se eligen los Flash, del más nuevo al más viejo
   async geminiModels(cfg) {
-    if (cfg.model) return { flash: [cfg.model], lite: [], good: {} };
+    if (cfg.model) return { pro: [], flash: [cfg.model], lite: [], good: {} };
     if (this._gm && this._gm.key === cfg.key) return this._gm;
     let r;
     try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
@@ -139,35 +139,39 @@
     if (!r.ok) throw this.aiErrorFrom(r.status, d);
     const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
       .map((m) => String(m.name || '').replace(/^models\//, ''))
-      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer|omni)/.test(n));
+      .filter((n) => /^gemini-/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer|omni|customtools)/.test(n));
     const ver = (n) => { const m = n.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
     const score = (n) => (/-latest$/.test(n) ? 1000 : 0) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
-    const best = (lite) => names.filter((n) => /lite/.test(n) === lite).sort((a, b) => score(b) - score(a));
-    let flash = best(false).slice(0, 2), lite = best(true).slice(0, 2);
+    const pick = (re, not) => names.filter((n) => re.test(n) && !(not && not.test(n))).sort((a, b) => score(b) - score(a));
+    let pro = pick(/-pro/).slice(0, 1), flash = pick(/flash/, /lite/).slice(0, 2), lite = pick(/flash-lite/).slice(0, 2);
     if (!flash.length && !lite.length) { flash = ['gemini-flash-latest']; lite = ['gemini-flash-lite-latest']; }
-    this._gm = { key: cfg.key, flash: flash, lite: lite, good: {} };
+    this._gm = { key: cfg.key, pro: pro, flash: flash, lite: lite, good: {} };
     return this._gm;
   }
 
-  async geminiRun(cfg, parts, gen) {
+  /* Cada tarea con su modelo:
+     - «hondo» (análisis de las fotos del cuerpo, una vez por semana): Pro si tu plan lo incluye (en el gratis responde 429
+       en un segundo y sigue), después Flash razonando lo normal, y Flash-Lite si Google está saturado.
+     - «foto» (comida): Flash con razonamiento bajo, y Flash-Lite de respaldo.
+     - «texto» (chat, informe del día, revisión de rutina): Flash con razonamiento bajo (unos 6 s) y Flash-Lite si tarda.
+     Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo, sigue con el siguiente. */
+  async geminiRun(cfg, parts, gen, tier) {
     const gm = await this.geminiModels(cfg);
-    const img = parts.length > 1, kind = img ? 'img' : 'txt';
-    // Texto: primero Flash-Lite, que responde en 1 o 2 s. Fotos: primero Flash, que ve mejor, y Flash-Lite si Google
-    // está saturado (pasa seguido: el Flash puede tardar más de 45 s o responder 503)
-    let models = img ? gm.flash.concat(gm.lite) : gm.lite.concat(gm.flash);
-    const good = gm.good[kind];
+    tier = tier || (parts.length > 1 ? 'foto' : 'texto');
+    let models = (tier === 'hondo' ? gm.pro : []).concat(gm.flash, gm.lite);
+    const good = gm.good[tier];
     if (good) models = [good].concat(models.filter((m) => m !== good));
+    const limit = (m) => /-pro/.test(m) ? 120000 : /lite/.test(m) ? (tier === 'texto' ? 30000 : 75000) : tier === 'hondo' ? 100000 : tier === 'foto' ? 50000 : 25000;
     let last = new Error('modelo');
     for (let i = 0; i < models.length; i++) {
       const g = Object.assign({}, gen);
       if (!/^gemini-[12]\./.test(models[i])) {   // Gemini 3 en adelante, y los alias -latest que apuntan a ellos
         delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
-        // por defecto razona harto: con «low» responde en ~6 s en vez de 30–45
-        if (!this._noThink || !this._noThink[models[i]]) g.thinkingConfig = { thinkingLevel: 'low' };
+        // por defecto razona harto (30–45 s); con «low» responde en unos 6 s. El análisis del cuerpo razona lo normal.
+        if (tier !== 'hondo' && (!this._noThink || !this._noThink[models[i]])) g.thinkingConfig = { thinkingLevel: 'low' };
       }
-      const wait = /lite/.test(models[i]) ? (img ? 75000 : 30000) : (img ? 50000 : 35000);
       const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = ac ? setTimeout(() => ac.abort(), wait) : 0;
+      const timer = ac ? setTimeout(() => ac.abort(), limit(models[i])) : 0;
       let r, d;
       try {
         r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
@@ -198,21 +202,23 @@
         const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
         throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
       }
-      gm.good[kind] = models[i];   // el que respondió va primero mientras la app siga abierta
+      gm.good[tier] = models[i];   // el que respondió va primero en esta tarea mientras la app siga abierta
       this.aiMarkOk(models[i]);
       return t;
     }
     throw last;
   }
 
-  async claudeRun(cfg, content, maxTokens) {
-    const model = cfg.model || 'claude-haiku-5-5';
+  async claudeRun(cfg, content, maxTokens, tier) {
+    const model = cfg.model || (tier === 'hondo' ? 'claude-sonnet-5-5' : 'claude-haiku-5-5');
     let r;
     try {
       r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: model, max_tokens: maxTokens || 1500, messages: [{ role: 'user', content: content }] })
+        // Haiku 5.5 y Sonnet 5.5 razonan antes de responder y ese razonamiento cuenta en max_tokens: con un tope bajo la
+        // respuesta salía cortada. Solo se cobra lo que se usa.
+        body: JSON.stringify({ model: model, max_tokens: Math.max(maxTokens || 0, 16000), messages: [{ role: 'user', content: content }] })
       });
     } catch (e) { throw new Error('red'); }
     const d = await r.json().catch(() => ({}));
@@ -296,7 +302,23 @@
     const s = String(txt || '');
     const a = s.indexOf('{'), b = s.lastIndexOf('}');
     if (a < 0 || b < a) throw new Error('formato');
-    return JSON.parse(s.slice(a, b + 1));
+    const clean = (v) => typeof v === 'string' ? this.aiPlain(v) : Array.isArray(v) ? v.map(clean)
+      : v && typeof v === 'object' ? Object.keys(v).reduce((o, k) => { o[k] = clean(v[k]); return o; }, {}) : v;
+    return clean(JSON.parse(s.slice(a, b + 1)));
+  }
+
+  // Gemini y Claude responden con Markdown (**negritas**, viñetas con *, títulos con #): la app muestra texto plano
+  aiPlain(s) {
+    return String(s || '')
+      .replace(/\r/g, '')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^(\s*)[*+-]\s+/gm, '$1• ')
+      .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1')
+      .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/gm, '$1$2')
+      .replace(/`([^`\n]+)`/g, '$1')
+      .replace(/\*\*/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   async aiJSON(prompt, img) {

@@ -4,7 +4,7 @@
 
   /* ---------- IA: varias imágenes o texto libre (la de Comida acepta una sola imagen) ---------- */
 
-  async aiCallN(prompt, imgs, json, maxTokens) {
+  async aiCallN(prompt, imgs, json, maxTokens, tier) {
     const cfg = this.aiCfg();
     if (!cfg.key) throw new Error('nokey');
     imgs = imgs || [];
@@ -12,14 +12,14 @@
     if (cfg.provider === 'claude') {
       const content = imgs.map((b) => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }));
       content.push({ type: 'text', text: prompt });
-      t = await this.claudeRun(cfg, content, maxTokens || 2000);
+      t = await this.claudeRun(cfg, content, maxTokens || 2000, tier);
     } else {
       const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
       const gen = { temperature: json ? 0.2 : 0.6 };
       if (json) gen.responseMimeType = 'application/json';
-      t = await this.geminiRun(cfg, parts, gen);
+      t = await this.geminiRun(cfg, parts, gen, tier);
     }
-    return json ? this.parseJSON(t) : t.trim();
+    return json ? this.parseJSON(t) : this.aiPlain(t);
   }
 
   aiProviderName() { return this.aiCfg().provider === 'claude' ? 'Claude (Anthropic)' : 'Gemini (Google)'; }
@@ -425,7 +425,33 @@
         .catch(() => { this._camPending = false; if (this.state.cap) this.setState({ cap: Object.assign({}, this.state.cap, { err: 'nocam' }) }); });
       return;
     }
-    if (v && this._stream && v.srcObject !== this._stream) { v.srcObject = this._stream; v.play().catch(() => {}); }
+    if (!v || !this._stream) return;
+    if (v.srcObject !== this._stream) {
+      // iPhone: el video en vivo solo se reproduce solo si está silenciado y en línea por código; el atributo del HTML
+      // no basta. Si no, queda pausado y se ve negro, aunque la foto igual sale.
+      v.muted = true; v.defaultMuted = true; v.playsInline = true;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+      v.srcObject = this._stream;
+      const go = () => this.camPlay(v, false);
+      v.onloadedmetadata = go;
+      go();
+      // si a los 1,5 s sigue sin imagen, se pide un toque (iOS a veces exige un gesto para reproducir)
+      clearTimeout(this._camCheck);
+      this._camCheck = setTimeout(() => {
+        const c = this.state.cap, el = document.getElementById('cam');
+        if (c && el && (el.paused || el.readyState < 2) && !c.tapPlay && (c.phase === 'live' || c.phase === 'count')) this.setState({ cap: Object.assign({}, c, { tapPlay: true }) });
+      }, 1500);
+    } else if (v.paused && !(this.state.cap || {}).tapPlay) this.camPlay(v, false);
+  }
+
+  camPlay(v, tap) {
+    v = v || document.getElementById('cam');
+    if (!v) return;
+    v.muted = true;
+    const p = v.play();
+    const ok = () => { const c = this.state.cap; if (c && c.tapPlay) this.setState({ cap: Object.assign({}, c, { tapPlay: false }) }); };
+    const no = () => { const c = this.state.cap; if (c && !c.tapPlay) this.setState({ cap: Object.assign({}, c, { tapPlay: true }) }); };
+    if (p && p.then) p.then(ok, tap ? no : () => {}); else if (!v.paused) ok();
   }
 
   flipCam() {
@@ -538,7 +564,7 @@
         if (!url) return;
         const im = await new Promise((res) => { const x = new Image(); x.onload = () => res(x); x.onerror = () => res(null); x.src = url; });
         if (!im) return;
-        imgs.push(this.shrink(im, 768, 0.8).split(',')[1]);
+        imgs.push(this.shrink(im, 1024, 0.85).split(',')[1]);
         desc.push('Imagen ' + imgs.length + ': ' + label + ', ' + this.poseDefs()[pose].label.toLowerCase());
       };
       for (const p of cur.poses) await add(cur, p, 'hoy (' + cur.d + ')');
@@ -551,10 +577,12 @@
         prev ? 'Compara hoy con la sesión anterior: describe solo cambios visibles y di cuando no se puede saber por luz o pose.' : 'Es la primera sesión de fotos: describe la línea base.',
         'Estima la grasa corporal como un rango honesto (de 3 a 5 puntos de ancho). Evalúa la postura en el perfil y la espalda (cabeza adelantada, hombros redondeados, inclinación de la pelvis, asimetrías).',
         hasFace ? 'Hay una foto de la cara: comenta solo la piel (textura, enrojecimiento, ojeras) con consejos simples de cuidado y hábitos. Nada de cirugías ni prácticas sin evidencia.' : 'No hay foto de la cara: deja "piel" vacío.',
-        'Recomendaciones: la rutina se hace en casa sin equipamiento, salvo una mancuerna de 3 kg; la comida es chilena. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Sé específico: nombra zonas concretas (abdomen bajo, oblicuos, pecho, deltoides, dorsales, trapecio, glúteos, muslos) y lo que se ve en cada una. Nada de frases genéricas que servirían para cualquier persona.',
+        'Recomendaciones: la rutina se hace en casa sin equipamiento, salvo una mancuerna de 3 kg; la comida es chilena. Cada recomendación es una acción concreta con números cuando sirvan (series, repeticiones, gramos de proteína, minutos) y se apoya en sus datos. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Los textos van en texto plano, sin Markdown (nada de asteriscos ni almohadillas).',
         'Responde SOLO con JSON válido, en español de Chile y tuteo: {"resumen":"2 frases","grasa":{"min":0,"max":0},"cambios":[{"zona":"","nota":""}],"postura":[{"punto":"","estado":"bien|mejorable","consejo":""}],"simetria":"","piel":"","recomendaciones":{"rutina":[""],"comida":[""],"habitos":[""]},"confianza":"alta|media|baja"}'
       ].join('\n\n');
-      const j = await this.aiCallN(prompt, imgs, true, 2500);
+      const j = await this.aiCallN(prompt, imgs, true, 2500, 'hondo');
       const S = (v, n) => String(v == null ? '' : v).slice(0, n || 240);
       const L = (a, n) => (Array.isArray(a) ? a : []).slice(0, n || 4);
       const g = j.grasa || {};
@@ -588,7 +616,8 @@
     try {
       const hist = msgs.slice(-10).map((m) => (m.r === 'u' ? 'Persona: ' : 'Entrenador: ') + m.t).join('\n');
       const prompt = [
-        'Eres el entrenador personal de la app keystone: directo, cálido y concreto, en español de Chile y tuteo. Respuestas cortas (máximo 120 palabras), con pasos accionables. Nada de diagnósticos médicos: si hay dolor fuerte, síntomas o algo médico, sugiere consultar a un profesional.',
+        'Eres el entrenador personal de la app keystone: directo, cálido y concreto, en español de Chile y tuteo. Respuestas cortas (máximo 120 palabras), con pasos accionables y números concretos cuando sirvan (series, repeticiones, gramos, minutos). Nada de diagnósticos médicos: si hay dolor fuerte, síntomas o algo médico, sugiere consultar a un profesional.',
+        'Formato: texto plano para una burbuja de chat. Sin Markdown: nada de asteriscos, almohadillas, negritas ni títulos. Párrafos cortos; si das pasos, una línea por paso que empiece con «• ». Usa los datos de la persona en vez de consejos genéricos.',
         'Entrena en casa sin equipamiento, salvo una mancuerna de 3 kg. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
         'Datos de la persona:\n' + this.aiContext(),
         'Conversación:\n' + hist,
@@ -740,6 +769,7 @@
         mirror: cp.facing === 'user' ? 'scaleX(-1)' : 'none',
         hasGhost: !!prevSet, ghost: prevSet ? (this.bodyImg(prevSet.id, p) || this.bodyImg(prevSet.id, p, true) || '') : '',
         ghostLabel: prevSet ? 'Tu foto del ' + this.shortDate(prevSet.d) + ' de guía' : '',
+        tapPlay: !!cp.tapPlay && (cp.phase === 'live' || cp.phase === 'count') && !cp.err, playCam: () => this.camPlay(null, true),
         start: () => this.startCountdown(), flip: () => this.flipCam(), retake: () => this.capRetake(), next: () => this.capNext(), skip: () => this.capSkip(),
         nextLabel: cp.i < cp.poses.length - 1 ? 'Usar y seguir' : 'Usar y guardar', close: () => this.closeCapture(), file: (e) => this.capFile(e)
       };
@@ -779,7 +809,7 @@
     const chat = {
       open: () => { this.sfx('open'); this.setState({ chatOpen: true }, () => { try { const s = document.getElementById('chat-scroll'); if (s) s.scrollTop = s.scrollHeight; } catch (e) {} }); },
       close: () => { this.sfx('tap'); this.setState({ chatOpen: false }); },
-      msgs: msgs.map((m) => ({ t: m.t, mine: m.r === 'u', bg: m.r === 'u' ? primary : (m.r === 'e' ? th.fill : th.card), fg: m.r === 'u' ? onPrimary : (m.r === 'e' ? th.sub : th.text), align: m.r === 'u' ? 'flex-end' : 'flex-start', shadow: m.r === 'a' ? th.cardShadow : 'none' })),
+      msgs: msgs.map((m) => ({ t: m.r === 'a' ? this.aiPlain(m.t) : m.t, mine: m.r === 'u', bg: m.r === 'u' ? primary : (m.r === 'e' ? th.fill : th.card), fg: m.r === 'u' ? onPrimary : (m.r === 'e' ? th.sub : th.text), align: m.r === 'u' ? 'flex-end' : 'flex-start', shadow: m.r === 'a' ? th.cardShadow : 'none' })),
       empty: msgs.length === 0, busy: !!st.chatBusy, hasKey: hasKey, noKey: !hasKey, draft: st.chatDraft || '',
       chips: ['¿Cómo voy esta semana?', '¿Qué cambio en mi rutina?', 'Ideas de cena con proteína', 'Me duele un poco la rodilla'].map((t) => ({ t: t, pick: () => this.chatSend(t) })),
       send: () => { const el = document.getElementById('chat-in'); this.chatSend(el ? el.value : st.chatDraft); },

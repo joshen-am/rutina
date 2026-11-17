@@ -1238,9 +1238,10 @@ Todo</span>
 <sc-if value="{{ cap.noFlip }}" hint-placeholder-val="{{ false }}"><span style="width: 44px"></span></sc-if>
 </div>
 <div style="position: relative; flex: 1; margin: 0 16px; border-radius: 24px; overflow: hidden; background: #0B0B0C">
-<sc-if value="{{ cap.camOn }}" hint-placeholder-val="{{ true }}"><video id="cam" autoplay playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: {{ cap.mirror }}"></video>
+<sc-if value="{{ cap.camOn }}" hint-placeholder-val="{{ true }}"><video id="cam" autoplay playsinline webkit-playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: {{ cap.mirror }}"></video>
 <sc-if value="{{ cap.hasGhost }}" hint-placeholder-val="{{ false }}"><img alt="" src="{{ cap.ghost }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; pointer-events: none"></sc-if>
 <svg aria-hidden="true" viewBox="0 0 100 133" preserveAspectRatio="none" style="position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none"><line x1="50" y1="2" x2="50" y2="131" stroke="rgba(250,250,250,0.35)" stroke-width="0.3" stroke-dasharray="1.5 1.5" vector-effect="non-scaling-stroke"></line><line x1="6" y1="13" x2="94" y2="13" stroke="rgba(250,250,250,0.3)" stroke-width="0.3" stroke-dasharray="1.5 1.5" vector-effect="non-scaling-stroke"></line><line x1="6" y1="32" x2="94" y2="32" stroke="rgba(250,250,250,0.3)" stroke-width="0.3" stroke-dasharray="1.5 1.5" vector-effect="non-scaling-stroke"></line><line x1="6" y1="66" x2="94" y2="66" stroke="rgba(250,250,250,0.3)" stroke-width="0.3" stroke-dasharray="1.5 1.5" vector-effect="non-scaling-stroke"></line><line x1="6" y1="124" x2="94" y2="124" stroke="rgba(250,250,250,0.3)" stroke-width="0.3" stroke-dasharray="1.5 1.5" vector-effect="non-scaling-stroke"></line></svg><span aria-hidden="true" style="position: absolute; left: 12px; top: calc(9.8% - 18px); font-family: {{ mono }}; font-size: 12px; color: rgba(250,250,250,0.6)">Cabeza</span><span aria-hidden="true" style="position: absolute; left: 12px; top: calc(24.1% - 18px); font-family: {{ mono }}; font-size: 12px; color: rgba(250,250,250,0.6)">Hombros</span><span aria-hidden="true" style="position: absolute; left: 12px; top: calc(49.6% - 18px); font-family: {{ mono }}; font-size: 12px; color: rgba(250,250,250,0.6)">Cadera</span><span aria-hidden="true" style="position: absolute; left: 12px; top: calc(93.2% - 18px); font-family: {{ mono }}; font-size: 12px; color: rgba(250,250,250,0.6)">Pies</span></sc-if>
+<sc-if value="{{ cap.tapPlay }}" hint-placeholder-val="{{ false }}"><button type="button" onClick="{{ cap.playCam }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 16px"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2l1.5-2h6L16.5 7h2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5zM12 16a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path></svg><span>Toca para ver la cámara</span></button></sc-if>
 <sc-if value="{{ cap.count }}" hint-placeholder-val="{{ false }}"><div aria-live="assertive" style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 120px; line-height: 1; font-weight: 300; letter-spacing: -0.06em; text-shadow: 0 2px 24px rgba(0, 0, 0, 0.6); font-variant-numeric: tabular-nums;">{{ cap.n }}</div></sc-if>
 <sc-if value="{{ cap.review }}" hint-placeholder-val="{{ false }}"><img alt="Tu foto" src="{{ cap.shot }}" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover"></sc-if>
 <sc-if value="{{ cap.noCam }}" hint-placeholder-val="{{ false }}"><div style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 24px; text-align: center">
@@ -3210,7 +3211,7 @@ class Component extends DCLogic {
 
   // Google cambia y retira modelos: se le pregunta cuáles acepta esta clave y se eligen los Flash, del más nuevo al más viejo
   async geminiModels(cfg) {
-    if (cfg.model) return { flash: [cfg.model], lite: [], good: {} };
+    if (cfg.model) return { pro: [], flash: [cfg.model], lite: [], good: {} };
     if (this._gm && this._gm.key === cfg.key) return this._gm;
     let r;
     try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
@@ -3219,35 +3220,39 @@ class Component extends DCLogic {
     if (!r.ok) throw this.aiErrorFrom(r.status, d);
     const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
       .map((m) => String(m.name || '').replace(/^models\//, ''))
-      .filter((n) => /^gemini-/.test(n) && /flash/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer|omni)/.test(n));
+      .filter((n) => /^gemini-/.test(n) && !/(image|tts|audio|live|embed|thinking|exp|8b|native|robotics|computer|omni|customtools)/.test(n));
     const ver = (n) => { const m = n.match(/^gemini-(\d+(?:\.\d+)?)/); return m ? parseFloat(m[1]) : 0; };
     const score = (n) => (/-latest$/.test(n) ? 1000 : 0) + ver(n) * 10 + (/preview/.test(n) ? 0 : 1) - (/-\d{3}$|\d{2}-\d{2,4}$/.test(n) ? 0.5 : 0);
-    const best = (lite) => names.filter((n) => /lite/.test(n) === lite).sort((a, b) => score(b) - score(a));
-    let flash = best(false).slice(0, 2), lite = best(true).slice(0, 2);
+    const pick = (re, not) => names.filter((n) => re.test(n) && !(not && not.test(n))).sort((a, b) => score(b) - score(a));
+    let pro = pick(/-pro/).slice(0, 1), flash = pick(/flash/, /lite/).slice(0, 2), lite = pick(/flash-lite/).slice(0, 2);
     if (!flash.length && !lite.length) { flash = ['gemini-flash-latest']; lite = ['gemini-flash-lite-latest']; }
-    this._gm = { key: cfg.key, flash: flash, lite: lite, good: {} };
+    this._gm = { key: cfg.key, pro: pro, flash: flash, lite: lite, good: {} };
     return this._gm;
   }
 
-  async geminiRun(cfg, parts, gen) {
+  /* Cada tarea con su modelo:
+     - «hondo» (análisis de las fotos del cuerpo, una vez por semana): Pro si tu plan lo incluye (en el gratis responde 429
+       en un segundo y sigue), después Flash razonando lo normal, y Flash-Lite si Google está saturado.
+     - «foto» (comida): Flash con razonamiento bajo, y Flash-Lite de respaldo.
+     - «texto» (chat, informe del día, revisión de rutina): Flash con razonamiento bajo (unos 6 s) y Flash-Lite si tarda.
+     Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo, sigue con el siguiente. */
+  async geminiRun(cfg, parts, gen, tier) {
     const gm = await this.geminiModels(cfg);
-    const img = parts.length > 1, kind = img ? 'img' : 'txt';
-    // Texto: primero Flash-Lite, que responde en 1 o 2 s. Fotos: primero Flash, que ve mejor, y Flash-Lite si Google
-    // está saturado (pasa seguido: el Flash puede tardar más de 45 s o responder 503)
-    let models = img ? gm.flash.concat(gm.lite) : gm.lite.concat(gm.flash);
-    const good = gm.good[kind];
+    tier = tier || (parts.length > 1 ? 'foto' : 'texto');
+    let models = (tier === 'hondo' ? gm.pro : []).concat(gm.flash, gm.lite);
+    const good = gm.good[tier];
     if (good) models = [good].concat(models.filter((m) => m !== good));
+    const limit = (m) => /-pro/.test(m) ? 120000 : /lite/.test(m) ? (tier === 'texto' ? 30000 : 75000) : tier === 'hondo' ? 100000 : tier === 'foto' ? 50000 : 25000;
     let last = new Error('modelo');
     for (let i = 0; i < models.length; i++) {
       const g = Object.assign({}, gen);
       if (!/^gemini-[12]\./.test(models[i])) {   // Gemini 3 en adelante, y los alias -latest que apuntan a ellos
         delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
-        // por defecto razona harto: con «low» responde en ~6 s en vez de 30–45
-        if (!this._noThink || !this._noThink[models[i]]) g.thinkingConfig = { thinkingLevel: 'low' };
+        // por defecto razona harto (30–45 s); con «low» responde en unos 6 s. El análisis del cuerpo razona lo normal.
+        if (tier !== 'hondo' && (!this._noThink || !this._noThink[models[i]])) g.thinkingConfig = { thinkingLevel: 'low' };
       }
-      const wait = /lite/.test(models[i]) ? (img ? 75000 : 30000) : (img ? 50000 : 35000);
       const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = ac ? setTimeout(() => ac.abort(), wait) : 0;
+      const timer = ac ? setTimeout(() => ac.abort(), limit(models[i])) : 0;
       let r, d;
       try {
         r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
@@ -3278,21 +3283,23 @@ class Component extends DCLogic {
         const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
         throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
       }
-      gm.good[kind] = models[i];   // el que respondió va primero mientras la app siga abierta
+      gm.good[tier] = models[i];   // el que respondió va primero en esta tarea mientras la app siga abierta
       this.aiMarkOk(models[i]);
       return t;
     }
     throw last;
   }
 
-  async claudeRun(cfg, content, maxTokens) {
-    const model = cfg.model || 'claude-haiku-5-5';
+  async claudeRun(cfg, content, maxTokens, tier) {
+    const model = cfg.model || (tier === 'hondo' ? 'claude-sonnet-5-5' : 'claude-haiku-5-5');
     let r;
     try {
       r = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'content-type': 'application/json', 'x-api-key': cfg.key, 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
-        body: JSON.stringify({ model: model, max_tokens: maxTokens || 1500, messages: [{ role: 'user', content: content }] })
+        // Haiku 5.5 y Sonnet 5.5 razonan antes de responder y ese razonamiento cuenta en max_tokens: con un tope bajo la
+        // respuesta salía cortada. Solo se cobra lo que se usa.
+        body: JSON.stringify({ model: model, max_tokens: Math.max(maxTokens || 0, 16000), messages: [{ role: 'user', content: content }] })
       });
     } catch (e) { throw new Error('red'); }
     const d = await r.json().catch(() => ({}));
@@ -3376,7 +3383,23 @@ class Component extends DCLogic {
     const s = String(txt || '');
     const a = s.indexOf('{'), b = s.lastIndexOf('}');
     if (a < 0 || b < a) throw new Error('formato');
-    return JSON.parse(s.slice(a, b + 1));
+    const clean = (v) => typeof v === 'string' ? this.aiPlain(v) : Array.isArray(v) ? v.map(clean)
+      : v && typeof v === 'object' ? Object.keys(v).reduce((o, k) => { o[k] = clean(v[k]); return o; }, {}) : v;
+    return clean(JSON.parse(s.slice(a, b + 1)));
+  }
+
+  // Gemini y Claude responden con Markdown (**negritas**, viñetas con *, títulos con #): la app muestra texto plano
+  aiPlain(s) {
+    return String(s || '')
+      .replace(/\r/g, '')
+      .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+      .replace(/^(\s*)[*+-]\s+/gm, '$1• ')
+      .replace(/\*\*([^*\n]+)\*\*/g, '$1').replace(/__([^_\n]+)__/g, '$1')
+      .replace(/(^|[\s(])\*([^*\n]+)\*(?=[\s).,;:!?]|$)/gm, '$1$2')
+      .replace(/`([^`\n]+)`/g, '$1')
+      .replace(/\*\*/g, '')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
   }
 
   async aiJSON(prompt, img) {
@@ -4571,7 +4594,7 @@ class Component extends DCLogic {
 
   /* ---------- IA: varias imágenes o texto libre (la de Comida acepta una sola imagen) ---------- */
 
-  async aiCallN(prompt, imgs, json, maxTokens) {
+  async aiCallN(prompt, imgs, json, maxTokens, tier) {
     const cfg = this.aiCfg();
     if (!cfg.key) throw new Error('nokey');
     imgs = imgs || [];
@@ -4579,14 +4602,14 @@ class Component extends DCLogic {
     if (cfg.provider === 'claude') {
       const content = imgs.map((b) => ({ type: 'image', source: { type: 'base64', media_type: 'image/jpeg', data: b } }));
       content.push({ type: 'text', text: prompt });
-      t = await this.claudeRun(cfg, content, maxTokens || 2000);
+      t = await this.claudeRun(cfg, content, maxTokens || 2000, tier);
     } else {
       const parts = [{ text: prompt }].concat(imgs.map((b) => ({ inline_data: { mime_type: 'image/jpeg', data: b } })));
       const gen = { temperature: json ? 0.2 : 0.6 };
       if (json) gen.responseMimeType = 'application/json';
-      t = await this.geminiRun(cfg, parts, gen);
+      t = await this.geminiRun(cfg, parts, gen, tier);
     }
-    return json ? this.parseJSON(t) : t.trim();
+    return json ? this.parseJSON(t) : this.aiPlain(t);
   }
 
   aiProviderName() { return this.aiCfg().provider === 'claude' ? 'Claude (Anthropic)' : 'Gemini (Google)'; }
@@ -4992,7 +5015,33 @@ class Component extends DCLogic {
         .catch(() => { this._camPending = false; if (this.state.cap) this.setState({ cap: Object.assign({}, this.state.cap, { err: 'nocam' }) }); });
       return;
     }
-    if (v && this._stream && v.srcObject !== this._stream) { v.srcObject = this._stream; v.play().catch(() => {}); }
+    if (!v || !this._stream) return;
+    if (v.srcObject !== this._stream) {
+      // iPhone: el video en vivo solo se reproduce solo si está silenciado y en línea por código; el atributo del HTML
+      // no basta. Si no, queda pausado y se ve negro, aunque la foto igual sale.
+      v.muted = true; v.defaultMuted = true; v.playsInline = true;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', ''); v.setAttribute('webkit-playsinline', '');
+      v.srcObject = this._stream;
+      const go = () => this.camPlay(v, false);
+      v.onloadedmetadata = go;
+      go();
+      // si a los 1,5 s sigue sin imagen, se pide un toque (iOS a veces exige un gesto para reproducir)
+      clearTimeout(this._camCheck);
+      this._camCheck = setTimeout(() => {
+        const c = this.state.cap, el = document.getElementById('cam');
+        if (c && el && (el.paused || el.readyState < 2) && !c.tapPlay && (c.phase === 'live' || c.phase === 'count')) this.setState({ cap: Object.assign({}, c, { tapPlay: true }) });
+      }, 1500);
+    } else if (v.paused && !(this.state.cap || {}).tapPlay) this.camPlay(v, false);
+  }
+
+  camPlay(v, tap) {
+    v = v || document.getElementById('cam');
+    if (!v) return;
+    v.muted = true;
+    const p = v.play();
+    const ok = () => { const c = this.state.cap; if (c && c.tapPlay) this.setState({ cap: Object.assign({}, c, { tapPlay: false }) }); };
+    const no = () => { const c = this.state.cap; if (c && !c.tapPlay) this.setState({ cap: Object.assign({}, c, { tapPlay: true }) }); };
+    if (p && p.then) p.then(ok, tap ? no : () => {}); else if (!v.paused) ok();
   }
 
   flipCam() {
@@ -5105,7 +5154,7 @@ class Component extends DCLogic {
         if (!url) return;
         const im = await new Promise((res) => { const x = new Image(); x.onload = () => res(x); x.onerror = () => res(null); x.src = url; });
         if (!im) return;
-        imgs.push(this.shrink(im, 768, 0.8).split(',')[1]);
+        imgs.push(this.shrink(im, 1024, 0.85).split(',')[1]);
         desc.push('Imagen ' + imgs.length + ': ' + label + ', ' + this.poseDefs()[pose].label.toLowerCase());
       };
       for (const p of cur.poses) await add(cur, p, 'hoy (' + cur.d + ')');
@@ -5118,10 +5167,12 @@ class Component extends DCLogic {
         prev ? 'Compara hoy con la sesión anterior: describe solo cambios visibles y di cuando no se puede saber por luz o pose.' : 'Es la primera sesión de fotos: describe la línea base.',
         'Estima la grasa corporal como un rango honesto (de 3 a 5 puntos de ancho). Evalúa la postura en el perfil y la espalda (cabeza adelantada, hombros redondeados, inclinación de la pelvis, asimetrías).',
         hasFace ? 'Hay una foto de la cara: comenta solo la piel (textura, enrojecimiento, ojeras) con consejos simples de cuidado y hábitos. Nada de cirugías ni prácticas sin evidencia.' : 'No hay foto de la cara: deja "piel" vacío.',
-        'Recomendaciones: la rutina se hace en casa sin equipamiento, salvo una mancuerna de 3 kg; la comida es chilena. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Sé específico: nombra zonas concretas (abdomen bajo, oblicuos, pecho, deltoides, dorsales, trapecio, glúteos, muslos) y lo que se ve en cada una. Nada de frases genéricas que servirían para cualquier persona.',
+        'Recomendaciones: la rutina se hace en casa sin equipamiento, salvo una mancuerna de 3 kg; la comida es chilena. Cada recomendación es una acción concreta con números cuando sirvan (series, repeticiones, gramos de proteína, minutos) y se apoya en sus datos. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
+        'Los textos van en texto plano, sin Markdown (nada de asteriscos ni almohadillas).',
         'Responde SOLO con JSON válido, en español de Chile y tuteo: {"resumen":"2 frases","grasa":{"min":0,"max":0},"cambios":[{"zona":"","nota":""}],"postura":[{"punto":"","estado":"bien|mejorable","consejo":""}],"simetria":"","piel":"","recomendaciones":{"rutina":[""],"comida":[""],"habitos":[""]},"confianza":"alta|media|baja"}'
       ].join('\n\n');
-      const j = await this.aiCallN(prompt, imgs, true, 2500);
+      const j = await this.aiCallN(prompt, imgs, true, 2500, 'hondo');
       const S = (v, n) => String(v == null ? '' : v).slice(0, n || 240);
       const L = (a, n) => (Array.isArray(a) ? a : []).slice(0, n || 4);
       const g = j.grasa || {};
@@ -5155,7 +5206,8 @@ class Component extends DCLogic {
     try {
       const hist = msgs.slice(-10).map((m) => (m.r === 'u' ? 'Persona: ' : 'Entrenador: ') + m.t).join('\n');
       const prompt = [
-        'Eres el entrenador personal de la app keystone: directo, cálido y concreto, en español de Chile y tuteo. Respuestas cortas (máximo 120 palabras), con pasos accionables. Nada de diagnósticos médicos: si hay dolor fuerte, síntomas o algo médico, sugiere consultar a un profesional.',
+        'Eres el entrenador personal de la app keystone: directo, cálido y concreto, en español de Chile y tuteo. Respuestas cortas (máximo 120 palabras), con pasos accionables y números concretos cuando sirvan (series, repeticiones, gramos, minutos). Nada de diagnósticos médicos: si hay dolor fuerte, síntomas o algo médico, sugiere consultar a un profesional.',
+        'Formato: texto plano para una burbuja de chat. Sin Markdown: nada de asteriscos, almohadillas, negritas ni títulos. Párrafos cortos; si das pasos, una línea por paso que empiece con «• ». Usa los datos de la persona en vez de consejos genéricos.',
         'Entrena en casa sin equipamiento, salvo una mancuerna de 3 kg. Nada extremo: sin dietas de choque, sustancias ni prácticas sin evidencia.',
         'Datos de la persona:\n' + this.aiContext(),
         'Conversación:\n' + hist,
@@ -5307,6 +5359,7 @@ class Component extends DCLogic {
         mirror: cp.facing === 'user' ? 'scaleX(-1)' : 'none',
         hasGhost: !!prevSet, ghost: prevSet ? (this.bodyImg(prevSet.id, p) || this.bodyImg(prevSet.id, p, true) || '') : '',
         ghostLabel: prevSet ? 'Tu foto del ' + this.shortDate(prevSet.d) + ' de guía' : '',
+        tapPlay: !!cp.tapPlay && (cp.phase === 'live' || cp.phase === 'count') && !cp.err, playCam: () => this.camPlay(null, true),
         start: () => this.startCountdown(), flip: () => this.flipCam(), retake: () => this.capRetake(), next: () => this.capNext(), skip: () => this.capSkip(),
         nextLabel: cp.i < cp.poses.length - 1 ? 'Usar y seguir' : 'Usar y guardar', close: () => this.closeCapture(), file: (e) => this.capFile(e)
       };
@@ -5346,7 +5399,7 @@ class Component extends DCLogic {
     const chat = {
       open: () => { this.sfx('open'); this.setState({ chatOpen: true }, () => { try { const s = document.getElementById('chat-scroll'); if (s) s.scrollTop = s.scrollHeight; } catch (e) {} }); },
       close: () => { this.sfx('tap'); this.setState({ chatOpen: false }); },
-      msgs: msgs.map((m) => ({ t: m.t, mine: m.r === 'u', bg: m.r === 'u' ? primary : (m.r === 'e' ? th.fill : th.card), fg: m.r === 'u' ? onPrimary : (m.r === 'e' ? th.sub : th.text), align: m.r === 'u' ? 'flex-end' : 'flex-start', shadow: m.r === 'a' ? th.cardShadow : 'none' })),
+      msgs: msgs.map((m) => ({ t: m.r === 'a' ? this.aiPlain(m.t) : m.t, mine: m.r === 'u', bg: m.r === 'u' ? primary : (m.r === 'e' ? th.fill : th.card), fg: m.r === 'u' ? onPrimary : (m.r === 'e' ? th.sub : th.text), align: m.r === 'u' ? 'flex-end' : 'flex-start', shadow: m.r === 'a' ? th.cardShadow : 'none' })),
       empty: msgs.length === 0, busy: !!st.chatBusy, hasKey: hasKey, noKey: !hasKey, draft: st.chatDraft || '',
       chips: ['¿Cómo voy esta semana?', '¿Qué cambio en mi rutina?', 'Ideas de cena con proteína', 'Me duele un poco la rodilla'].map((t) => ({ t: t, pick: () => this.chatSend(t) })),
       send: () => { const el = document.getElementById('chat-in'); this.chatSend(el ? el.value : st.chatDraft); },
@@ -5681,7 +5734,7 @@ class Component extends DCLogic {
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',
-      help: isG ? 'Gemini tiene un plan gratis: crea una clave en Google AI Studio y pégala aquí. En el plan gratis Google puede usar las fotos para mejorar sus modelos.' : 'Claude cobra por uso (menos de un peso por foto) y no usa tus datos para entrenar. Crea una clave en la consola de Anthropic.',
+      help: isG ? 'Gemini tiene un plan gratis: crea una clave en Google AI Studio y pégala aquí. En el plan gratis Google puede usar las fotos para mejorar sus modelos.' : 'Claude cobra por uso: unos pocos pesos por foto de comida y menos de 100 por análisis del cuerpo. No usa tus datos para entrenar. La suscripción de claude.ai no sirve aquí: crea una clave en la consola de Anthropic y carga crédito.',
       provs: [['gemini', 'Gemini · gratis'], ['claude', 'Claude']].map((p) => {
         const sel = (ai.provider || 'gemini') === p[0];
         return { label: p[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 500 : 400, shadow: sel && !dark ? '0 1px 3px rgba(9, 9, 11, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setAi({ provider: p[0], model: '' }); this.setState({ aiMsg: '' }); } };

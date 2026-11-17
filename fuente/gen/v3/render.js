@@ -187,7 +187,7 @@
       ph: isG ? 'Pega tu clave de Google AI Studio' : 'Pega tu clave de Anthropic (sk-ant-…)',
       modelPh: isG ? 'gemini-flash-latest' : 'claude-haiku-5-5',
       url: isG ? 'https://aistudio.google.com/apikey' : 'https://console.anthropic.com/settings/keys',
-      help: isG ? 'Gemini tiene un plan gratis: crea una clave en Google AI Studio y pégala aquí. En el plan gratis Google puede usar las fotos para mejorar sus modelos.' : 'Claude cobra por uso (menos de un peso por foto) y no usa tus datos para entrenar. Crea una clave en la consola de Anthropic.',
+      help: isG ? 'Gemini tiene un plan gratis: crea una clave en Google AI Studio y pégala aquí. En el plan gratis Google puede usar las fotos para mejorar sus modelos.' : 'Claude cobra por uso: unos pocos pesos por foto de comida y menos de 100 por análisis del cuerpo. No usa tus datos para entrenar. La suscripción de claude.ai no sirve aquí: crea una clave en la consola de Anthropic y carga crédito.',
       provs: [['gemini', 'Gemini · gratis'], ['claude', 'Claude']].map((p) => {
         const sel = (ai.provider || 'gemini') === p[0];
         return { label: p[1], selected: sel, bg: sel ? th.segSel : 'transparent', weight: sel ? 500 : 400, shadow: sel && !dark ? '0 1px 3px rgba(9, 9, 11, 0.12)' : 'none', pick: () => { this.sfx('tap'); this.setAi({ provider: p[0], model: '' }); this.setState({ aiMsg: '' }); } };
