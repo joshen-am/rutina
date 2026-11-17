@@ -11,6 +11,7 @@ def make(g):
     HALO_BG, HALO = g['HALO_BG'], g['HALO']
     eyebrow, pill, ico, sec_title, switch = g['eyebrow'], g['pill'], g['ico'], g['sec_title'], g['switch']
     CHEV, BACK, CLOSE, CAMERA = g['CHEV'], g['BACK'], g['CLOSE'], g['CAMERA']
+    ring = g['ring']
     T = lambda s: s.replace('[[', '{{').replace(']]', '}}')
     CHAT = 'M4 5h16v11H9l-5 4z'
     FLIP = 'M4 8h13l-3-3M20 16H7l3 3'
@@ -46,6 +47,13 @@ def make(g):
 
     # ---------------------------------------------------------------- Inicio: check-in, informe y cierre del día
     DIARIO = T(f'''<section aria-label="Tu día" style="{CARD}; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<sc-if value="[[ sk.show ]]" hint-placeholder-val="[[ false ]]">
+<button type="button" onClick="[[ sk.open ]]" style="{B} color: inherit; text-align: left; width: 100%; display: flex; align-items: center; gap: 16px; padding: 0 0 16px; background: transparent; border-bottom: 0.5px solid [[ th.sep ]]">
+<span style="position: relative; width: 52px; height: 52px; flex: none">{ring(52, 22, 5, "[[ sk.off ]]", "[[ sk.ring ]]", 138.2)}<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 400; letter-spacing: -0.04em; {NUM}">[[ sk.s ]]</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">{eyebrow("[[ sk.eyebrow ]]")}<span style="font-size: 16px; font-weight: 500">[[ sk.grade ]]</span><span style="font-size: 13px; line-height: 20px; color: [[ th.sub ]]">[[ sk.parts ]]</span></span>
+{CHEV}
+</button>
+</sc-if>
 <sc-if value="[[ dy.showCheckin ]]" hint-placeholder-val="[[ true ]]">
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.02em">¿Cómo amaneciste?</h2><span style="{MONO} font-size: 13px; color: [[ th.sub ]]">20 segundos</span></div>
 <sc-for list="[[ dy.rows ]]" as="row" hint-placeholder-count="4">

@@ -48,7 +48,8 @@ class Component extends DCLogic {
     cap: null,
     photos: false,
     aspecto: false,
-    chatOpen: false
+    chatOpen: false,
+    dayScores: {}
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -80,6 +81,10 @@ class Component extends DCLogic {
         navigator.storage.persisted().then((p) => (p ? p : navigator.storage.persist())).then((p) => this.setState({ persisted: !!p })).catch(() => {});
       }
     } catch (e) {}
+    // guarda el puntaje de los días que ya terminaron, al abrir y al volver a la app (iPhone la deja abierta días)
+    setTimeout(() => this.closeDays(), 1200);
+    this._onVis = () => { if (!document.hidden) this.closeDays(); };
+    document.addEventListener('visibilitychange', this._onVis);
     this.warmAudio();
     this.syncTicker();
     if (this.isNative()) setTimeout(() => this.nativeSchedule(), 1500);
@@ -87,7 +92,7 @@ class Component extends DCLogic {
 
   applyData(s) {
     const next = {};
-    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat'].forEach((k) => {
+    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat', 'dayScores'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
@@ -116,7 +121,7 @@ class Component extends DCLogic {
     return {
       schema: 4, savedAt: Date.now(),
       log: s.log, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
-      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, derived: this.derived()
+      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, dayScores: s.dayScores, derived: this.derived()
     };
   }
 
@@ -1043,7 +1048,7 @@ class Component extends DCLogic {
       return;
     }
     this.go({
-      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
+      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, dayScores: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
   }
 
@@ -1152,19 +1157,18 @@ class Component extends DCLogic {
     return f;
   }
 
+  // para la racha: cumplido, versión mínima o «casi» (75 % o más: dormir 7 de 8 h no corta la racha)
   habitMet(h, key, date) {
     const f = this.habitFrac(h, key, date);
     if (f === null) return null;
     const d = ((this.state.hlog || {})[key] || {});
-    return f >= 1 || !!d[h.id + '~'];
+    return f >= 0.75 || !!d[h.id + '~'];
   }
 
+  // 0..1: el puntaje del día (guardado si el día ya cerró; ver progreso.js)
   dayScore(key, date) {
-    const cfg = this.habitCfg();
-    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
-    let n = 0, sum = 0;
-    list.forEach((h) => { const f = this.habitFrac(h, key, date); if (f !== null) { n++; sum += f; } });
-    return n ? sum / n : null;
+    const sc = this.scoreFor(key, date);
+    return sc ? sc.s / 100 : null;
   }
 
   habitStreak(h, today0) {
@@ -1184,7 +1188,7 @@ class Component extends DCLogic {
     const hl = Object.assign({}, this.state.hlog || {});
     hl[key] = Object.assign({}, hl[key] || {});
     if (v === null || v === 0 || v === false) delete hl[key][id]; else hl[key][id] = v;
-    this.setState({ hlog: hl }, () => this.persist());
+    this.setState({ hlog: hl }, () => { if (key < this.keyOf(new Date())) this.saveScore(key); this.persist(); });
   }
 
   habitDate() {
@@ -1230,9 +1234,11 @@ class Component extends DCLogic {
       const atRisk = ym === false && ykey >= (st.since || key) && !met && !mini;
       const step = h.step || 1;
       let status;
-      if (h.kind === 'auto') status = met ? 'Sesión completada' : 'Toca entrenar hoy';
+      if (h.kind === 'auto') status = met ? 'Sesión completada' : (isToday ? 'Toca entrenar hoy' : 'Sin sesión ese día');
       else if (h.kind === 'food') status = Math.round(this.dayTotals(key).p) + ' de ' + this.targets().prot + ' g';
       else status = this.habitValueLabel(h, v, goal);
+      // el avance cuenta aunque no llegues a la meta: 7 de 8 h suman 88 % al puntaje del día
+      if (h.kind === 'num' && f > 0 && f < 1) status += ' · ' + Math.round(f * 100) + ' %' + (f >= 0.75 ? ', casi' : '');
       if (mini && !met) status += ', versión mínima';
       items.push({
         id: h.id, name: h.name, icon: h.icon, color: c[h.color], tint: tint(h.color),
@@ -1270,10 +1276,11 @@ class Component extends DCLogic {
     const water = {
       on: wOn, count: w, goal: wGoal, liters: L(w), goalL: L(wGoal), glasses: glasses,
       pct: Math.round(Math.min(1, w / wGoal) * 100), met: w >= wGoal,
-      left: w >= wGoal ? 'Meta cumplida' : 'Te faltan ' + (wGoal - w) + (wGoal - w === 1 ? ' vaso' : ' vasos'),
+      left: w >= wGoal ? 'Meta cumplida' : (w ? Math.round((w / wGoal) * 100) + ' % · ' : '') + 'te faltan ' + (wGoal - w) + (wGoal - w === 1 ? ' vaso' : ' vasos'),
       cue: cfg.cues.agua || cat[1].cue,
       add: () => { this.sfx(w + 1 === wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 1); },
       add2: () => { this.sfx(w + 2 >= wGoal && w < wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 2); },
+      add4: () => { this.sfx(w + 4 >= wGoal && w < wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 4); },
       sub: () => { this.sfx('tap'); this.setHabit(key, 'agua', Math.max(0, w - 1)); }
     };
     const score = total ? done / total : 0;
@@ -1282,14 +1289,14 @@ class Component extends DCLogic {
     const left = total - done;
     return {
       dayLabel: isToday ? 'Hoy' : ((st.hday || 0) === -1 ? 'Ayer' : cap(names[(date.getDay() + 6) % 7]) + ' ' + date.getDate()),
-      dateLabel: this.longDate(date), isToday: isToday, canNext: !isToday, canPrev: (st.hday || 0) > -6,
-      nextOp: isToday ? 0.3 : 1, prevOp: (st.hday || 0) > -6 ? 1 : 0.3,
+      dateLabel: this.longDate(date), isToday: isToday, canNext: !isToday, canPrev: (st.hday || 0) > -120,
+      nextOp: isToday ? 0.3 : 1, prevOp: (st.hday || 0) > -120 ? 1 : 0.3,
       done: done, total: total, items: items, water: water,
       ringOff: (238.8 * (1 - score)).toFixed(1),
       title: total ? (done === total ? 'Día completo' : 'Vas al ' + Math.round(score * 100) + ' %') : 'Sin hábitos',
       sub: total ? (left === 0 ? 'Cumpliste todos tus hábitos de hoy.' : 'Te faltan ' + left + (left === 1 ? ' hábito' : ' hábitos') + ' para completar el día.') : 'Elige qué hábitos seguir.',
       hasRisk: items.some((x) => x.atRisk),
-      prev: () => { this.sfx('tap'); this.setState({ hday: Math.max(-6, (st.hday || 0) - 1) }); },
+      prev: () => { this.sfx('tap'); this.setState({ hday: Math.max(-120, (st.hday || 0) - 1) }); },
       next: () => { this.sfx('tap'); this.setState({ hday: Math.min(0, (st.hday || 0) + 1) }); }
     };
   }
@@ -3012,6 +3019,89 @@ class Component extends DCLogic {
     };
   }
 
+  /* ---------- puntaje del día (versión 33) ----------
+     De 0 a 100: el promedio de lo que avanzaste en cada hábito activo ese día. El avance cuenta aunque no llegues a la
+     meta (1 L de 2,5 L de agua suma 40 %; dormir 7 de 8 h, 88 %). Cuando el día termina, el puntaje queda guardado en
+     dayScores: no cambia si después ajustas metas o hábitos, y sí si editas ese día en Hábitos. */
+
+  dayScoreInfo(key, date) {
+    const cfg = this.habitCfg();
+    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
+    let n = 0, sum = 0, met = 0, part = 0, miss = 0;
+    const items = {};
+    list.forEach((h) => {
+      const f = this.habitFrac(h, key, date);
+      if (f === null) return;
+      n++; sum += f;
+      if (f >= 1) met++; else if (f > 0) part++; else miss++;
+      items[h.id] = Math.round(f * 100);
+    });
+    if (!n) return null;
+    return { s: Math.round((sum / n) * 100), n: n, met: met, part: part, miss: miss, items: items };
+  }
+
+  scoreFor(key, date) {
+    if (key < this.keyOf(new Date())) { const s = (this.state.dayScores || {})[key]; if (s) return s; }
+    return this.dayScoreInfo(key, date || this.dateOf(key));
+  }
+
+  saveScore(key) {
+    const info = this.dayScoreInfo(key, this.dateOf(key));
+    const cur = (this.state.dayScores || {})[key];
+    if (!info) return;
+    if (cur && cur.s === info.s && cur.met === info.met && cur.part === info.part && cur.miss === info.miss) return;
+    this.setState({ dayScores: Object.assign({}, this.state.dayScores || {}, { [key]: Object.assign(info, { at: Date.now() }) }) }, () => this.persist());
+  }
+
+  // al abrir la app (o volver a ella) se guardan los días que terminaron y no tienen puntaje
+  closeDays() {
+    const st = this.state;
+    const now = new Date();
+    const since = st.since || this.keyOf(now);
+    const add = {};
+    for (let i = 1; i <= 60; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = this.keyOf(d);
+      if (key < since) break;
+      if ((st.dayScores || {})[key]) continue;
+      const info = this.dayScoreInfo(key, d);
+      if (info) add[key] = Object.assign(info, { at: Date.now() });
+    }
+    if (Object.keys(add).length) this.setState({ dayScores: Object.assign({}, st.dayScores || {}, add) }, () => this.persist());
+  }
+
+  scoreGrade(s) {
+    return s >= 90 ? 'Día redondo' : s >= 75 ? 'Muy buen día' : s >= 50 ? 'Día a medias' : s > 0 ? 'Día flojo' : 'Sin registro';
+  }
+
+  scoreParts(sc) {
+    const p = [];
+    if (sc.met) p.push(sc.met + (sc.met === 1 ? ' cumplido' : ' cumplidos'));
+    if (sc.part) p.push(sc.part + ' con avance');
+    if (sc.miss) p.push(sc.miss + ' sin hacer');
+    return p.join(' · ');
+  }
+
+  // tarjeta del puntaje para Inicio: el de ayer en la mañana y el de hoy desde las 18:00
+  scoreCardVals(th, c, dark) {
+    const now = new Date();
+    const h = now.getHours();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yk = this.keyOf(y);
+    const morning = h < 12 && yk >= (this.state.since || yk);
+    const evening = h >= 18;
+    const date = morning ? y : now;
+    const sc = (morning || evening) ? this.scoreFor(this.keyOf(date), date) : null;
+    if (!sc) return { show: false, s: 0, color: th.text, eyebrow: '', grade: '', parts: '', off: '0', open: () => {} };
+    return {
+      show: true, s: sc.s, color: this.healthText(sc.s, dark), ring: this.healthColor(sc.s, dark),
+      off: (138.2 * (1 - sc.s / 100)).toFixed(1),
+      eyebrow: morning ? 'Tu día de ayer' : 'Tu día hasta ahora',
+      grade: this.scoreGrade(sc.s), parts: this.scoreParts(sc),
+      open: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: morning ? -1 : 0 }); }
+    };
+  }
+
   programData() { return %%PROGRAM%%; }
 
   /* ================================================================ versión 28 ================================================================
@@ -4096,14 +4186,20 @@ class Component extends DCLogic {
       for (let d = 0; d < 7; d++) {
         const day = new Date(col.getFullYear(), col.getMonth(), col.getDate() + d);
         const isToday = day.getTime() === today0.getTime();
-        let bg = th.fill, ring = 'none';
+        let bg = th.fill, ring = 'none', aria = '', pick = null;
+        const off = Math.round((day - today0) / 86400000);
         if (day > today0) { bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep; }
         else if (day >= sinceD) {
           const sc = this.dayScore(this.keyOf(day), day);
           if (sc !== null && !(isToday && sc === 0)) { bg = dayCol(sc); if (sc > 0) hAny++; if (sc >= 1) hFull++; }
+          // tocar un día abre Hábitos en ese día, con su puntaje guardado
+          if (off >= -120) {
+            aria = this.longDate(day) + (sc !== null ? ': puntaje ' + Math.round(sc * 100) : '');
+            pick = () => { this.sfx('tap'); this.setState({ prog: false }); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: off }); };
+          }
         }
         if (isToday) ring = 'inset 0 0 0 1.5px ' + th.text;
-        items.push({ isLabel: false, isCell: true, bg: bg, ring: ring });
+        items.push({ isLabel: false, isCell: true, isBtn: !!pick, isPlain: !pick, bg: bg, ring: ring, aria: aria, pick: pick || (() => {}) });
       }
     }
     const hist = {
@@ -4135,9 +4231,18 @@ class Component extends DCLogic {
     });
 
     const hdv = this.habitsVals(th, c, dark, primary, onPrimary);
-    const score = hdv.total ? hdv.done / hdv.total : 0;
+    // puntaje del día (0–100, cuenta el avance parcial); en días pasados, el guardado
+    const hDate = this.habitDate();
+    const hsc = this.scoreFor(this.keyOf(hDate), hDate);
+    const score = hsc ? hsc.s / 100 : 0;
     hdv.ringOff52 = (138.2 * (1 - score)).toFixed(1);
     hdv.ringOff84 = (226.2 * (1 - score)).toFixed(1);
+    hdv.score = hsc ? String(hsc.s) : '–';
+    hdv.ringColor = hsc ? this.healthColor(hsc.s, dark) : th.text;
+    hdv.scoreLabel = hdv.isToday ? 'Puntaje de hoy' : 'Puntaje del día';
+    hdv.title = hsc ? this.scoreGrade(hsc.s) + (hdv.isToday && hsc.s < 100 ? ' hasta ahora' : '') : 'Sin hábitos';
+    hdv.sub = hsc ? this.scoreParts(hsc) : 'Elige qué hábitos seguir.';
+    const sk = this.scoreCardVals(th, c, dark);
 
     /* comida e inicio de comida */
     const fdv = this.foodVals(th, c, dark);
@@ -4158,7 +4263,7 @@ class Component extends DCLogic {
     const wv = hdv.water;
     const kf = T.kcal ? tt.kcal / T.kcal : 0;
     const ty = {
-      habits: { off: ring3(score), center: hdv.done + '/' + hdv.total, label: 'Hábitos', sub: hdv.total ? (hdv.done === hdv.total ? 'Día completo' : 'Te faltan ' + (hdv.total - hdv.done)) : 'Sin hábitos', color: c.constancia },
+      habits: { off: ring3(score), center: hsc && hdv.isToday ? String(hsc.s) : '–', label: 'Hábitos', sub: hsc && hdv.isToday ? 'Puntaje de hoy' : 'Sin hábitos', color: c.constancia },
       food: { off: ring3(kf), center: Math.round(Math.min(9.99, kf) * 100) + ' %', label: 'Comida', sub: this.fmt(tt.kcal) + ' kcal', color: c.carb },
       water: { on: !!wv.on, off: ring3(wv.goal ? wv.count / wv.goal : 0), center: wv.liters + ' L', label: 'Agua', sub: 'de ' + wv.goalL + ' L', color: c.resistencia, add: wv.add }
     };
@@ -4230,7 +4335,7 @@ class Component extends DCLogic {
       isEval: n.screen === 'eval',
       ev: n.screen === 'eval' ? this.evalVals(th, c) : {},
       hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
-      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
+      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, sk: sk, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
       dy: cv.dy, ph: cv.ph, cap: cv.cap, asp: cv.asp, chat: cv.chat, ad: cv.ad,
       isPhotos: !!st.photos && !st.cap, isCap: !!st.cap, isAspecto: !!st.aspecto, isChat: !!st.chatOpen,
       openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },

@@ -101,14 +101,20 @@
       for (let d = 0; d < 7; d++) {
         const day = new Date(col.getFullYear(), col.getMonth(), col.getDate() + d);
         const isToday = day.getTime() === today0.getTime();
-        let bg = th.fill, ring = 'none';
+        let bg = th.fill, ring = 'none', aria = '', pick = null;
+        const off = Math.round((day - today0) / 86400000);
         if (day > today0) { bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep; }
         else if (day >= sinceD) {
           const sc = this.dayScore(this.keyOf(day), day);
           if (sc !== null && !(isToday && sc === 0)) { bg = dayCol(sc); if (sc > 0) hAny++; if (sc >= 1) hFull++; }
+          // tocar un día abre Hábitos en ese día, con su puntaje guardado
+          if (off >= -120) {
+            aria = this.longDate(day) + (sc !== null ? ': puntaje ' + Math.round(sc * 100) : '');
+            pick = () => { this.sfx('tap'); this.setState({ prog: false }); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: off }); };
+          }
         }
         if (isToday) ring = 'inset 0 0 0 1.5px ' + th.text;
-        items.push({ isLabel: false, isCell: true, bg: bg, ring: ring });
+        items.push({ isLabel: false, isCell: true, isBtn: !!pick, isPlain: !pick, bg: bg, ring: ring, aria: aria, pick: pick || (() => {}) });
       }
     }
     const hist = {
@@ -140,9 +146,18 @@
     });
 
     const hdv = this.habitsVals(th, c, dark, primary, onPrimary);
-    const score = hdv.total ? hdv.done / hdv.total : 0;
+    // puntaje del día (0–100, cuenta el avance parcial); en días pasados, el guardado
+    const hDate = this.habitDate();
+    const hsc = this.scoreFor(this.keyOf(hDate), hDate);
+    const score = hsc ? hsc.s / 100 : 0;
     hdv.ringOff52 = (138.2 * (1 - score)).toFixed(1);
     hdv.ringOff84 = (226.2 * (1 - score)).toFixed(1);
+    hdv.score = hsc ? String(hsc.s) : '–';
+    hdv.ringColor = hsc ? this.healthColor(hsc.s, dark) : th.text;
+    hdv.scoreLabel = hdv.isToday ? 'Puntaje de hoy' : 'Puntaje del día';
+    hdv.title = hsc ? this.scoreGrade(hsc.s) + (hdv.isToday && hsc.s < 100 ? ' hasta ahora' : '') : 'Sin hábitos';
+    hdv.sub = hsc ? this.scoreParts(hsc) : 'Elige qué hábitos seguir.';
+    const sk = this.scoreCardVals(th, c, dark);
 
     /* comida e inicio de comida */
     const fdv = this.foodVals(th, c, dark);
@@ -163,7 +178,7 @@
     const wv = hdv.water;
     const kf = T.kcal ? tt.kcal / T.kcal : 0;
     const ty = {
-      habits: { off: ring3(score), center: hdv.done + '/' + hdv.total, label: 'Hábitos', sub: hdv.total ? (hdv.done === hdv.total ? 'Día completo' : 'Te faltan ' + (hdv.total - hdv.done)) : 'Sin hábitos', color: c.constancia },
+      habits: { off: ring3(score), center: hsc && hdv.isToday ? String(hsc.s) : '–', label: 'Hábitos', sub: hsc && hdv.isToday ? 'Puntaje de hoy' : 'Sin hábitos', color: c.constancia },
       food: { off: ring3(kf), center: Math.round(Math.min(9.99, kf) * 100) + ' %', label: 'Comida', sub: this.fmt(tt.kcal) + ' kcal', color: c.carb },
       water: { on: !!wv.on, off: ring3(wv.goal ? wv.count / wv.goal : 0), center: wv.liters + ' L', label: 'Agua', sub: 'de ' + wv.goalL + ' L', color: c.resistencia, add: wv.add }
     };
@@ -235,7 +250,7 @@
       isEval: n.screen === 'eval',
       ev: n.screen === 'eval' ? this.evalVals(th, c) : {},
       hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
-      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
+      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, sk: sk, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
       dy: cv.dy, ph: cv.ph, cap: cv.cap, asp: cv.asp, chat: cv.chat, ad: cv.ad,
       isPhotos: !!st.photos && !st.cap, isCap: !!st.cap, isAspecto: !!st.aspecto, isChat: !!st.chatOpen,
       openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },

@@ -185,10 +185,11 @@ def water_card(idp):
 <button type="button" onClick="{{{{ g.pick }}}}" aria-label="{{{{ g.aria }}}}" style="{B} padding: 0; height: 44px; border-radius: 12px; background: {{{{ g.bg }}}}; display: flex; align-items: center; justify-content: center; transition: background 0.2s">{ico(DROP, 15, "{{ g.stroke }}", 1.6, "{{ g.fill }}")}</button>
 </sc-for>
 </div>
-<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<div style="display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 8px">
 <button type="button" onClick="{{{{ hd.water.sub }}}}" aria-label="Quitar un vaso" style="{B} height: 44px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; display: flex; align-items: center; justify-content: center">{ico(MINUS, 16, "currentColor", 2)}</button>
-<button type="button" onClick="{{{{ hd.water.add }}}}" style="{B} height: 44px; padding: 0 8px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 16px; font-weight: 500">+ Vaso 250 ml</button>
-<button type="button" onClick="{{{{ hd.water.add2 }}}}" style="{B} height: 44px; padding: 0 8px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500">+ Botella 500</button>
+<button type="button" onClick="{{{{ hd.water.add }}}}" aria-label="Sumar un vaso de 250 ml" style="{B} height: 44px; padding: 0 4px; border-radius: 999px; background: {{{{ th.inv }}}}; color: {{{{ th.onInv }}}}; font-size: 16px; font-weight: 500; {NUM}">+250 ml</button>
+<button type="button" onClick="{{{{ hd.water.add2 }}}}" aria-label="Sumar 500 ml" style="{B} height: 44px; padding: 0 4px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500; {NUM}">+500 ml</button>
+<button type="button" onClick="{{{{ hd.water.add4 }}}}" aria-label="Sumar 1 litro" style="{B} height: 44px; padding: 0 4px; border-radius: 999px; background: {{{{ th.fill }}}}; color: {{{{ th.text }}}}; font-size: 16px; font-weight: 500; {NUM}">+1 L</button>
 </div>
 <p style="margin: 0; font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ hd.water.cue }}}}</p>
 </section>
@@ -200,11 +201,11 @@ HIST = f'''<section aria-labelledby="hist" style="{CARD}; padding: 20px; display
 <h2 id="hist" style="margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.02em">Historial</h2>
 <span style="{MONO} font-size: 13px; color: {{{{ th.sub }}}}; {NUM}">{{{{ hist.summary }}}}</span>
 </div>
-<div role="img" aria-label="{{{{ hist.aria }}}}" style="display: grid; grid-template-columns: 12px repeat({{{{ hist.weeks }}}}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, auto); grid-auto-flow: column; column-gap: 4px; row-gap: 4px">
+<div role="group" aria-label="{{{{ hist.aria }}}}" style="display: grid; grid-template-columns: 12px repeat({{{{ hist.weeks }}}}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, auto); grid-auto-flow: column; column-gap: 4px; row-gap: 4px">
 <span aria-hidden="true"></span><sc-for list="{{{{ hist.days }}}}" as="hd" hint-placeholder-count="7"><span aria-hidden="true" style="{MONO} font-size: 12px; line-height: 16px; align-self: center; color: {{{{ th.tertiary }}}}">{{{{ hd.t }}}}</span></sc-for>
 <sc-for list="{{{{ hist.items }}}}" as="hc" hint-placeholder-count="136">
 <sc-if value="{{{{ hc.isLabel }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="{MONO} font-size: 12px; line-height: 16px; color: {{{{ th.tertiary }}}}; white-space: nowrap; overflow: visible">{{{{ hc.text }}}}</span></sc-if>
-<sc-if value="{{{{ hc.isCell }}}}" hint-placeholder-val="{{{{ true }}}}"><span style="aspect-ratio: 1 / 1; border-radius: 3px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></span></sc-if>
+<sc-if value="{{{{ hc.isCell }}}}" hint-placeholder-val="{{{{ true }}}}"><sc-if value="{{{{ hc.isBtn }}}}" hint-placeholder-val="{{{{ true }}}}"><button type="button" onClick="{{{{ hc.pick }}}}" aria-label="{{{{ hc.aria }}}}" style="{B} padding: 0; width: 100%; aspect-ratio: 1 / 1; border-radius: 3px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></button></sc-if><sc-if value="{{{{ hc.isPlain }}}}" hint-placeholder-val="{{{{ false }}}}"><span style="aspect-ratio: 1 / 1; border-radius: 3px; background: {{{{ hc.bg }}}}; box-shadow: {{{{ hc.ring }}}}"></span></sc-if></sc-if>
 </sc-for>
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: {{{{ th.sub }}}}">
@@ -518,9 +519,9 @@ def habitos():
 {round_btn("hd.next", "M9 5l7 7-7 7", "Día siguiente", 40, "transparent").replace('style="', 'style="opacity: {{ hd.nextOp }}; ', 1)}
 </div>
 <section aria-label="Resumen del día" style="{CARD}; padding: 20px; display: flex; align-items: center; gap: 20px">
-<div style="position: relative; width: 84px; height: 84px; flex: none">{ring(84, 36, 7, "{{ hd.ringOff84 }}", "{{ th.text }}", 226.2)}
-<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ hd.done }}}}/{{{{ hd.total }}}}</div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.03em">{{{{ hd.title }}}}</span><span style="font-size: 16px; line-height: 24px; color: {{{{ th.sub }}}}">{{{{ hd.sub }}}}</span></div>
+<div style="position: relative; width: 84px; height: 84px; flex: none">{ring(84, 36, 7, "{{ hd.ringOff84 }}", "{{ hd.ringColor }}", 226.2)}
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 400; letter-spacing: -0.04em; {NUM}">{{{{ hd.score }}}}</div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px">{eyebrow("{{ hd.scoreLabel }}")}<span style="font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.03em">{{{{ hd.title }}}}</span><span style="font-size: 13px; line-height: 20px; color: {{{{ th.sub }}}}">{{{{ hd.sub }}}}</span></div>
 </section>
 {water_card("agua-h")}
 <section aria-label="Hábitos" style="{CARD}; padding: 0 0 0 20px">

@@ -285,4 +285,87 @@
     };
   }
 
+  /* ---------- puntaje del día (versión 33) ----------
+     De 0 a 100: el promedio de lo que avanzaste en cada hábito activo ese día. El avance cuenta aunque no llegues a la
+     meta (1 L de 2,5 L de agua suma 40 %; dormir 7 de 8 h, 88 %). Cuando el día termina, el puntaje queda guardado en
+     dayScores: no cambia si después ajustas metas o hábitos, y sí si editas ese día en Hábitos. */
+
+  dayScoreInfo(key, date) {
+    const cfg = this.habitCfg();
+    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
+    let n = 0, sum = 0, met = 0, part = 0, miss = 0;
+    const items = {};
+    list.forEach((h) => {
+      const f = this.habitFrac(h, key, date);
+      if (f === null) return;
+      n++; sum += f;
+      if (f >= 1) met++; else if (f > 0) part++; else miss++;
+      items[h.id] = Math.round(f * 100);
+    });
+    if (!n) return null;
+    return { s: Math.round((sum / n) * 100), n: n, met: met, part: part, miss: miss, items: items };
+  }
+
+  scoreFor(key, date) {
+    if (key < this.keyOf(new Date())) { const s = (this.state.dayScores || {})[key]; if (s) return s; }
+    return this.dayScoreInfo(key, date || this.dateOf(key));
+  }
+
+  saveScore(key) {
+    const info = this.dayScoreInfo(key, this.dateOf(key));
+    const cur = (this.state.dayScores || {})[key];
+    if (!info) return;
+    if (cur && cur.s === info.s && cur.met === info.met && cur.part === info.part && cur.miss === info.miss) return;
+    this.setState({ dayScores: Object.assign({}, this.state.dayScores || {}, { [key]: Object.assign(info, { at: Date.now() }) }) }, () => this.persist());
+  }
+
+  // al abrir la app (o volver a ella) se guardan los días que terminaron y no tienen puntaje
+  closeDays() {
+    const st = this.state;
+    const now = new Date();
+    const since = st.since || this.keyOf(now);
+    const add = {};
+    for (let i = 1; i <= 60; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = this.keyOf(d);
+      if (key < since) break;
+      if ((st.dayScores || {})[key]) continue;
+      const info = this.dayScoreInfo(key, d);
+      if (info) add[key] = Object.assign(info, { at: Date.now() });
+    }
+    if (Object.keys(add).length) this.setState({ dayScores: Object.assign({}, st.dayScores || {}, add) }, () => this.persist());
+  }
+
+  scoreGrade(s) {
+    return s >= 90 ? 'Día redondo' : s >= 75 ? 'Muy buen día' : s >= 50 ? 'Día a medias' : s > 0 ? 'Día flojo' : 'Sin registro';
+  }
+
+  scoreParts(sc) {
+    const p = [];
+    if (sc.met) p.push(sc.met + (sc.met === 1 ? ' cumplido' : ' cumplidos'));
+    if (sc.part) p.push(sc.part + ' con avance');
+    if (sc.miss) p.push(sc.miss + ' sin hacer');
+    return p.join(' · ');
+  }
+
+  // tarjeta del puntaje para Inicio: el de ayer en la mañana y el de hoy desde las 18:00
+  scoreCardVals(th, c, dark) {
+    const now = new Date();
+    const h = now.getHours();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yk = this.keyOf(y);
+    const morning = h < 12 && yk >= (this.state.since || yk);
+    const evening = h >= 18;
+    const date = morning ? y : now;
+    const sc = (morning || evening) ? this.scoreFor(this.keyOf(date), date) : null;
+    if (!sc) return { show: false, s: 0, color: th.text, eyebrow: '', grade: '', parts: '', off: '0', open: () => {} };
+    return {
+      show: true, s: sc.s, color: this.healthText(sc.s, dark), ring: this.healthColor(sc.s, dark),
+      off: (138.2 * (1 - sc.s / 100)).toFixed(1),
+      eyebrow: morning ? 'Tu día de ayer' : 'Tu día hasta ahora',
+      grade: this.scoreGrade(sc.s), parts: this.scoreParts(sc),
+      open: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: morning ? -1 : 0 }); }
+    };
+  }
+
   programData() { return %%PROGRAM%%; }

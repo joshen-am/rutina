@@ -34,7 +34,7 @@ h = rep(h, """    const d = (st.hlog || {})[key] || {};
     const d = (st.hlog || {})[key] || {};
     const mini = !!d[h.id + '~'];""")
 h = rep(h, "      if (h.kind === 'auto') status = met ? 'Sesión completada' : 'Toca entrenar hoy';",
-           "      if (h.kind === 'auto') status = met ? 'Sesión completada' : 'Toca entrenar hoy';\n      else if (h.kind === 'food') status = Math.round(this.dayTotals(key).p) + ' de ' + this.targets().prot + ' g';")
+           "      if (h.kind === 'auto') status = met ? 'Sesión completada' : (isToday ? 'Toca entrenar hoy' : 'Sin sesión ese día');\n      else if (h.kind === 'food') status = Math.round(this.dayTotals(key).p) + ' de ' + this.targets().prot + ' g';")
 h = rep(h, "        hasStreak: streak > 1, streak: streak,", "        hasStreak: false, streak: streak, hasBar: h.kind === 'num' || h.kind === 'food',")
 h = rep(h, "isAuto: h.kind === 'auto',", "isAuto: h.kind === 'auto' || h.kind === 'food',")
 h = rep(h, "        checkBg: met ? c[h.color] : th.segBg, checkFg: met ? (dark ? '#000000' : '#FFFFFF') : th.tertiary,",

@@ -48,7 +48,8 @@ class Component extends DCLogic {
     cap: null,
     photos: false,
     aspecto: false,
-    chatOpen: false
+    chatOpen: false,
+    dayScores: {}
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -57,7 +58,7 @@ class Component extends DCLogic {
 
   applyData(s) {
     const next = {};
-    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat'].forEach((k) => {
+    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat', 'dayScores'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
@@ -86,7 +87,7 @@ class Component extends DCLogic {
     return {
       schema: 4, savedAt: Date.now(),
       log: s.log, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
-      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, derived: this.derived()
+      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, dayScores: s.dayScores, derived: this.derived()
     };
   }
 
@@ -313,7 +314,7 @@ class Component extends DCLogic {
       return;
     }
     this.go({
-      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
+      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, dayScores: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
   }
 

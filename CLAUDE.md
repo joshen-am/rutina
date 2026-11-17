@@ -22,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 33        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 32
+python3 build_pwa3.py 34        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 33
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -118,6 +118,16 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - La sesión pide la pantalla encendida (Wake Lock) y la suelta al salir. El motor de audio se crea en un momento libre después de abrir (`warmAudio`), no en el primer toque, que antes tardaba ~290 ms.
 - El paso de la sesión va una sola vez en la plantilla, con `id="paso-N"`: morphdom lo reemplaza al avanzar y su animación vuelve a correr.
 - El respaldo avisa cada semana («Tu respaldo semanal») y lo guarda en Archivos o iCloud Drive con un toque (menú compartir). Lo técnico de los recordatorios (código y secreto de GitHub) va en «Configuración avanzada».
+
+## Puntaje del día y avance parcial (`progreso.js` y `habits` de `parts.json`, versión 33)
+
+Pedido de Joshen: un puntaje del día que quede guardado, y que el agua y el sueño cuenten aunque no llegue a la meta («tomé 1 litro», «dormí 7 horas»).
+
+- **Puntaje** de 0 a 100: el promedio de `habitFrac` de los hábitos activos ese día, con el avance parcial (1 L de 2,5 L suma 40 %; 7 de 8 h, 88 %). `dayScoreInfo` lo calcula con cuántos se cumplieron, cuántos tienen avance y cuántos no se hicieron; `scoreGrade` da «Día redondo» (90+), «Muy buen día» (75+), «Día a medias» (50+) o «Día flojo».
+- **Guardado**: `dayScores[fecha]` (con el resto de los datos y el respaldo; «Borrar historial» lo vacía). `closeDays` guarda los días que terminaron (hasta 60 atrás, desde `since`) al abrir la app y al volver a ella (`visibilitychange`). Un día cerrado no cambia si después se ajustan metas o hábitos; sí si se edita ese día en Hábitos (`setHabit` llama a `saveScore`). `scoreFor` devuelve el guardado o, para hoy, el de ahora. `dayScore` (0..1, lo usan el historial y el resumen semanal) sale de ahí.
+- **Dónde se ve**: el anillo de Hábitos (con el color de salud), el anillo «Hábitos» de «Hoy» en Inicio, la tarjeta de la sección `diario` («Tu día de ayer» antes de las 12:00 y «Tu día hasta ahora» desde las 18:00; `scoreCardVals`, lleva a Hábitos en ese día) y el Historial de Progreso: cada día se toca y abre Hábitos en esa fecha. Hábitos navega hasta 120 días atrás.
+- **Avance parcial**: los hábitos con número muestran su barra y el porcentaje («7 de 8 h · 88 %, casi»). Desde el 75 % cuentan como «casi» y no cortan la racha (`habitMet`). El agua suma +250 ml, +500 ml o +1 L.
+- **Apple Salud**: una PWA no puede leer ni escribir en Salud (HealthKit es solo para apps nativas). Las opciones son la app nativa archivada o un Atajo de iOS que lea Salud y le pase los datos a la app.
 
 ## Progreso (`fuente/gen/v3/progreso.js`, versión 27)
 

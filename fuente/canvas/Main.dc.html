@@ -87,6 +87,13 @@ button{transition:opacity .16s ease}button:active{transform:none}
 </sc-if>
 <div style="opacity: {{ ho.diario.opacity }}; pointer-events: {{ ho.pe }}; max-height: {{ ho.maxH }}; overflow: {{ ho.ov }}; border-radius: 24px; display: flex; flex-direction: column; gap: 12px">
 <section aria-label="Tu día" style="background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
+<sc-if value="{{ sk.show }}" hint-placeholder-val="{{ false }}">
+<button type="button" onClick="{{ sk.open }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; color: inherit; text-align: left; width: 100%; display: flex; align-items: center; gap: 16px; padding: 0 0 16px; background: transparent; border-bottom: 0.5px solid {{ th.sep }}">
+<span style="position: relative; width: 52px; height: 52px; flex: none"><svg width="52" height="52" viewBox="0 0 52 52" aria-hidden="true"><circle cx="26.0" cy="26.0" r="22" fill="none" stroke="{{ th.fill }}" stroke-width="5"></circle><circle cx="26.0" cy="26.0" r="22" fill="none" stroke="{{ sk.ring }}" stroke-width="5" stroke-linecap="round" stroke-dasharray="138.2" stroke-dashoffset="{{ sk.off }}" transform="rotate(-90 26.0 26.0)" class="ring-in" style="--full: 138.2; transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg><span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ sk.s }}</span></span>
+<span style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">{{ sk.eyebrow }}</span><span style="font-size: 16px; font-weight: 500">{{ sk.grade }}</span><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ sk.parts }}</span></span>
+<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="{{ th.tertiary }}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg>
+</button>
+</sc-if>
 <sc-if value="{{ dy.showCheckin }}" hint-placeholder-val="{{ true }}">
 <div style="display: flex; justify-content: space-between; align-items: baseline; gap: 8px"><h2 style="margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.02em">¿Cómo amaneciste?</h2><span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}">20 segundos</span></div>
 <sc-for list="{{ dy.rows }}" as="row" hint-placeholder-count="4">
@@ -392,9 +399,9 @@ button{transition:opacity .16s ease}button:active{transform:none}
 <button type="button" onClick="{{ hd.next }}" aria-label="Día siguiente" style="opacity: {{ hd.nextOp }}; appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 44px; height: 44px; flex: none; border-radius: 50%; background: transparent; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"></path></svg></button>
 </div>
 <section aria-label="Resumen del día" style="background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px; padding: 20px; display: flex; align-items: center; gap: 20px">
-<div style="position: relative; width: 84px; height: 84px; flex: none"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ th.fill }}" stroke-width="7"></circle><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ th.text }}" stroke-width="7" stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="{{ hd.ringOff84 }}" transform="rotate(-90 42.0 42.0)" class="ring-in" style="--full: 226.2; transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
-<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ hd.done }}/{{ hd.total }}</div></div>
-<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.03em">{{ hd.title }}</span><span style="font-size: 16px; line-height: 24px; color: {{ th.sub }}">{{ hd.sub }}</span></div>
+<div style="position: relative; width: 84px; height: 84px; flex: none"><svg width="84" height="84" viewBox="0 0 84 84" aria-hidden="true"><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ th.fill }}" stroke-width="7"></circle><circle cx="42.0" cy="42.0" r="36" fill="none" stroke="{{ hd.ringColor }}" stroke-width="7" stroke-linecap="round" stroke-dasharray="226.2" stroke-dashoffset="{{ hd.ringOff84 }}" transform="rotate(-90 42.0 42.0)" class="ring-in" style="--full: 226.2; transition: stroke-dashoffset 0.6s cubic-bezier(.32,.72,0,1)"></circle></svg>
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 400; letter-spacing: -0.04em; font-variant-numeric: tabular-nums;">{{ hd.score }}</div></div>
+<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px"><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}; color: {{ th.sub }}">{{ hd.scoreLabel }}</span><span style="font-size: 20px; line-height: 24px; font-weight: 500; letter-spacing: -0.03em">{{ hd.title }}</span><span style="font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ hd.sub }}</span></div>
 </section>
 <sc-if value="{{ hd.water.on }}" hint-placeholder-val="{{ true }}">
 <section aria-labelledby="agua-h" style="background: {{ th.card }}; box-shadow: {{ th.cardShadow }}; border-radius: 24px; padding: 20px; display: flex; flex-direction: column; gap: 16px">
@@ -407,10 +414,11 @@ button{transition:opacity .16s ease}button:active{transform:none}
 <button type="button" onClick="{{ g.pick }}" aria-label="{{ g.aria }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; height: 44px; border-radius: 12px; background: {{ g.bg }}; display: flex; align-items: center; justify-content: center; transition: background 0.2s"><svg width="16" height="16" viewBox="0 0 24 24" fill="{{ g.fill }}" stroke="{{ g.stroke }}" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3c3.5 4.4 6 7.6 6 10.5a6 6 0 0 1-12 0C6 10.6 8.5 7.4 12 3z"></path></svg></button>
 </sc-for>
 </div>
-<div style="display: grid; grid-template-columns: 52px minmax(0, 1fr) minmax(0, 1fr); gap: 8px">
+<div style="display: grid; grid-template-columns: 44px repeat(3, minmax(0, 1fr)); gap: 8px">
 <button type="button" onClick="{{ hd.water.sub }}" aria-label="Quitar un vaso" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; display: flex; align-items: center; justify-content: center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14"></path></svg></button>
-<button type="button" onClick="{{ hd.water.add }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 8px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500">+ Vaso 250 ml</button>
-<button type="button" onClick="{{ hd.water.add2 }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 8px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500">+ Botella 500</button>
+<button type="button" onClick="{{ hd.water.add }}" aria-label="Sumar un vaso de 250 ml" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 4px; border-radius: 999px; background: {{ th.inv }}; color: {{ th.onInv }}; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums;">+250 ml</button>
+<button type="button" onClick="{{ hd.water.add2 }}" aria-label="Sumar 500 ml" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 4px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums;">+500 ml</button>
+<button type="button" onClick="{{ hd.water.add4 }}" aria-label="Sumar 1 litro" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; height: 44px; padding: 0 4px; border-radius: 999px; background: {{ th.fill }}; color: {{ th.text }}; font-size: 16px; font-weight: 500; font-variant-numeric: tabular-nums;">+1 L</button>
 </div>
 <p style="margin: 0; font-size: 13px; line-height: 20px; color: {{ th.sub }}">{{ hd.water.cue }}</p>
 </section>
@@ -1082,11 +1090,11 @@ button{transition:opacity .16s ease}button:active{transform:none}
 <h2 id="hist" style="margin: 0; font-size: 20px; font-weight: 500; letter-spacing: -0.02em">Historial</h2>
 <span style="font-family: {{ mono }}; font-size: 13px; color: {{ th.sub }}; font-variant-numeric: tabular-nums;">{{ hist.summary }}</span>
 </div>
-<div role="img" aria-label="{{ hist.aria }}" style="display: grid; grid-template-columns: 12px repeat({{ hist.weeks }}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, auto); grid-auto-flow: column; column-gap: 4px; row-gap: 4px">
+<div role="group" aria-label="{{ hist.aria }}" style="display: grid; grid-template-columns: 12px repeat({{ hist.weeks }}, minmax(0, 1fr)); grid-template-rows: 16px repeat(7, auto); grid-auto-flow: column; column-gap: 4px; row-gap: 4px">
 <span aria-hidden="true"></span><sc-for list="{{ hist.days }}" as="hd" hint-placeholder-count="7"><span aria-hidden="true" style="font-family: {{ mono }}; font-size: 12px; line-height: 16px; align-self: center; color: {{ th.tertiary }}">{{ hd.t }}</span></sc-for>
 <sc-for list="{{ hist.items }}" as="hc" hint-placeholder-count="136">
 <sc-if value="{{ hc.isLabel }}" hint-placeholder-val="{{ false }}"><span style="font-family: {{ mono }}; font-size: 12px; line-height: 16px; color: {{ th.tertiary }}; white-space: nowrap; overflow: visible">{{ hc.text }}</span></sc-if>
-<sc-if value="{{ hc.isCell }}" hint-placeholder-val="{{ true }}"><span style="aspect-ratio: 1 / 1; border-radius: 3px; background: {{ hc.bg }}; box-shadow: {{ hc.ring }}"></span></sc-if>
+<sc-if value="{{ hc.isCell }}" hint-placeholder-val="{{ true }}"><sc-if value="{{ hc.isBtn }}" hint-placeholder-val="{{ true }}"><button type="button" onClick="{{ hc.pick }}" aria-label="{{ hc.aria }}" style="appearance: none; border: 0; margin: 0; padding: 0; font: inherit; cursor: pointer; padding: 0; width: 100%; aspect-ratio: 1 / 1; border-radius: 3px; background: {{ hc.bg }}; box-shadow: {{ hc.ring }}"></button></sc-if><sc-if value="{{ hc.isPlain }}" hint-placeholder-val="{{ false }}"><span style="aspect-ratio: 1 / 1; border-radius: 3px; background: {{ hc.bg }}; box-shadow: {{ hc.ring }}"></span></sc-if></sc-if>
 </sc-for>
 </div>
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; line-height: 16px; color: {{ th.sub }}">
@@ -1661,7 +1669,8 @@ class Component extends DCLogic {
     cap: null,
     photos: false,
     aspecto: false,
-    chatOpen: false
+    chatOpen: false,
+    dayScores: {}
   };
 
   /* ---------- ciclo de vida y guardado ---------- */
@@ -1693,6 +1702,10 @@ class Component extends DCLogic {
         navigator.storage.persisted().then((p) => (p ? p : navigator.storage.persist())).then((p) => this.setState({ persisted: !!p })).catch(() => {});
       }
     } catch (e) {}
+    // guarda el puntaje de los días que ya terminaron, al abrir y al volver a la app (iPhone la deja abierta días)
+    setTimeout(() => this.closeDays(), 1200);
+    this._onVis = () => { if (!document.hidden) this.closeDays(); };
+    document.addEventListener('visibilitychange', this._onVis);
     this.warmAudio();
     this.syncTicker();
     if (this.isNative()) setTimeout(() => this.nativeSchedule(), 1500);
@@ -1700,7 +1713,7 @@ class Component extends DCLogic {
 
   applyData(s) {
     const next = {};
-    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat'].forEach((k) => {
+    ['log', 'peso', 'plan', 'noDemo', 'sess', 'since', 'hlog', 'flog', 'frev', 'hp', 'meas', 'mood', 'xlog', 'hpHist', 'daily', 'bodyPhotos', 'adapt', 'chat', 'dayScores'].forEach((k) => {
       if (s[k] !== undefined && s[k] !== null) next[k] = s[k];
     });
     if (s.prefs) {
@@ -1729,7 +1742,7 @@ class Component extends DCLogic {
     return {
       schema: 4, savedAt: Date.now(),
       log: s.log, peso: s.peso, prefs: s.prefs, plan: s.plan, noDemo: s.noDemo, sess: s.sess, since: s.since,
-      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, derived: this.derived()
+      hlog: s.hlog, flog: s.flog, frev: s.frev, hp: s.hp, meas: s.meas, mood: s.mood, xlog: s.xlog, hpHist: s.hpHist, daily: s.daily, bodyPhotos: s.bodyPhotos, adapt: s.adapt, chat: s.chat, dayScores: s.dayScores, derived: this.derived()
     };
   }
 
@@ -2656,7 +2669,7 @@ class Component extends DCLogic {
       return;
     }
     this.go({
-      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
+      log: {}, hlog: {}, flog: {}, xlog: {}, hpHist: [], daily: {}, dayScores: {}, frev: null, last: null, resetArmed: false, noDemo: true, tab: 'inicio', sel: null, sess: null, since: this.keyOf(new Date())
     }, () => this.persist());
   }
 
@@ -2765,19 +2778,18 @@ class Component extends DCLogic {
     return f;
   }
 
+  // para la racha: cumplido, versión mínima o «casi» (75 % o más: dormir 7 de 8 h no corta la racha)
   habitMet(h, key, date) {
     const f = this.habitFrac(h, key, date);
     if (f === null) return null;
     const d = ((this.state.hlog || {})[key] || {});
-    return f >= 1 || !!d[h.id + '~'];
+    return f >= 0.75 || !!d[h.id + '~'];
   }
 
+  // 0..1: el puntaje del día (guardado si el día ya cerró; ver progreso.js)
   dayScore(key, date) {
-    const cfg = this.habitCfg();
-    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
-    let n = 0, sum = 0;
-    list.forEach((h) => { const f = this.habitFrac(h, key, date); if (f !== null) { n++; sum += f; } });
-    return n ? sum / n : null;
+    const sc = this.scoreFor(key, date);
+    return sc ? sc.s / 100 : null;
   }
 
   habitStreak(h, today0) {
@@ -2797,7 +2809,7 @@ class Component extends DCLogic {
     const hl = Object.assign({}, this.state.hlog || {});
     hl[key] = Object.assign({}, hl[key] || {});
     if (v === null || v === 0 || v === false) delete hl[key][id]; else hl[key][id] = v;
-    this.setState({ hlog: hl }, () => this.persist());
+    this.setState({ hlog: hl }, () => { if (key < this.keyOf(new Date())) this.saveScore(key); this.persist(); });
   }
 
   habitDate() {
@@ -2843,9 +2855,11 @@ class Component extends DCLogic {
       const atRisk = ym === false && ykey >= (st.since || key) && !met && !mini;
       const step = h.step || 1;
       let status;
-      if (h.kind === 'auto') status = met ? 'Sesión completada' : 'Toca entrenar hoy';
+      if (h.kind === 'auto') status = met ? 'Sesión completada' : (isToday ? 'Toca entrenar hoy' : 'Sin sesión ese día');
       else if (h.kind === 'food') status = Math.round(this.dayTotals(key).p) + ' de ' + this.targets().prot + ' g';
       else status = this.habitValueLabel(h, v, goal);
+      // el avance cuenta aunque no llegues a la meta: 7 de 8 h suman 88 % al puntaje del día
+      if (h.kind === 'num' && f > 0 && f < 1) status += ' · ' + Math.round(f * 100) + ' %' + (f >= 0.75 ? ', casi' : '');
       if (mini && !met) status += ', versión mínima';
       items.push({
         id: h.id, name: h.name, icon: h.icon, color: c[h.color], tint: tint(h.color),
@@ -2883,10 +2897,11 @@ class Component extends DCLogic {
     const water = {
       on: wOn, count: w, goal: wGoal, liters: L(w), goalL: L(wGoal), glasses: glasses,
       pct: Math.round(Math.min(1, w / wGoal) * 100), met: w >= wGoal,
-      left: w >= wGoal ? 'Meta cumplida' : 'Te faltan ' + (wGoal - w) + (wGoal - w === 1 ? ' vaso' : ' vasos'),
+      left: w >= wGoal ? 'Meta cumplida' : (w ? Math.round((w / wGoal) * 100) + ' % · ' : '') + 'te faltan ' + (wGoal - w) + (wGoal - w === 1 ? ' vaso' : ' vasos'),
       cue: cfg.cues.agua || cat[1].cue,
       add: () => { this.sfx(w + 1 === wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 1); },
       add2: () => { this.sfx(w + 2 >= wGoal && w < wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 2); },
+      add4: () => { this.sfx(w + 4 >= wGoal && w < wGoal ? 'pick' : 'tap'); this.setHabit(key, 'agua', w + 4); },
       sub: () => { this.sfx('tap'); this.setHabit(key, 'agua', Math.max(0, w - 1)); }
     };
     const score = total ? done / total : 0;
@@ -2895,14 +2910,14 @@ class Component extends DCLogic {
     const left = total - done;
     return {
       dayLabel: isToday ? 'Hoy' : ((st.hday || 0) === -1 ? 'Ayer' : cap(names[(date.getDay() + 6) % 7]) + ' ' + date.getDate()),
-      dateLabel: this.longDate(date), isToday: isToday, canNext: !isToday, canPrev: (st.hday || 0) > -6,
-      nextOp: isToday ? 0.3 : 1, prevOp: (st.hday || 0) > -6 ? 1 : 0.3,
+      dateLabel: this.longDate(date), isToday: isToday, canNext: !isToday, canPrev: (st.hday || 0) > -120,
+      nextOp: isToday ? 0.3 : 1, prevOp: (st.hday || 0) > -120 ? 1 : 0.3,
       done: done, total: total, items: items, water: water,
       ringOff: (238.8 * (1 - score)).toFixed(1),
       title: total ? (done === total ? 'Día completo' : 'Vas al ' + Math.round(score * 100) + ' %') : 'Sin hábitos',
       sub: total ? (left === 0 ? 'Cumpliste todos tus hábitos de hoy.' : 'Te faltan ' + left + (left === 1 ? ' hábito' : ' hábitos') + ' para completar el día.') : 'Elige qué hábitos seguir.',
       hasRisk: items.some((x) => x.atRisk),
-      prev: () => { this.sfx('tap'); this.setState({ hday: Math.max(-6, (st.hday || 0) - 1) }); },
+      prev: () => { this.sfx('tap'); this.setState({ hday: Math.max(-120, (st.hday || 0) - 1) }); },
       next: () => { this.sfx('tap'); this.setState({ hday: Math.min(0, (st.hday || 0) + 1) }); }
     };
   }
@@ -4625,6 +4640,89 @@ class Component extends DCLogic {
     };
   }
 
+  /* ---------- puntaje del día (versión 33) ----------
+     De 0 a 100: el promedio de lo que avanzaste en cada hábito activo ese día. El avance cuenta aunque no llegues a la
+     meta (1 L de 2,5 L de agua suma 40 %; dormir 7 de 8 h, 88 %). Cuando el día termina, el puntaje queda guardado en
+     dayScores: no cambia si después ajustas metas o hábitos, y sí si editas ese día en Hábitos. */
+
+  dayScoreInfo(key, date) {
+    const cfg = this.habitCfg();
+    const list = this.habitCatalog().filter((h) => cfg.on.indexOf(h.id) >= 0);
+    let n = 0, sum = 0, met = 0, part = 0, miss = 0;
+    const items = {};
+    list.forEach((h) => {
+      const f = this.habitFrac(h, key, date);
+      if (f === null) return;
+      n++; sum += f;
+      if (f >= 1) met++; else if (f > 0) part++; else miss++;
+      items[h.id] = Math.round(f * 100);
+    });
+    if (!n) return null;
+    return { s: Math.round((sum / n) * 100), n: n, met: met, part: part, miss: miss, items: items };
+  }
+
+  scoreFor(key, date) {
+    if (key < this.keyOf(new Date())) { const s = (this.state.dayScores || {})[key]; if (s) return s; }
+    return this.dayScoreInfo(key, date || this.dateOf(key));
+  }
+
+  saveScore(key) {
+    const info = this.dayScoreInfo(key, this.dateOf(key));
+    const cur = (this.state.dayScores || {})[key];
+    if (!info) return;
+    if (cur && cur.s === info.s && cur.met === info.met && cur.part === info.part && cur.miss === info.miss) return;
+    this.setState({ dayScores: Object.assign({}, this.state.dayScores || {}, { [key]: Object.assign(info, { at: Date.now() }) }) }, () => this.persist());
+  }
+
+  // al abrir la app (o volver a ella) se guardan los días que terminaron y no tienen puntaje
+  closeDays() {
+    const st = this.state;
+    const now = new Date();
+    const since = st.since || this.keyOf(now);
+    const add = {};
+    for (let i = 1; i <= 60; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() - i);
+      const key = this.keyOf(d);
+      if (key < since) break;
+      if ((st.dayScores || {})[key]) continue;
+      const info = this.dayScoreInfo(key, d);
+      if (info) add[key] = Object.assign(info, { at: Date.now() });
+    }
+    if (Object.keys(add).length) this.setState({ dayScores: Object.assign({}, st.dayScores || {}, add) }, () => this.persist());
+  }
+
+  scoreGrade(s) {
+    return s >= 90 ? 'Día redondo' : s >= 75 ? 'Muy buen día' : s >= 50 ? 'Día a medias' : s > 0 ? 'Día flojo' : 'Sin registro';
+  }
+
+  scoreParts(sc) {
+    const p = [];
+    if (sc.met) p.push(sc.met + (sc.met === 1 ? ' cumplido' : ' cumplidos'));
+    if (sc.part) p.push(sc.part + ' con avance');
+    if (sc.miss) p.push(sc.miss + ' sin hacer');
+    return p.join(' · ');
+  }
+
+  // tarjeta del puntaje para Inicio: el de ayer en la mañana y el de hoy desde las 18:00
+  scoreCardVals(th, c, dark) {
+    const now = new Date();
+    const h = now.getHours();
+    const y = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const yk = this.keyOf(y);
+    const morning = h < 12 && yk >= (this.state.since || yk);
+    const evening = h >= 18;
+    const date = morning ? y : now;
+    const sc = (morning || evening) ? this.scoreFor(this.keyOf(date), date) : null;
+    if (!sc) return { show: false, s: 0, color: th.text, eyebrow: '', grade: '', parts: '', off: '0', open: () => {} };
+    return {
+      show: true, s: sc.s, color: this.healthText(sc.s, dark), ring: this.healthColor(sc.s, dark),
+      off: (138.2 * (1 - sc.s / 100)).toFixed(1),
+      eyebrow: morning ? 'Tu día de ayer' : 'Tu día hasta ahora',
+      grade: this.scoreGrade(sc.s), parts: this.scoreParts(sc),
+      open: () => { this.sfx('tap'); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: morning ? -1 : 0 }); }
+    };
+  }
+
   programData() { return {"ladder":[["Pecho","De rodillas + negativas en el suelo","Flexión en el suelo","Diamante → arquera"],["Hombros","Laterales con 3 kg + pica corta","Pica completa","Pica con pausa y pies más cerca"],["Remo","Marco de la puerta","Marco con los pies más cerca","Marco con pausa de 3 s y bajada lenta"],["Espalda alta","Jalón boca abajo, Y-T-W","Con pausa de 3 s","Y-T-W con la mancuerna"],["Tríceps","Fondo en el suelo, extensión con 3 kg","Fondo con los pies más lejos","Flexión diamante"],["Piernas","Sentadilla con pausa, zancadas","Zancadas con la mancuerna","Sentadilla a una pierna en el marco"],["Isquios","Puente + peso muerto rumano","Puente de isquios","Puente de isquios a una pierna"],["Core","Dead bug, plancha, piernas dobladas","Hollow más estirado, plancha de 60 s","Hollow completo, piernas estiradas"]],"later":[["Flexión diamante","manos juntas bajo el pecho, formando un diamante con los dedos. Trabaja más el tríceps."],["Flexión arquera","manos muy abiertas: baja hacia un brazo mientras el otro queda casi estirado."],["Sentadilla con salto","desde la semana 9, si las rodillas van bien: baja controlado y sube saltando suave."],["Elevación de piernas estiradas","como la del jueves, pero con las rodillas rectas."]],"catalog":{"flex_rodillas":{"k":"flex_rodillas","pages":[{"figs":["img/p/flex_rodillas-1.svg"],"lines":["Rodillas en el mat y manos un poco más abiertas que los hombros."]},{"figs":["img/p/flex_rodillas-1.svg"],"lines":["Cuerpo recto de rodillas a cabeza: aprieta glúteos y abdomen."]},{"figs":["img/p/flex_rodillas-2.svg"],"lines":["Baja el pecho cerca del suelo con los codos a unos 45° del cuerpo y empuja hasta estirar los brazos."]}],"view":null,"phase":"Ejercicios","name":"Flexión de rodillas","dose":"4 × 6–12","rest":90,"works":"Pecho, hombros y tríceps","how":["Rodillas en el mat y manos un poco más abiertas que los hombros.","Cuerpo recto de rodillas a cabeza: aprieta glúteos y abdomen.","Baja el pecho cerca del suelo con los codos a unos 45° del cuerpo y empuja hasta estirar los brazos."],"watch":"Que la cadera no se hunda ni quede levantada.","easier":"En la pared.","harder":"Flexión en el suelo.","tip":null,"sets":4},"remo_marco":{"k":"remo_marco","pages":[{"figs":["img/p/remo_marco-2s.svg"],"lines":["Párate frente al borde del marco, con la punta de los pies junto a la base, y agárralo a la altura del pecho."]},{"figs":["img/p/remo_marco-1.svg"],"lines":["Déjate caer hacia atrás con el brazo estirado y el cuerpo recto."]},{"figs":["img/p/remo_marco-2.svg"],"lines":["Tira llevando el codo atrás, pegado al cuerpo, hasta acercar el pecho al marco. Baja en 2–3 s."]}],"view":null,"phase":"Ejercicios","name":"Remo en el marco de la puerta","dose":"4 × 8–12 por brazo","rest":60,"works":"Espalda, hombro posterior y bíceps","how":["Párate frente al borde del marco, con la punta de los pies junto a la base, y agárralo a la altura del pecho.","Déjate caer hacia atrás con el brazo estirado y el cuerpo recto.","Tira llevando el codo atrás, pegado al cuerpo, hasta acercar el pecho al marco. Baja en 2–3 s."],"watch":"No gires el torso para ayudarte: el movimiento sale de la espalda. Agarra firme.","easier":null,"harder":"Pies más cerca del marco, para quedar más inclinado.","tip":null,"sets":4},"laterales":{"k":"laterales","pages":[{"figs":["img/p/laterales-1.svg"],"lines":["De pie, con el codo apenas doblado."]},{"figs":["img/p/laterales-2.svg"],"lines":["Sube el brazo hacia el lado hasta la altura del hombro en 2 s y baja en 3 s."]}],"view":null,"phase":"Ejercicios","name":"Elevaciones laterales con 3 kg","dose":"3 × 12–20 por brazo","rest":60,"works":"Hombro lateral (el ancho de los hombros)","how":["De pie, con el codo apenas doblado.","Sube el brazo hacia el lado hasta la altura del hombro en 2 s y baja en 3 s."],"watch":"No balancees el cuerpo ni subas el hombro hacia la oreja.","easier":null,"harder":"Más lento, con pausa arriba o hasta 25 reps.","tip":null,"sets":3},"curl":{"k":"curl","pages":[{"figs":["img/p/curl-1.svg"],"lines":["Codo pegado al costado y palma hacia arriba."]},{"figs":["img/p/curl-2.svg"],"lines":["Sube sin mover el codo y baja en 3 s."]}],"view":null,"phase":"Ejercicios","name":"Curl de bíceps con 3 kg","dose":"3 × 12–20 por brazo","rest":60,"works":"Bíceps","how":["Codo pegado al costado y palma hacia arriba.","Sube sin mover el codo y baja en 3 s."],"watch":"No te ayudes balanceando la espalda.","easier":null,"harder":null,"tip":"Para ahorrar tiempo, alterna una serie de curl con una de tríceps, sin descanso entre ellas.","sets":3},"triceps":{"k":"triceps","pages":[{"figs":["img/p/triceps-1.svg"],"lines":["Brazo arriba, con el codo apuntando al techo y cerca de la cabeza."]},{"figs":["img/p/triceps-2.svg"],"lines":["Baja la mancuerna detrás de la cabeza doblando solo el codo y vuelve a estirar."]}],"view":null,"phase":"Ejercicios","name":"Extensión de tríceps sobre la cabeza","dose":"3 × 12–20 por brazo","rest":60,"works":"Tríceps","how":["Brazo arriba, con el codo apuntando al techo y cerca de la cabeza.","Baja la mancuerna detrás de la cabeza doblando solo el codo y vuelve a estirar."],"watch":"El codo no se abre hacia el lado. Si cuesta, sujétalo con la otra mano.","easier":null,"harder":null,"tip":null,"sets":3},"ytw":{"k":"ytw","pages":[{"figs":["img/p/ytw-1.svg"],"lines":["Boca abajo en el mat, con la frente apoyada. Levanta los brazos 3–5 cm del suelo formando una Y, con los pulgares hacia arriba."]},{"figs":["img/p/ytw-2.svg"],"lines":["Luego forma una T."]},{"figs":["img/p/ytw-3.svg"],"lines":["Y luego una W. Aprieta los omóplatos 2 s en cada letra."]}],"view":"Vista desde arriba","phase":"Ejercicios","name":"Y-T-W boca abajo","dose":"2 × 8 de cada letra","rest":60,"works":"Espalda alta y hombro posterior (postura)","how":["Boca abajo en el mat, con la frente apoyada en el mat.","Levanta los brazos 3–5 cm del suelo formando una Y, luego una T y luego una W, con los pulgares hacia arriba.","Aprieta los omóplatos 2 s en cada letra."],"watch":"No levantes el pecho: trabajan los brazos y los omóplatos.","easier":null,"harder":"Desde la fase 2, la T con la mancuerna, un brazo a la vez.","tip":null,"sets":2},"deadbug":{"k":"deadbug","pages":[{"figs":["img/p/deadbug-1.svg"],"lines":["Boca arriba, brazos hacia el techo, caderas y rodillas a 90°."]},{"figs":["img/p/deadbug-2.svg"],"lines":["Pega la zona lumbar al suelo. Estira un brazo hacia atrás y la pierna contraria hacia adelante."]},{"figs":["img/p/deadbug-1.svg"],"lines":["Vuelve y cambia de lado."]}],"view":null,"phase":"Ejercicios","name":"Dead bug","dose":"3 × 8 por lado","rest":45,"works":"Core profundo","how":["Boca arriba, brazos hacia el techo, caderas y rodillas a 90°.","Pega la zona lumbar al suelo. Estira un brazo hacia atrás y la pierna contraria hacia adelante.","Vuelve y cambia de lado."],"watch":"Si la espalda se despega, no bajes tanto la pierna.","easier":null,"harder":null,"tip":null,"sets":3},"plancha":{"k":"plancha","pages":[{"figs":["img/p/plancha-1.svg"],"lines":["Antebrazos en el suelo y codos bajo los hombros.","Cuerpo recto: aprieta glúteos y mete un poco la pelvis. Respira normal."]}],"view":null,"phase":"Ejercicios","name":"Plancha","dose":"3 × 20–40 s","rest":45,"works":"Todo el core","how":["Antebrazos en el suelo y codos bajo los hombros.","Cuerpo recto: aprieta glúteos y mete un poco la pelvis. Respira normal."],"watch":"La cadera no se hunde ni queda arriba.","easier":"Con las rodillas apoyadas.","harder":null,"tip":null,"sets":3},"sentadilla":{"k":"sentadilla","pages":[{"figs":["img/p/sentadilla-1.svg"],"lines":["Pies al ancho de los hombros, puntas un poco abiertas y brazos al frente."]},{"figs":["img/p/sentadilla-2.svg"],"lines":["Baja en 3 s llevando la cadera atrás, hasta que los muslos queden casi horizontales. Pausa 1 s."]},{"figs":["img/p/sentadilla-1.svg"],"lines":["Sube empujando el suelo con todo el pie."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla con pausa","dose":"4 × 10–15","rest":90,"works":"Muslos y glúteos","how":["Pies al ancho de los hombros, puntas un poco abiertas y brazos al frente.","Baja en 3 s llevando la cadera atrás, hasta que los muslos queden casi horizontales. Pausa 1 s.","Sube empujando el suelo con todo el pie."],"watch":"Las rodillas siguen la dirección de las puntas y los talones no se despegan.","easier":"Baja solo hasta donde mantengas la técnica.","harder":"Con la mancuerna al pecho y pausa de 3 s.","tip":null,"sets":4},"zancada_atras":{"k":"zancada_atras","pages":[{"figs":["img/p/zancada_atras-2.svg"],"lines":["Da un paso largo hacia atrás y baja hasta que la rodilla de atrás casi toque el suelo."]},{"figs":["img/p/zancada_atras-2s.svg"],"lines":["Torso recto y el peso en la pierna de adelante."]},{"figs":["img/p/zancada_atras-1.svg"],"lines":["Vuelve empujando con la pierna de adelante. Alterna."]}],"view":null,"phase":"Ejercicios","name":"Zancada hacia atrás","dose":"3 × 8–12 por pierna","rest":90,"works":"Muslos, glúteos y equilibrio","how":["Da un paso largo hacia atrás y baja hasta que la rodilla de atrás casi toque el suelo.","Torso recto y el peso en la pierna de adelante.","Vuelve empujando con la pierna de adelante. Alterna."],"watch":"La rodilla de adelante no se va hacia adentro. Apóyate en la pared si pierdes el equilibrio.","easier":null,"harder":"Con la mancuerna en una mano.","tip":null,"sets":3},"puente":{"k":"puente","pages":[{"figs":["img/p/puente-1.svg"],"lines":["Boca arriba, rodillas dobladas y pies cerca de los glúteos."]},{"figs":["img/p/puente-2.svg"],"lines":["Empuja con los talones y sube la cadera hasta formar una línea de hombros a rodillas."]},{"figs":["img/p/puente-2s.svg"],"lines":["Aprieta los glúteos 2 s arriba."]}],"view":null,"phase":"Ejercicios","name":"Puente de glúteo","dose":"3 × 12–20","rest":60,"works":"Glúteos","how":["Boca arriba, rodillas dobladas y pies cerca de los glúteos.","Empuja con los talones y sube la cadera hasta formar una línea de hombros a rodillas.","Aprieta los glúteos 2 s arriba."],"watch":"No arquees la zona lumbar para subir más.","easier":null,"harder":"A una pierna (viernes, pág. 11).","tip":null,"sets":3},"pm_rumano":{"k":"pm_rumano","pages":[{"figs":["img/p/pm_rumano-1.svg"],"lines":["De pie en una pierna, rodilla apenas doblada, con la mancuerna en la mano del lado de la pierna que va atrás."]},{"figs":["img/p/pm_rumano-2.svg"],"lines":["Inclina el torso hacia adelante mientras esa pierna sube atrás, en línea con la espalda."]},{"figs":["img/p/pm_rumano-2s.svg"],"lines":["Baja hasta sentir el estiramiento atrás del muslo y vuelve apretando el glúteo."]}],"view":null,"phase":"Ejercicios","name":"Peso muerto rumano a una pierna","dose":"3 × 8–12 por pierna","rest":60,"works":"Parte de atrás del muslo, glúteos y equilibrio","how":["De pie en una pierna, rodilla apenas doblada, con la mancuerna en la mano del lado de la pierna que va atrás.","Inclina el torso hacia adelante mientras esa pierna sube atrás, en línea con la espalda.","Baja hasta sentir el estiramiento atrás del muslo y vuelve apretando el glúteo."],"watch":"Espalda recta y cadera nivelada. Si pierdes el equilibrio, apoya la mano libre en la pared.","easier":null,"harder":null,"tip":null,"sets":3},"talones_suelo":{"k":"talones_suelo","pages":[{"figs":["img/p/talones_suelo-1.svg"],"lines":["De pie en una pierna, con una mano en la pared para el equilibrio."]},{"figs":["img/p/talones_suelo-2.svg"],"lines":["Sube lo más alto que puedas, pausa 1 s arriba y baja lento."]}],"view":null,"phase":"Ejercicios","name":"Elevación de talones a una pierna","dose":"3 × 12–20 por pierna","rest":45,"works":"Pantorrillas","how":["De pie en una pierna, con una mano en la pared para el equilibrio.","Sube lo más alto que puedas, pausa 1 s arriba y baja lento."],"watch":null,"easier":"Con las dos piernas.","harder":"Con la mancuerna en la mano libre.","tip":null,"sets":3},"plancha_lateral":{"k":"plancha_lateral","pages":[{"figs":["img/p/plancha_lateral-1.svg"],"lines":["De lado, con el codo bajo el hombro y los pies uno sobre otro.","Sube la cadera hasta formar una línea recta y mantén."]}],"view":"Vista de frente","phase":"Ejercicios","name":"Plancha lateral","dose":"3 × 20–30 s por lado","rest":45,"works":"Oblicuos y cintura","how":["De lado, con el codo bajo el hombro y los pies uno sobre otro.","Sube la cadera hasta formar una línea recta y mantén."],"watch":"La cadera no cae hacia el suelo ni se va hacia atrás.","easier":"Con las rodillas dobladas y apoyadas.","harder":null,"tip":null,"sets":3},"bird_dog":{"k":"bird_dog","pages":[{"figs":["img/p/bird_dog-1.svg"],"lines":["En cuatro apoyos: manos bajo los hombros y rodillas bajo la cadera."]},{"figs":["img/p/bird_dog-2.svg"],"lines":["Estira un brazo adelante y la pierna contraria atrás, sin girar la cadera. Pausa 2 s."]},{"figs":["img/p/bird_dog-1.svg"],"lines":["Vuelve y cambia de lado."]}],"view":null,"phase":"Ejercicios","name":"Bird dog","dose":"3 × 8 por lado","rest":45,"works":"Core y zona lumbar","how":["En cuatro apoyos: manos bajo los hombros y rodillas bajo la cadera.","Estira un brazo adelante y la pierna contraria atrás, sin girar la cadera. Pausa 2 s.","Vuelve y cambia de lado."],"watch":"No arquees la espalda: imagina un vaso de agua sobre la zona lumbar.","easier":null,"harder":null,"tip":null,"sets":3},"flex_suelo":{"k":"flex_suelo","pages":[{"figs":["img/p/flex_suelo-1.svg"],"lines":["Empieza arriba, en posición de flexión. Si cuesta llegar, sube desde las rodillas."]},{"figs":["img/p/flex_suelo-2.svg"],"lines":["Baja en 3–5 s con el cuerpo recto hasta casi tocar el suelo."]},{"figs":["img/p/flex_suelo-1.svg"],"lines":["Apoya las rodillas para volver arriba y repite."]}],"view":null,"phase":"Ejercicios","name":"Flexión negativa en el suelo","dose":"4 × 3–6","rest":90,"works":"Pecho, hombros y tríceps","how":["Empieza arriba, en posición de flexión. Si cuesta llegar, sube desde las rodillas.","Baja en 3–5 s con el cuerpo recto hasta casi tocar el suelo.","Apoya las rodillas para volver arriba y repite."],"watch":"No te dejes caer: controla toda la bajada.","easier":null,"harder":"Cuando bajes controlado, intenta empujar de vuelta: tu primera flexión completa.","tip":null,"sets":4},"jalon_suelo":{"k":"jalon_suelo","pages":[{"figs":["img/p/jalon_suelo-1.svg"],"lines":["Boca abajo, brazos estirados sobre la cabeza y despegados 3–5 cm del suelo."]},{"figs":["img/p/jalon_suelo-2.svg"],"lines":["Lleva los codos hacia las costillas, como si bajaras una barra, y aprieta la espalda 2 s."]},{"figs":["img/p/jalon_suelo-1.svg"],"lines":["Vuelve a estirar los brazos sin apoyarlos."]}],"view":"Vista desde arriba","phase":"Ejercicios","name":"Jalón boca abajo","dose":"3 × 10–12","rest":60,"works":"Dorsales y espalda alta","how":["Boca abajo, brazos estirados sobre la cabeza y despegados 3–5 cm del suelo.","Lleva los codos hacia las costillas, como si bajaras una barra, y aprieta la espalda 2 s.","Vuelve a estirar los brazos sin apoyarlos."],"watch":"No levantes el pecho: mira el suelo.","easier":null,"harder":"Con pausa de 3 s abajo.","tip":null,"sets":3},"flex_pica":{"k":"flex_pica","pages":[{"figs":["img/p/flex_pica-1.svg"],"lines":["Manos y pies en el suelo, cadera alta: el cuerpo forma una V invertida."]},{"figs":["img/p/flex_pica-2.svg"],"lines":["Dobla los codos y baja la cabeza hacia el suelo, delante de las manos. Empuja de vuelta."]}],"view":null,"phase":"Ejercicios","name":"Flexión pica","dose":"3 × 5–8","rest":90,"works":"Hombros y tríceps","how":["Manos y pies en el suelo, cadera alta: el cuerpo forma una V invertida.","Dobla los codos y baja la cabeza hacia el suelo, delante de las manos. Empuja de vuelta."],"watch":null,"easier":"Baja solo la mitad del recorrido.","harder":"Pies más cerca de las manos.","tip":null,"sets":3},"fondo_suelo":{"k":"fondo_suelo","pages":[{"figs":["img/p/fondo_suelo-1.svg"],"lines":["Sentado en el mat, manos detrás de la cadera con los dedos hacia ti y rodillas dobladas."]},{"figs":["img/p/fondo_suelo-2.svg"],"lines":["Levanta la cadera, dobla los codos hacia atrás para bajarla casi al suelo y empuja hasta estirar."]}],"view":null,"phase":"Ejercicios","name":"Fondo de tríceps en el suelo","dose":"3 × 10–15","rest":60,"works":"Tríceps","how":["Sentado en el mat, manos detrás de la cadera con los dedos hacia ti y rodillas dobladas.","Levanta la cadera, dobla los codos hacia atrás para bajarla casi al suelo y empuja hasta estirar."],"watch":"Hombros lejos de las orejas.","easier":null,"harder":"Pies más lejos de la cadera.","tip":null,"sets":3},"elev_piernas":{"k":"elev_piernas","pages":[{"figs":["img/p/elev_piernas-1.svg"],"lines":["Boca arriba, manos bajo la cadera y rodillas un poco dobladas."]},{"figs":["img/p/elev_piernas-2.svg"],"lines":["Sube las piernas hasta la vertical y bájalas lento, sin tocar el suelo."]}],"view":null,"phase":"Ejercicios","name":"Elevación de piernas acostado","dose":"3 × 8–12","rest":60,"works":"Abdomen","how":["Boca arriba, manos bajo la cadera y rodillas un poco dobladas.","Sube las piernas hasta la vertical y bájalas lento, sin tocar el suelo."],"watch":"Si la zona lumbar se despega, no bajes tanto las piernas.","easier":null,"harder":"Piernas estiradas.","tip":null,"sets":3},"zancada_estatica":{"k":"zancada_estatica","pages":[{"figs":["img/p/zancada_estatica-1.svg"],"lines":["Pies separados en un paso largo: uno adelante y el de atrás en punta."]},{"figs":["img/p/zancada_estatica-2.svg"],"lines":["Baja recto hasta que la rodilla de atrás casi toque el suelo y sube. Termina una pierna y cambia."]}],"view":null,"phase":"Ejercicios","name":"Zancada estática","dose":"3 × 8–12 por pierna","rest":90,"works":"Muslos y glúteos","how":["Pies separados en un paso largo: uno adelante y el de atrás en punta.","Baja recto hasta que la rodilla de atrás casi toque el suelo y sube. Termina una pierna y cambia."],"watch":"Torso recto y el peso en la pierna de adelante.","easier":null,"harder":"Con la mancuerna en una mano.","tip":null,"sets":3},"sumo":{"k":"sumo","pages":[{"figs":["img/p/sumo-1.svg"],"lines":["Pies bastante más abiertos que los hombros, puntas hacia afuera y la mancuerna al pecho."]},{"figs":["img/p/sumo-2.svg"],"lines":["Baja recto llevando las rodillas hacia afuera, en la dirección de las puntas."]},{"figs":["img/p/sumo-1.svg"],"lines":["Sube apretando los glúteos."]}],"view":"Vista de frente","phase":"Ejercicios","name":"Sentadilla sumo con 3 kg","dose":"3 × 12–20","rest":60,"works":"Glúteos, muslos y parte interna del muslo","how":["Pies bastante más abiertos que los hombros, puntas hacia afuera y la mancuerna al pecho.","Baja recto llevando las rodillas hacia afuera, en la dirección de las puntas.","Sube apretando los glúteos."],"watch":"Las rodillas no se juntan y la espalda va recta.","easier":null,"harder":null,"tip":null,"sets":3},"puente_isquios":{"k":"puente_isquios","pages":[{"figs":["img/p/puente_isquios-1.svg"],"lines":["Boca arriba, con los talones lejos de la cadera y las rodillas apenas dobladas."]},{"figs":["img/p/puente_isquios-2.svg"],"lines":["Empuja con los talones y sube la cadera. Aprieta 2 s."]},{"figs":["img/p/puente_isquios-1.svg"],"lines":["Baja lento."]}],"view":null,"phase":"Ejercicios","name":"Puente de isquios","dose":"3 × 10–15","rest":60,"works":"Parte de atrás del muslo y glúteos","how":["Boca arriba, con los talones lejos de la cadera y las rodillas apenas dobladas.","Empuja con los talones y sube la cadera. Aprieta 2 s.","Baja lento."],"watch":null,"easier":null,"harder":"A una pierna.","tip":null,"sets":3},"puente_una2":{"k":"puente_una2","pages":[{"figs":["img/p/puente_una2-1.svg"],"lines":["Como el puente normal, pero con una pierna estirada en el aire."]},{"figs":["img/p/puente_una2-2.svg"],"lines":["Sube la cadera empujando con el talón de apoyo."]}],"view":null,"phase":"Ejercicios","name":"Puente a una pierna","dose":"3 × 8–12 por pierna","rest":60,"works":"Glúteos","how":["Como el puente normal, pero con una pierna estirada en el aire.","Sube la cadera empujando con el talón de apoyo."],"watch":"La cadera sube pareja, sin ladearse.","easier":null,"harder":null,"tip":null,"sets":3},"sentadilla_pared":{"k":"sentadilla_pared","pages":[{"figs":["img/p/sentadilla_pared-1.svg"],"lines":["Espalda contra la pared. Baja hasta que los muslos queden casi horizontales y las rodillas sobre los tobillos.","Mantén respirando normal."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla isométrica en la pared","dose":"2 × 30–60 s","rest":60,"works":"Muslos","how":["Espalda contra la pared. Baja hasta que los muslos queden casi horizontales y las rodillas sobre los tobillos.","Mantén respirando normal."],"watch":null,"easier":null,"harder":null,"tip":null,"sets":2},"curl_martillo":{"k":"curl_martillo","pages":[{"figs":["img/p/curl_martillo-1.svg"],"lines":["Curl con la palma mirando hacia el cuerpo, como si sostuvieras un martillo."]},{"figs":["img/p/curl_martillo-2.svg"],"lines":["Alterna una serie de curl con una de elevaciones laterales."]}],"view":null,"phase":"Ejercicios","name":"Curl martillo + elevaciones laterales","dose":"2 × 15–20 por brazo","rest":45,"works":"Bíceps, antebrazo y hombro","how":["Curl con la palma mirando hacia el cuerpo, como si sostuvieras un martillo.","Alterna una serie de curl con una de elevaciones laterales."],"watch":null,"easier":null,"harder":null,"tip":null,"sets":2},"hollow":{"k":"hollow","pages":[{"figs":["img/p/hollow-1.svg"],"lines":["Boca arriba, con la zona lumbar pegada al suelo.","Despega los hombros, sube las rodillas y estira los brazos hacia ellas. Mantén."]}],"view":null,"phase":"Ejercicios","name":"Hollow con rodillas dobladas","dose":"3 × 15–30 s","rest":45,"works":"Abdomen","how":["Boca arriba, con la zona lumbar pegada al suelo.","Despega los hombros, sube las rodillas y estira los brazos hacia ellas. Mantén."],"watch":"Si la espalda se despega del suelo, acerca más las rodillas.","easier":null,"harder":"Hollow completo.","tip":null,"sets":3},"crunch_invertido":{"k":"crunch_invertido","pages":[{"figs":["img/p/crunch_invertido-1.svg"],"lines":["Boca arriba, con las rodillas a 90°."]},{"figs":["img/p/crunch_invertido-2.svg"],"lines":["Lleva las rodillas hacia el pecho despegando un poco la cadera, usando el abdomen. Baja lento."]}],"view":null,"phase":"Ejercicios","name":"Crunch invertido","dose":"3 × 10–15","rest":45,"works":"Abdomen bajo","how":["Boca arriba, con las rodillas a 90°.","Lleva las rodillas hacia el pecho despegando un poco la cadera, usando el abdomen. Baja lento."],"watch":"No te impulses con las piernas.","easier":null,"harder":null,"tip":null,"sets":3},"flex_pared":{"k":"flex_pared","pages":[{"figs":["img/p/flex_pared-1.svg"],"lines":["Manos en la pared a la altura del pecho, un poco más abiertas que los hombros, y pies un paso atrás."]},{"figs":["img/p/flex_pared-2.svg"],"lines":["Lleva el pecho hacia la pared doblando los codos a unos 45° y empuja hasta estirar los brazos."]}],"view":null,"phase":"Ejercicios","name":"Flexión en la pared","dose":"3 × 10–20","rest":60,"works":"Pecho, hombros y tríceps","how":["Manos en la pared a la altura del pecho, un poco más abiertas que los hombros, y pies un paso atrás.","Lleva el pecho hacia la pared doblando los codos a unos 45° y empuja hasta estirar los brazos."],"watch":"Cuerpo recto de pies a cabeza: que la cadera no se quede atrás.","easier":null,"harder":"Flexión en el mesón.","tip":null,"sets":3},"flex_meson":{"k":"flex_meson","pages":[{"figs":["img/p/flex_meson-1.svg"],"lines":["Manos en el borde del mesón de la cocina, a lo ancho de los hombros, y pies atrás con el cuerpo recto."]},{"figs":["img/p/flex_meson-2.svg"],"lines":["Baja el pecho hasta el borde doblando los codos y empuja hasta estirar los brazos."]}],"view":null,"phase":"Ejercicios","name":"Flexión en el mesón","dose":"3 × 8–15","rest":60,"works":"Pecho, hombros y tríceps","how":["Manos en el borde del mesón de la cocina, a lo ancho de los hombros, y pies atrás con el cuerpo recto.","Baja el pecho hasta el borde doblando los codos y empuja hasta estirar los brazos."],"watch":"Que el mesón no se mueva y el cuerpo vaya como una tabla.","easier":"Flexión en la pared.","harder":"Flexión inclinada en una silla firme.","tip":null,"sets":3},"flex_banco":{"k":"flex_banco","pages":[{"figs":["img/p/flex_banco-1.svg"],"lines":["Manos en el borde de una silla firme apoyada contra la pared, pies atrás y cuerpo recto."]},{"figs":["img/p/flex_banco-2.svg"],"lines":["Baja el pecho hasta el borde con los codos a unos 45° y empuja hasta estirar los brazos."]}],"view":null,"phase":"Ejercicios","name":"Flexión inclinada en una silla","dose":"3 × 8–12","rest":90,"works":"Pecho, hombros y tríceps","how":["Manos en el borde de una silla firme apoyada contra la pared, pies atrás y cuerpo recto.","Baja el pecho hasta el borde con los codos a unos 45° y empuja hasta estirar los brazos."],"watch":"Apoya la silla contra la pared para que no se deslice.","easier":"Flexión en el mesón.","harder":"Flexión de rodillas en el suelo.","tip":null,"sets":3},"remo_marco_cerca":{"k":"remo_marco_cerca","pages":[{"figs":["img/p/remo_marco_cerca-1.svg"],"lines":["Acerca los pies a la base del marco y déjate caer con el brazo estirado: mientras más te inclinas, más cuesta."]},{"figs":["img/p/remo_marco_cerca-2.svg"],"lines":["Tira llevando el codo atrás, pegado al cuerpo, hasta acercar el pecho al marco. Baja en 2–3 s."]}],"view":null,"phase":"Ejercicios","name":"Remo en el marco, más inclinado","dose":"4 × 8–12 por brazo","rest":90,"works":"Espalda, bíceps y hombros de atrás","how":["Acerca los pies a la base del marco y déjate caer con el brazo estirado: mientras más te inclinas, más cuesta.","Tira llevando el codo atrás, pegado al cuerpo, hasta acercar el pecho al marco. Baja en 2–3 s."],"watch":"Cuerpo recto: que la cadera no se doble.","easier":"Remo en el marco con los pies más lejos.","harder":"Remo bajo la mesa.","tip":null,"sets":4},"remo_australiano":{"k":"remo_australiano","pages":[{"figs":["img/p/remo_australiano-1.svg"],"lines":["Acuéstate bajo una mesa firme, tómate del borde con las manos a lo ancho de los hombros y deja el cuerpo recto con los talones en el suelo."]},{"figs":["img/p/remo_australiano-2.svg"],"lines":["Tira llevando el pecho hacia el borde y los codos atrás; baja lento hasta estirar los brazos."]}],"view":null,"phase":"Ejercicios","name":"Remo bajo la mesa","dose":"3 × 6–12","rest":90,"works":"Espalda, bíceps y hombros de atrás","how":["Acuéstate bajo una mesa firme, tómate del borde con las manos a lo ancho de los hombros y deja el cuerpo recto con los talones en el suelo.","Tira llevando el pecho hacia el borde y los codos atrás; baja lento hasta estirar los brazos."],"watch":"Solo con una mesa pesada que no se mueva ni se incline.","easier":"Remo en el marco, más inclinado.","harder":"Pausa de 2 s arriba.","tip":null,"sets":3},"sentadilla_silla":{"k":"sentadilla_silla","pages":[{"figs":["img/p/sentadilla_silla-1.svg"],"lines":["De pie frente a una silla, pies al ancho de los hombros y brazos al frente."]},{"figs":["img/p/sentadilla_silla-2.svg"],"lines":["Baja llevando la cadera atrás hasta rozar la silla sin sentarte y sube empujando el suelo."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla a la silla","dose":"3 × 10–15","rest":60,"works":"Muslos y glúteos","how":["De pie frente a una silla, pies al ancho de los hombros y brazos al frente.","Baja llevando la cadera atrás hasta rozar la silla sin sentarte y sube empujando el suelo."],"watch":null,"easier":null,"harder":"Sentadilla libre.","tip":null,"sets":3},"sentadilla_libre":{"k":"sentadilla_libre","pages":[{"figs":["img/p/sentadilla_libre-1.svg"],"lines":["Pies al ancho de los hombros: baja con la cadera atrás hasta que los muslos queden horizontales y sube empujando el suelo con todo el pie."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla libre","dose":"3 × 12–20","rest":60,"works":"Muslos y glúteos","how":["Pies al ancho de los hombros: baja con la cadera atrás hasta que los muslos queden horizontales y sube empujando el suelo con todo el pie."],"watch":null,"easier":"Sentadilla a la silla.","harder":"Sentadilla con pausa de 1 s abajo.","tip":null,"sets":3},"subida_escalon":{"k":"subida_escalon","pages":[{"figs":["img/p/subida_escalon-1.svg"],"lines":["Frente a un escalón firme, apoya un pie completo arriba."]},{"figs":["img/p/subida_escalon-2.svg"],"lines":["Sube empujando con esa pierna hasta quedar recto y baja lento. Termina una pierna y cambia."]}],"view":null,"phase":"Ejercicios","name":"Subida al escalón","dose":"3 × 8–12 por pierna","rest":60,"works":"Muslos y glúteos","how":["Frente a un escalón firme, apoya un pie completo arriba.","Sube empujando con esa pierna hasta quedar recto y baja lento. Termina una pierna y cambia."],"watch":"Empuja con la pierna de arriba, no con la de abajo.","easier":null,"harder":"Con la mancuerna de 3 kg en una mano.","tip":null,"sets":3},"bulgara":{"k":"bulgara","pages":[{"figs":["img/p/bulgara-1.svg"],"lines":["De espaldas al sofá, apoya el empeine de un pie en el asiento y da un paso largo adelante con el otro."]},{"figs":["img/p/bulgara-2.svg"],"lines":["Baja recto hasta que la rodilla de atrás quede cerca del suelo y sube empujando con la pierna de adelante. Termina una pierna y cambia."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla búlgara en el sofá","dose":"3 × 6–12 por pierna","rest":90,"works":"Muslos y glúteos","how":["De espaldas al sofá, apoya el empeine de un pie en el asiento y da un paso largo adelante con el otro.","Baja recto hasta que la rodilla de atrás quede cerca del suelo y sube empujando con la pierna de adelante. Termina una pierna y cambia."],"watch":"La rodilla de adelante sigue la dirección del pie.","easier":"Zancada estática.","harder":"Con la mancuerna de 3 kg al pecho.","tip":null,"sets":3},"pistol_marco":{"k":"pistol_marco","pages":[{"figs":["img/p/pistol_marco-1.svg"],"lines":["Afírmate del marco de la puerta con las manos y estira una pierna adelante."]},{"figs":["img/p/pistol_marco-2.svg"],"lines":["Baja lento en la otra pierna lo más que puedas con control y sube ayudándote con los brazos."]}],"view":null,"phase":"Ejercicios","name":"Sentadilla a una pierna en el marco","dose":"3 × 3–8 por pierna","rest":90,"works":"Muslos y glúteos","how":["Afírmate del marco de la puerta con las manos y estira una pierna adelante.","Baja lento en la otra pierna lo más que puedas con control y sube ayudándote con los brazos."],"watch":"Usa los brazos lo justo: que trabaje la pierna.","easier":"Sentadilla búlgara en el sofá.","harder":null,"tip":null,"sets":3},"hip_thrust":{"k":"hip_thrust","pages":[{"figs":["img/p/hip_thrust-1.svg"],"lines":["Espalda alta apoyada en el borde del sofá, pies firmes en el suelo y rodillas dobladas."]},{"figs":["img/p/hip_thrust-2.svg"],"lines":["Sube la cadera hasta formar una mesa de hombros a rodillas, aprieta los glúteos 1 s y baja lento."]}],"view":null,"phase":"Ejercicios","name":"Hip thrust en el sofá","dose":"3 × 10–15","rest":90,"works":"Glúteos e isquios","how":["Espalda alta apoyada en el borde del sofá, pies firmes en el suelo y rodillas dobladas.","Sube la cadera hasta formar una mesa de hombros a rodillas, aprieta los glúteos 1 s y baja lento."],"watch":"Mentón al pecho: que no se arquee la zona lumbar.","easier":"Puente a una pierna.","harder":"Con la mancuerna de 3 kg sobre la cadera.","tip":null,"sets":3},"puente_isquios_una":{"k":"puente_isquios_una","pages":[{"figs":["img/p/puente_isquios_una-1.svg"],"lines":["Talón de apoyo lejos de la cadera y la otra pierna en el aire: sube la cadera, aprieta 2 s y baja lento."]}],"view":null,"phase":"Ejercicios","name":"Puente de isquios a una pierna","dose":"3 × 8–12 por pierna","rest":60,"works":"Isquios y glúteos","how":["Talón de apoyo lejos de la cadera y la otra pierna en el aire: sube la cadera, aprieta 2 s y baja lento."],"watch":null,"easier":"Puente de isquios.","harder":"Curl de isquios con toalla.","tip":null,"sets":3},"curl_isquios":{"k":"curl_isquios","pages":[{"figs":["img/p/curl_isquios-1.svg"],"lines":["Boca arriba con los talones sobre una toalla en un piso liso, sube la cadera."]},{"figs":["img/p/curl_isquios-2.svg"],"lines":["Sin bajar la cadera, lleva los talones hacia los glúteos deslizando la toalla y vuelve lento."]}],"view":null,"phase":"Ejercicios","name":"Curl de isquios con toalla","dose":"3 × 6–10","rest":90,"works":"Isquios y glúteos","how":["Boca arriba con los talones sobre una toalla en un piso liso, sube la cadera.","Sin bajar la cadera, lleva los talones hacia los glúteos deslizando la toalla y vuelve lento."],"watch":"Si da calambre, baja la cadera y descansa.","easier":"Puente de isquios a una pierna.","harder":null,"tip":null,"sets":3},"talones":{"k":"talones","pages":[{"figs":["img/p/talones-1.svg"],"lines":["Puntas de los pies en el borde de un escalón y talones en el aire, con una mano en la pared."]},{"figs":["img/p/talones-2.svg"],"lines":["Sube lo más alto que puedas, pausa 1 s y baja lento hasta estirar."]}],"view":null,"phase":"Ejercicios","name":"Elevación de talones en el escalón","dose":"3 × 15–25","rest":45,"works":"Gemelos","how":["Puntas de los pies en el borde de un escalón y talones en el aire, con una mano en la pared.","Sube lo más alto que puedas, pausa 1 s y baja lento hasta estirar."],"watch":null,"easier":null,"harder":"A una pierna.","tip":null,"sets":3},"hollow_completo":{"k":"hollow_completo","pages":[{"figs":["img/p/hollow_completo-1.svg"],"lines":["Brazos y piernas estirados, lumbar pegada al suelo: mantén la forma de banana sin que se despegue la espalda."]}],"view":null,"phase":"Ejercicios","name":"Hollow completo","dose":"3 × 15–30 s","rest":45,"works":"Abdomen","how":["Brazos y piernas estirados, lumbar pegada al suelo: mantén la forma de banana sin que se despegue la espalda."],"watch":null,"easier":"Hollow con rodillas dobladas.","harder":null,"tip":null,"sets":3},"escalador":{"k":"escalador","pages":[{"figs":["img/p/escalador-2.svg"],"lines":["En plancha alta, lleva una rodilla al pecho y vuelve; alterna sin que suba la cadera."]}],"view":null,"phase":"Ejercicios","name":"Escalador lento","dose":"3 × 30 s","rest":30,"works":"Corazón, abdomen y hombros","how":["En plancha alta, lleva una rodilla al pecho y vuelve; alterna sin que suba la cadera."],"watch":"Hombros sobre las manos todo el tiempo.","easier":null,"harder":null,"tip":null,"sets":3}},"groups":{"empuje":["flex_pared","flex_meson","flex_banco","flex_rodillas","flex_suelo"],"remo":["remo_marco","remo_marco_cerca","remo_australiano"],"sentadilla":["sentadilla_silla","sentadilla_libre","sentadilla","sumo"],"una_pierna":["zancada_atras","zancada_estatica","subida_escalon","bulgara","pistol_marco"],"gluteo":["puente","puente_una2","hip_thrust"],"isquios":["puente_isquios","puente_isquios_una","curl_isquios"],"gemelos":["talones","talones_suelo"],"core":["hollow","hollow_completo"]}}; }
 
   /* ================================================================ versión 28 ================================================================
@@ -5709,14 +5807,20 @@ class Component extends DCLogic {
       for (let d = 0; d < 7; d++) {
         const day = new Date(col.getFullYear(), col.getMonth(), col.getDate() + d);
         const isToday = day.getTime() === today0.getTime();
-        let bg = th.fill, ring = 'none';
+        let bg = th.fill, ring = 'none', aria = '', pick = null;
+        const off = Math.round((day - today0) / 86400000);
         if (day > today0) { bg = 'transparent'; ring = 'inset 0 0 0 1px ' + th.sep; }
         else if (day >= sinceD) {
           const sc = this.dayScore(this.keyOf(day), day);
           if (sc !== null && !(isToday && sc === 0)) { bg = dayCol(sc); if (sc > 0) hAny++; if (sc >= 1) hFull++; }
+          // tocar un día abre Hábitos en ese día, con su puntaje guardado
+          if (off >= -120) {
+            aria = this.longDate(day) + (sc !== null ? ': puntaje ' + Math.round(sc * 100) : '');
+            pick = () => { this.sfx('tap'); this.setState({ prog: false }); this.go({ tab: 'habitos', screen: 'inicio', menu: false, hday: off }); };
+          }
         }
         if (isToday) ring = 'inset 0 0 0 1.5px ' + th.text;
-        items.push({ isLabel: false, isCell: true, bg: bg, ring: ring });
+        items.push({ isLabel: false, isCell: true, isBtn: !!pick, isPlain: !pick, bg: bg, ring: ring, aria: aria, pick: pick || (() => {}) });
       }
     }
     const hist = {
@@ -5748,9 +5852,18 @@ class Component extends DCLogic {
     });
 
     const hdv = this.habitsVals(th, c, dark, primary, onPrimary);
-    const score = hdv.total ? hdv.done / hdv.total : 0;
+    // puntaje del día (0–100, cuenta el avance parcial); en días pasados, el guardado
+    const hDate = this.habitDate();
+    const hsc = this.scoreFor(this.keyOf(hDate), hDate);
+    const score = hsc ? hsc.s / 100 : 0;
     hdv.ringOff52 = (138.2 * (1 - score)).toFixed(1);
     hdv.ringOff84 = (226.2 * (1 - score)).toFixed(1);
+    hdv.score = hsc ? String(hsc.s) : '–';
+    hdv.ringColor = hsc ? this.healthColor(hsc.s, dark) : th.text;
+    hdv.scoreLabel = hdv.isToday ? 'Puntaje de hoy' : 'Puntaje del día';
+    hdv.title = hsc ? this.scoreGrade(hsc.s) + (hdv.isToday && hsc.s < 100 ? ' hasta ahora' : '') : 'Sin hábitos';
+    hdv.sub = hsc ? this.scoreParts(hsc) : 'Elige qué hábitos seguir.';
+    const sk = this.scoreCardVals(th, c, dark);
 
     /* comida e inicio de comida */
     const fdv = this.foodVals(th, c, dark);
@@ -5771,7 +5884,7 @@ class Component extends DCLogic {
     const wv = hdv.water;
     const kf = T.kcal ? tt.kcal / T.kcal : 0;
     const ty = {
-      habits: { off: ring3(score), center: hdv.done + '/' + hdv.total, label: 'Hábitos', sub: hdv.total ? (hdv.done === hdv.total ? 'Día completo' : 'Te faltan ' + (hdv.total - hdv.done)) : 'Sin hábitos', color: c.constancia },
+      habits: { off: ring3(score), center: hsc && hdv.isToday ? String(hsc.s) : '–', label: 'Hábitos', sub: hsc && hdv.isToday ? 'Puntaje de hoy' : 'Sin hábitos', color: c.constancia },
       food: { off: ring3(kf), center: Math.round(Math.min(9.99, kf) * 100) + ' %', label: 'Comida', sub: this.fmt(tt.kcal) + ' kcal', color: c.carb },
       water: { on: !!wv.on, off: ring3(wv.goal ? wv.count / wv.goal : 0), center: wv.liters + ' L', label: 'Agua', sub: 'de ' + wv.goalL + ' L', color: c.resistencia, add: wv.add }
     };
@@ -5843,7 +5956,7 @@ class Component extends DCLogic {
       isEval: n.screen === 'eval',
       ev: n.screen === 'eval' ? this.evalVals(th, c) : {},
       hd: hdv, he: this.habitEditorVals(th, c, dark, primary), rm: this.remVals(th, c),
-      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
+      fd: fdv, fh: fh, hs: hv, hv: hv, ai: aiv, ty: ty, pg: pgv, sk: sk, hasNoFocusHere: false, isProg: !!st.prog && n.screen !== 'area',
       dy: cv.dy, ph: cv.ph, cap: cv.cap, asp: cv.asp, chat: cv.chat, ad: cv.ad,
       isPhotos: !!st.photos && !st.cap, isCap: !!st.cap, isAspecto: !!st.aspecto, isChat: !!st.chatOpen,
       openHabEditor: () => { this.sfx('open'); this.go({ habEdit: true, tab: 'habitos', screen: 'inicio', menu: false }); },

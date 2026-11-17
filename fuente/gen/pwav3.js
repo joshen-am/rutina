@@ -8,6 +8,8 @@ const { chromium } = require('playwright');
     const p = await ctx.newPage();
     const errs = []; p.on('pageerror', (e) => errs.push(e.message)); p.on('console', (m) => { if (m.type() === 'error') errs.push('console: ' + m.text()); });
     await p.route('https://generativelanguage.googleapis.com/**', async (route) => {
+      // desde la versión 29 la app pide primero la lista de modelos de la clave
+      if (route.request().method() === 'GET') return route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: JSON.stringify({ models: ['gemini-flash-latest', 'gemini-flash-lite-latest'].map((n) => ({ name: 'models/' + n, supportedGenerationMethods: ['generateContent'] })) }) });
       const body = JSON.parse(route.request().postData());
       const isImg = body.contents[0].parts.length > 1;
       const txt = body.contents[0].parts[0].text;
