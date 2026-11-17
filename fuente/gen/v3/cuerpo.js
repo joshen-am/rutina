@@ -407,6 +407,7 @@
 
   stopCam() {
     if (this.camTimer) { clearInterval(this.camTimer); this.camTimer = null; }
+    if (this._camRaf) { cancelAnimationFrame(this._camRaf); this._camRaf = 0; }
     if (this._stream) { try { this._stream.getTracks().forEach((t) => t.stop()); } catch (e) {} this._stream = null; }
   }
 
@@ -426,6 +427,7 @@
       return;
     }
     if (!v || !this._stream) return;
+    if (!this._camRaf) this._camRaf = requestAnimationFrame(() => this.camDraw());
     if (v.srcObject !== this._stream) {
       // iPhone: el video en vivo solo se reproduce solo si está silenciado y en línea por código; el atributo del HTML
       // no basta. Si no, queda pausado y se ve negro, aunque la foto igual sale.
@@ -442,6 +444,27 @@
         if (c && el && (el.paused || el.readyState < 2) && !c.tapPlay && (c.phase === 'live' || c.phase === 'count')) this.setState({ cap: Object.assign({}, c, { tapPlay: true }) });
       }, 1500);
     } else if (v.paused && !(this.state.cap || {}).tapPlay) this.camPlay(v, false);
+  }
+
+  /* La vista en vivo se dibuja en un lienzo, cuadro a cuadro, desde el video. En iPhone el video puede estar
+     reproduciendo y aun así no pintarse (se veía negro), pero copiarlo a un lienzo funciona: es lo mismo que hace la
+     foto. Si el video sí se pinta, el lienzo muestra exactamente lo mismo encima. */
+  camDraw() {
+    const c = this.state.cap;
+    if (!c || !(c.phase === 'live' || c.phase === 'count') || !this._stream) { this._camRaf = 0; return; }
+    const v = document.getElementById('cam'), cv = document.getElementById('camcv');
+    if (v && cv && v.videoWidth && v.readyState >= 2) {
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      const W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr);
+      if (W && H) {
+        if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+        // como object-fit: cover
+        const vw = v.videoWidth, vh = v.videoHeight, k = Math.max(W / vw, H / vh);
+        const sw = W / k, sh = H / k;
+        try { cv.getContext('2d').drawImage(v, (vw - sw) / 2, (vh - sh) / 2, sw, sh, 0, 0, W, H); } catch (e) {}
+      }
+    }
+    this._camRaf = requestAnimationFrame(() => this.camDraw());
   }
 
   camPlay(v, tap) {

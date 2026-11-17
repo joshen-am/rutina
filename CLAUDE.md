@@ -22,7 +22,7 @@ App web instalable (PWA) de Joshen para entrenamiento, comida, hábitos y salud.
 cd fuente/gen
 python3 gen_figs.py && python3 gen_session.py   # solo si cambian los dibujos, los textos o las rutinas
 python3 build3.py
-python3 build_pwa3.py 32        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 31
+python3 build_pwa3.py 33        # sube el número en cada versión publicada (cambia la caché del service worker y el «Versión N» del pie de Ajustes); la última fue 32
 cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 ```
 
@@ -67,7 +67,7 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
 - **`exfit.js` se genera**: después de cambiar `exercises.js` o el solver, corre `python3 b3d/preparar.py`, vacía `b3d/t/exfit.js` (`echo "window.KS_FIT={};" > b3d/t/exfit.js`) y luego `node b3d/bake.js`. Si el ajuste de un ejercicio no coincide con su definición, la app lo recalcula al abrirlo (más lento, pero correcto).
 - `edit_ex.py <script.py>` trae `setb(clave, texto)` para reemplazar el bloque entero de un ejercicio.
 
-## Conexión con la IA (`v3/food.js`, versiones 29 a 31)
+## Conexión con la IA (`v3/food.js`, versiones 29 a 32)
 
 - La clave la pone el usuario en Ajustes → «Inteligencia artificial». `cleanKey` deja solo la clave aunque se pegue con espacios, comillas o texto alrededor. Google tiene dos formatos de clave: el clásico `AIza…` y el nuevo `AQ.…` de AI Studio; los dos eligen Gemini, y una `sk-ant-…` elige Claude.
 - Gemini: `geminiModels` pide a Google la lista de modelos de esa clave (`GET /v1beta/models`) y se queda con el Pro, los dos Flash y los dos Flash-Lite más nuevos (los `-latest` primero). En el plan gratis los Pro responden 429 al instante. Google retira modelos (`gemini-2.5-flash` ya no se ofrece a usuarios nuevos) y los Flash se saturan seguido: responden 503 o tardan más de 45 s.
@@ -76,12 +76,13 @@ cd ../.. && git add -A && git commit && git push   # GitHub Pages publica solo
   - `foto` (comida): Flash con razonamiento «low» y Flash-Lite.
   - `texto` (chat, informe del día, revisión de rutina, «Probar conexión»): Flash con «low» (unos 6 s, tope 25 s) y Flash-Lite.
   Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo límite (`AbortController`), sigue con el siguiente, y el que respondió queda primero en esa tarea mientras la app siga abierta.
+- **Respaldo en paralelo** (versión 32, porque la comida quedaba «cargando»: el Flash gratis a veces acepta la consulta y tarda más de un minuto). `geminiRun` lanza el primer modelo y, si no contesta en 8 s (texto), 12 s (foto de comida) o 60 s (cuerpo), lanza también el siguiente sin cortar el primero; gana el primero que responda y los demás se cancelan. En texto y comida el orden alterna Flash y Flash-Lite, para que el respaldo de un Flash lento sea uno rápido. `geminiTry` hace cada consulta. La lista de modelos tiene 15 s de tope. Si la comida tarda más de 8 s, la tarjeta lo dice.
 - Con Gemini 3 y los alias `-latest` no se manda `temperature`. Salvo en `hondo`, se pide `thinkingConfig: { thinkingLevel: 'low' }`: por defecto razona tanto que tarda 30–45 s en responder `{"ok":true}`, y con «low» unos 6 s. Si un modelo no acepta ese nivel (400), se repite sin él.
 - Gemini y Claude responden con Markdown: `aiPlain` lo pasa a texto plano (viñetas «• ») en el chat, incluso en los mensajes ya guardados, y `parseJSON` limpia todos los textos de los JSON. Los prompts también piden texto sin Markdown. Todo pasa por `geminiRun` y `claudeRun` (también `aiCallN` de `cuerpo.js`).
 - `aiErrorFrom` lee el motivo que da Google o Anthropic (clave inválida o vencida, API sin activar, clave con restricciones, región, sin cuota gratis, sin saldo, filtros de contenido) y `aiErrorText` lo explica en español. «Probar conexión» suma el detalle original y, si funciona, nombra el modelo que respondió.
 - Ajustes dice «Conectada» solo después de una respuesta real (`prefs.ai.ok` guarda el modelo que respondió) y vuelve a «Sin probar» si la clave falla.
 - La app registra el service worker solo en https: en `localhost` las pruebas lo registran a mano.
-- **Cámara en iPhone** (versión 31): el video en vivo solo se reproduce solo si `muted` y `playsInline` se ponen por código; el atributo del HTML no basta y el video queda pausado y negro, aunque la foto igual sale. `syncCam` los pone antes de `srcObject` y llama a `play()` (`camPlay`). Si a los 1,5 s sigue sin imagen, aparece «Toca para ver la cámara», que reproduce con el gesto del usuario.
+- **Cámara en iPhone** (versiones 31 y 32): `syncCam` pone `muted` y `playsInline` por código antes de `srcObject` y llama a `play()` (`camPlay`); si a los 1,5 s sigue pausado, aparece «Toca para ver la cámara». Aun así, en el iPhone de Joshen el video reproducía (punto verde encendido, la foto salía bien) pero se veía negro. Desde la 32 la vista en vivo se dibuja en el lienzo `#camcv`, cuadro a cuadro con `drawImage` desde el video (`camDraw`, con `requestAnimationFrame`, recortado como `object-fit: cover`), igual que la foto. El runtime de morphdom conserva `width` y `height` de los lienzos con `id`.
 - iCloud deja copias como `gato_vaca-2 2.svg`. `build_pwa3.py` las salta (`COPIA`) y comprueba que existan todos los archivos de `FILES`, porque si falta uno el service worker no se instala (pasó en la 28).
 
 ## Reglas

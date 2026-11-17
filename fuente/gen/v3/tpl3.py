@@ -721,7 +721,7 @@ def comida():
 <div style="position: relative; overflow: hidden; {HALO_BG}; color: #FAFAFA; border-radius: 24px; padding: 24px 20px; min-height: 120px; display: flex; flex-direction: column; justify-content: flex-end; gap: 8px">
 {HALO}
 <span style="position: relative">{eyebrow("Analizando", "rgba(250, 250, 250, 0.62)")}</span>
-<span style="position: relative; font-size: 20px; line-height: 24px; letter-spacing: -0.03em">Identificando alimentos y porciones…</span>
+<span style="position: relative; font-size: 20px; line-height: 24px; letter-spacing: -0.03em">{{{{ fd.dLoadText }}}}</span>
 </div>
 </sc-if>
 <sc-if value="{{{{ fd.dReady }}}}" hint-placeholder-val="{{{{ false }}}}">

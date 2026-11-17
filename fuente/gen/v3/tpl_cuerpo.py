@@ -104,6 +104,7 @@ def make(g):
 </div>
 <div style="position: relative; flex: 1; margin: 0 16px; border-radius: 24px; overflow: hidden; background: #0B0B0C">
 <sc-if value="[[ cap.camOn ]]" hint-placeholder-val="[[ true ]]"><video id="cam" autoplay playsinline webkit-playsinline muted style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: [[ cap.mirror ]]"></video>
+<canvas id="camcv" aria-hidden="true" style="position: absolute; inset: 0; width: 100%; height: 100%; transform: [[ cap.mirror ]]; pointer-events: none"></canvas>
 <sc-if value="[[ cap.hasGhost ]]" hint-placeholder-val="[[ false ]]"><img alt="" src="[[ cap.ghost ]]" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0.3; pointer-events: none"></sc-if>
 {GUIDE}</sc-if>
 <sc-if value="[[ cap.tapPlay ]]" hint-placeholder-val="[[ false ]]"><button type="button" onClick="[[ cap.playCam ]]" style="{B} position: absolute; inset: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.55); color: #FAFAFA; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; font-size: 16px">{ico(CAMERA, 28, "currentColor", 1.6)}<span>Toca para ver la cámara</span></button></sc-if>

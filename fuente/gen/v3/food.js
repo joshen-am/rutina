@@ -132,10 +132,14 @@
   async geminiModels(cfg) {
     if (cfg.model) return { pro: [], flash: [cfg.model], lite: [], good: {} };
     if (this._gm && this._gm.key === cfg.key) return this._gm;
-    let r;
-    try { r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key)); }
-    catch (e) { throw new Error('red'); }
-    const d = await r.json().catch(() => ({}));
+    let r, d;
+    const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    const timer = ac ? setTimeout(() => ac.abort(), 15000) : 0;
+    try {
+      r = await fetch('https://generativelanguage.googleapis.com/v1beta/models?pageSize=1000&key=' + encodeURIComponent(cfg.key), { signal: ac ? ac.signal : undefined });
+      d = await r.json().catch(() => ({}));
+    } catch (e) { clearTimeout(timer); throw new Error(e && e.name === 'AbortError' ? 'ocupada' : 'red'); }
+    clearTimeout(timer);
     if (!r.ok) throw this.aiErrorFrom(r.status, d);
     const names = (d.models || []).filter((m) => (m.supportedGenerationMethods || []).indexOf('generateContent') >= 0)
       .map((m) => String(m.name || '').replace(/^models\//, ''))
@@ -153,60 +157,89 @@
      - «hondo» (análisis de las fotos del cuerpo, una vez por semana): Pro si tu plan lo incluye (en el gratis responde 429
        en un segundo y sigue), después Flash razonando lo normal, y Flash-Lite si Google está saturado.
      - «foto» (comida): Flash con razonamiento bajo, y Flash-Lite de respaldo.
-     - «texto» (chat, informe del día, revisión de rutina): Flash con razonamiento bajo (unos 6 s) y Flash-Lite si tarda.
-     Si un modelo no existe, no tiene cuota, está saturado o pasa su tiempo, sigue con el siguiente. */
+     - «texto» (chat, informe del día, revisión de rutina): Flash con razonamiento bajo (unos 6 s) y Flash-Lite.
+     Respaldo en paralelo: si un modelo no responde en unos segundos (8 en texto, 12 en fotos de comida, 60 en el análisis
+     del cuerpo), se le pregunta también al siguiente y gana el primero que conteste. El Flash gratis a veces acepta la
+     consulta y tarda más de un minuto; antes eso dejaba la comida «cargando» hasta cuatro minutos. Si un modelo no existe,
+     no tiene cuota o está saturado, se pasa al siguiente de inmediato. */
   async geminiRun(cfg, parts, gen, tier) {
     const gm = await this.geminiModels(cfg);
     tier = tier || (parts.length > 1 ? 'foto' : 'texto');
-    let models = (tier === 'hondo' ? gm.pro : []).concat(gm.flash, gm.lite);
+    // el respaldo de un Flash lento es un Flash-Lite (rápido), no otro Flash: suelen ser el mismo modelo y estar igual de saturados
+    const mix = [];
+    for (let k = 0; k < Math.max(gm.flash.length, gm.lite.length); k++) { if (gm.flash[k]) mix.push(gm.flash[k]); if (gm.lite[k]) mix.push(gm.lite[k]); }
+    let models = tier === 'hondo' ? gm.pro.concat(gm.flash, gm.lite) : mix;
     const good = gm.good[tier];
     if (good) models = [good].concat(models.filter((m) => m !== good));
-    const limit = (m) => /-pro/.test(m) ? 120000 : /lite/.test(m) ? (tier === 'texto' ? 30000 : 75000) : tier === 'hondo' ? 100000 : tier === 'foto' ? 50000 : 25000;
-    let last = new Error('modelo');
-    for (let i = 0; i < models.length; i++) {
-      const g = Object.assign({}, gen);
-      if (!/^gemini-[12]\./.test(models[i])) {   // Gemini 3 en adelante, y los alias -latest que apuntan a ellos
-        delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
-        // por defecto razona harto (30–45 s); con «low» responde en unos 6 s. El análisis del cuerpo razona lo normal.
-        if (tier !== 'hondo' && (!this._noThink || !this._noThink[models[i]])) g.thinkingConfig = { thinkingLevel: 'low' };
-      }
-      const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
-      const timer = ac ? setTimeout(() => ac.abort(), limit(models[i])) : 0;
-      let r, d;
-      try {
-        r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + models[i] + ':generateContent?key=' + encodeURIComponent(cfg.key), {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac ? ac.signal : undefined,
-          body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: g })
-        });
-        d = await r.json().catch(() => ({}));
-      } catch (e) {
+    const limit = (m) => /-pro/.test(m) ? 120000 : /lite/.test(m) ? (tier === 'texto' ? 30000 : 60000) : tier === 'hondo' ? 100000 : tier === 'foto' ? 45000 : 25000;
+    const hedge = tier === 'hondo' ? 60000 : tier === 'foto' ? 12000 : 8000;
+    const retry = ['modelo', 'limite', 'sincuota', 'ocupada', 'vacio'];
+    return new Promise((resolve, reject) => {
+      let i = 0, pending = 0, done = false, last = new Error('modelo'), timer = 0;
+      const ctrls = [];
+      const finish = (ok, val, m) => {
+        if (done) return;
+        done = true; clearTimeout(timer);
+        ctrls.forEach((c) => { try { c.abort(); } catch (e) {} });
+        if (ok) { gm.good[tier] = m; this.aiMarkOk(m); resolve(val); } else reject(val);
+      };
+      const next = () => {
         clearTimeout(timer);
-        if (e && e.name === 'AbortError') { last = new Error('ocupada'); continue; }   // tardó demasiado: el siguiente
-        throw new Error('red');
-      }
-      clearTimeout(timer);
-      if (!r.ok) {
-        // un modelo que no acepta el nivel de razonamiento: se repite sin él
-        if (r.status === 400 && g.thinkingConfig && /thinking/i.test(String((d.error || {}).message || ''))) {
-          this._noThink = Object.assign({}, this._noThink, { [models[i]]: true });
-          i--; continue;
-        }
-        last = this.aiErrorFrom(r.status, d);
-        // modelo retirado, sin cuota o saturado: prueba el siguiente
-        if (['modelo', 'limite', 'sincuota', 'ocupada'].indexOf(last.message) >= 0) continue;
-        throw last;
-      }
-      const c = d.candidates && d.candidates[0];
-      const t = c && c.content && c.content.parts ? c.content.parts.filter((p) => !p.thought).map((p) => p.text || '').join('') : '';
-      if (!t) {
-        const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
-        throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
-      }
-      gm.good[tier] = models[i];   // el que respondió va primero en esta tarea mientras la app siga abierta
-      this.aiMarkOk(models[i]);
-      return t;
+        if (done) return;
+        if (i >= models.length) { if (!pending) finish(false, last); return; }
+        const m = models[i++];
+        const ac = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        if (ac) ctrls.push(ac);
+        pending++;
+        this.geminiTry(cfg, m, parts, gen, tier, ac, limit(m)).then((t) => { pending--; finish(true, t, m); }, (e) => {
+          pending--;
+          if (done) return;
+          if (retry.indexOf(e && e.message) >= 0) { last = e; next(); } else finish(false, e);
+        });
+        timer = setTimeout(next, hedge);   // si tarda, se suma el siguiente modelo sin cortar este
+      };
+      next();
+    });
+  }
+
+  // Una consulta a un modelo: devuelve el texto o un Error con el código del motivo
+  async geminiTry(cfg, model, parts, gen, tier, ac, wait) {
+    const g = Object.assign({}, gen);
+    if (!/^gemini-[12]\./.test(model)) {   // Gemini 3 en adelante, y los alias -latest que apuntan a ellos
+      delete g.temperature;   // Gemini 3 pide dejar la temperatura por defecto
+      // por defecto razona harto (30–45 s); con «low» responde en unos 6 s. El análisis del cuerpo razona lo normal.
+      if (tier !== 'hondo' && (!this._noThink || !this._noThink[model])) g.thinkingConfig = { thinkingLevel: 'low' };
     }
-    throw last;
+    let timedOut = false;
+    const timer = ac ? setTimeout(() => { timedOut = true; ac.abort(); }, wait) : 0;
+    let r, d;
+    try {
+      r = await fetch('https://generativelanguage.googleapis.com/v1beta/models/' + model + ':generateContent?key=' + encodeURIComponent(cfg.key), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, signal: ac ? ac.signal : undefined,
+        body: JSON.stringify({ contents: [{ role: 'user', parts: parts }], generationConfig: g })
+      });
+      d = await r.json().catch(() => ({}));
+    } catch (e) {
+      clearTimeout(timer);
+      // tardó demasiado (o ganó otro modelo y esta se canceló)
+      throw new Error(e && e.name === 'AbortError' ? (timedOut ? 'ocupada' : 'cancelada') : 'red');
+    }
+    clearTimeout(timer);
+    if (!r.ok) {
+      // un modelo que no acepta el nivel de razonamiento: se repite sin él
+      if (r.status === 400 && g.thinkingConfig && /thinking/i.test(String((d.error || {}).message || ''))) {
+        this._noThink = Object.assign({}, this._noThink, { [model]: true });
+        return this.geminiTry(cfg, model, parts, gen, tier, ac, wait);
+      }
+      throw this.aiErrorFrom(r.status, d);
+    }
+    const c = d.candidates && d.candidates[0];
+    const t = c && c.content && c.content.parts ? c.content.parts.filter((p) => !p.thought).map((p) => p.text || '').join('') : '';
+    if (!t) {
+      const why = (d.promptFeedback && d.promptFeedback.blockReason) || (c && c.finishReason) || '';
+      throw new Error(/SAFETY|PROHIBITED|BLOCK|SPII|IMAGE_SAFETY|OTHER/.test(why) ? 'bloqueo' : 'vacio');
+    }
+    return t;
   }
 
   async claudeRun(cfg, content, maxTokens, tier) {
@@ -398,7 +431,10 @@
         this.setState({ fdraft: Object.assign({}, this.state.fdraft, { thumb: thumb }) });
       }
       const name = (this.mealDefs().find((m) => m.id === meal) || {}).name || 'Comida';
-      const j = await this.aiJSON(this.foodPrompt(name, text, !!img), img);
+      // si tarda, se avisa: así no parece pegada
+      const slow = setTimeout(() => { const f = this.state.fdraft; if (f && f.id === id && f.status === 'loading') this.setState({ fdraft: Object.assign({}, f, { slow: true }) }); }, 8000);
+      let j;
+      try { j = await this.aiJSON(this.foodPrompt(name, text, !!img), img); } finally { clearTimeout(slow); }
       if (!this.state.fdraft || this.state.fdraft.id !== id) return;
       const items = this.normItems(j.items);
       this.setState({
@@ -621,6 +657,7 @@
       draftOpen: !!fd, dLoading: !!fd && fd.status === 'loading', dReady: !!fd && fd.status === 'ready', dError: !!fd && (fd.status === 'error' || fd.status === 'empty'),
       dErr: fd ? (fd.status === 'empty' ? (fd.note || 'No encontré comida en la foto.') : fd.err || '') : '',
       dHasThumb: !!(fd && fd.thumb), dThumb: fd && fd.thumb ? fd.thumb : '', dNoThumb: !(fd && fd.thumb),
+      dLoadText: fd && fd.slow ? 'La IA de Google está lenta: le pregunto también a un modelo más rápido…' : 'Identificando alimentos y porciones…',
       dTitle: fd ? (fd.t || 'Analizando…') : '', dItems: dItems, dNote: fd ? fd.note || '' : '', dHasNote: !!(fd && fd.note),
       dQ: fd && fd.q ? fd.q : '', dHasQ: !!(fd && fd.q), dLow: !!(fd && fd.conf === 'baja'),
       dTot: { kcal: r0(dTot.kcal), p: r0(dTot.p), c: r0(dTot.c), f: r0(dTot.f), fib: r0(dTot.fib) },

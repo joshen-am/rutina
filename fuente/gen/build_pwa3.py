@@ -152,6 +152,8 @@ RUNTIME = r'''
     var html = build(tplRoot, vals);
     morphdom(appEl, '<div id="app">' + html + '</div>', {
       onBeforeElUpdated: function (from, to) {
+        // el lienzo de la cámara guarda su tamaño (width/height los pone el código, no la plantilla)
+        if (from.tagName === 'CANVAS' && from.id) { to.setAttribute('width', from.width); to.setAttribute('height', from.height); }
         if (from.isEqualNode(to)) return false;
         if (from === document.activeElement && (from.tagName === 'INPUT' || from.tagName === 'TEXTAREA')) { to.value = from.value; if (from.tagName === 'TEXTAREA') to.textContent = from.value; }
         return true;
